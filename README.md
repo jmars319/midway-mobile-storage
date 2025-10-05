@@ -103,3 +103,14 @@ Favicons and platform icons are stored under `uploads/images/favicon-set/`. The 
 If you maintain multiple icon sizes or tools that generate icons, keep larger sizes (512) for maskable/Android usage and smaller sizes (16/32) for browser tabs.
 
 Note: there's a deprecated manifest copy inside `uploads/images/favicon-set/site.webmanifest.deprecated` — the root `/site.webmanifest` is canonical.
+
+## Changelog
+
+- 2025-10-05: Repository cleanup — removed cookiecutter artifacts, rotated branch to `main`, removed sensitive `admin/auth.json` from history, added `.gitignore` and `admin/auth.json.example`.
+- 2025-10-04: Typography update — prepared self-hosted font rules and CSS variables for Inter/Montserrat/Roboto families.
+
+## Development notes
+
+- Use `./dev.sh start` to run the PHP built-in server locally on `127.0.0.1:8000`.
+- For email testing install MailHog (Homebrew: `brew install mailhog`) or configure SMTP settings in `admin/auth.json` (do not commit real credentials).
+- To add self-hosted fonts: place WOFF2 files under `assets/fonts/` matching names in `assets/fonts/README.md`.
