@@ -1,0 +1,13 @@
+/.DS_Store
+/vendor/
+/private_data/
+/data/*.bak*
+/data/archives/
+/uploads/uploads/
+/uploads/*.DS_Store
+/assets/fonts/*.woff2
+/admin/auth.json
+/.env
+node_modules/
+/.idea/
+/.vscode/

@@ -1,4 +1,8 @@
 {
+  "smtp_username": "your-smtp-username@example.com",
+  "smtp_password": "YOUR_SMTP_PASSWORD"
+}
+{
     "hash": "<bcrypt-hash-goes-here>",
     "version": 0
 }
