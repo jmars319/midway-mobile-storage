@@ -167,7 +167,7 @@ body.admin { overflow-x: hidden; }
 #image-list img { border-radius:6px; border:1px solid var(--admin-border); height:48px; width:64px; object-fit:cover }
 
 /* Menu admin layout and preview */
-.menu-admin-wrap { gap:1rem }
+.menu-admin-wrap { gap:1rem; display:flex; align-items:flex-start; margin-top:.5rem }
 .menu-admin-wrap #menu-list { max-height:620px; overflow:auto; padding-right:.25rem }
 .menu-admin-wrap .menu-admin-row, .menu-admin-wrap .menu-admin-row * { box-sizing:border-box }
 .menu-admin-wrap input[type="text"], .menu-admin-wrap textarea { padding:.45rem; border-radius:8px; border:1px solid var(--admin-border) }
@@ -246,14 +246,45 @@ body.admin { overflow-x: hidden; }
 .smtp-test-input { width:260px }
 .smtp-result { margin-top:.6rem }
 
+/* NOTE: menu-admin-wrap rules are defined earlier; no-op placeholder removed */
 /* helpers to replace common inline styles found in admin templates */
 .mt-05 { margin-top: .5rem !important; }
 .mt-1 { margin-top: 1rem !important; }
 .mt-15 { margin-top: 1.5rem !important; }
+.mt-04 { margin-top: .4rem !important; }
 .ml-auto { margin-left: auto !important; }
 .text-center { text-align: center !important; }
 .pad-3rem { padding: 3rem 1rem !important; }
 .card-center { max-width: 720px; margin: 0 auto; text-align: center; }
+
+/* small layout utilities */
+.header-brand { display:flex; align-items:center; gap:12px }
+.logo-inline { display:inline-block }
+.logo-img { height:40px; width:auto; vertical-align:middle }
+.m-0 { margin:0 !important }
+.ml-05 { margin-left:.5rem !important }
+.mb-05 { margin-bottom:.5rem !important }
+.mb-075 { margin-bottom:.75rem !important }
+.d-inline { display:inline !important }
+.flex-1 { flex:1 }
+.menu-preview { flex:1; min-width:300px; max-width:480px }
+.mt-0 { margin-top:0 !important }
+.pl-1 { padding-left:1rem !important }
+.pad-2rem { padding:2rem 0 !important }
+.mb-1 { margin-bottom:1rem !important }
+.text-success { color: var(--success-color) !important }
+
+/* App modal specific styles (replaces inline styles for #app-modal dialog) */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000 }
+.app-modal-dialog { background:var(--card-bg, #fff); max-width:720px; width:95%; margin:auto; padding:1rem; border-radius:6px; box-shadow:0 10px 30px rgba(0,0,0,.4) }
+.app-modal-close { float:right }
+.app-modal-body { clear:both; max-height:60vh; overflow:auto }
+.app-modal-table { width:100%; border-collapse:collapse }
+.app-modal-table th { text-align:left; padding:.25rem .5rem }
+.app-modal-table td { padding:.25rem .5rem }
+
+/* helper for small muted footers */
+.muted-footer { font-size: 0.875rem }
 
 /* modal improvements */
 .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000 }

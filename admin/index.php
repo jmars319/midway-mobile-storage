@@ -407,19 +407,19 @@ header('Content-Type: text/html; charset=utf-8');
                 if (preg_match('#^https?://#i', $lf)) $adminLogo = $lf; else $adminLogo = '../uploads/images/' . ltrim($lf, '/');
               }
             ?>
-            <div style="display:flex;align-items:center;gap:12px">
-              <a href="../" class="logo" style="display:inline-block">
+            <div class="header-brand">
+              <a href="../" class="logo logo-inline">
                 <?php if ($adminLogo): ?>
                   <picture>
                     <source type="image/webp" srcset="/uploads/images/logo-48.webp 1x, /uploads/images/logo-96.webp 2x, /uploads/images/logo-192.webp 4x">
-                    <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="<?php echo htmlspecialchars($siteContent['business_info']['name'] ?? 'Site'); ?>" style="height:40px; width:auto; vertical-align:middle">
+                    <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="<?php echo htmlspecialchars($siteContent['business_info']['name'] ?? 'Site'); ?>" class="logo-img">
                   </picture>
                 <?php else: ?>
                   <strong><?php echo htmlspecialchars($siteContent['business_info']['name'] ?? 'Admin'); ?></strong>
                 <?php endif; ?>
               </a>
               <div>
-                <h1 style="margin:0">Admin Dashboard</h1>
+                <h1 class="m-0">Admin Dashboard</h1>
                 <div class="topbar">
                   <a href="../" class="btn btn-ghost" target="_blank">View site</a>
                 </div>
@@ -464,12 +464,12 @@ header('Content-Type: text/html; charset=utf-8');
                       <a href="reservation-audit.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM4 10h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>View full reservation audit</a>
                       <a href="reservation-audit.php?download=csv" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM8 10v6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV</a>
                       <a href="reservation-audit.php?download=json" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON</a>
-                      <form method="post" style="margin:0" data-confirm="Clear reservation audit? This will remove recent audit entries. Continue?">
+                      <form method="post" class="m-0" data-confirm="Clear reservation audit? This will remove recent audit entries. Continue?">
                         <?php echo csrf_input_field(); ?>
                         <input type="hidden" name="action" value="clear_reservation_audit">
                         <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear reservation audit</button>
                       </form>
-                      <form method="post" style="margin:0">
+                      <form method="post" class="m-0">
                         <?php echo csrf_input_field(); ?>
                         <input type="hidden" name="action" value="download_reservations">
                         <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v10M8 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download Reservations (CSV)</button>
@@ -484,7 +484,7 @@ header('Content-Type: text/html; charset=utf-8');
                     </form>
                   </div>
                 <div class="pm-item pm-sep">
-                  <form method="get" action="change-password.php" class="pm-form" style="margin:0">
+                  <form method="get" action="change-password.php" class="pm-form m-0">
                     <button type="submit" class="btn btn-ghost"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM5 11v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Change admin password</button>
                   </form>
                 </div>
@@ -549,10 +549,10 @@ header('Content-Type: text/html; charset=utf-8');
                 $rf = basename($e['resume_file']);
               ?>
                 <a href="download-resume.php?file=<?php echo urlencode($rf); ?>">Download</a>
-                <span class="small" style="margin-left:.5rem"><?php echo htmlspecialchars($rf); ?></span>
-                <div style="margin-top:.4rem"><button type="button" class="btn btn-ghost view-app" data-entry="<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>">View</button></div>
+                <span class="small ml-05"><?php echo htmlspecialchars($rf); ?></span>
+                <div class="mt-04"><button type="button" class="btn btn-ghost view-app" data-entry="<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>">View</button></div>
               <?php else: ?>
-                — <div style="margin-top:.4rem"><button type="button" class="btn btn-ghost view-app" data-entry="<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>">View</button></div>
+                — <div class="mt-04"><button type="button" class="btn btn-ghost view-app" data-entry="<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>">View</button></div>
               <?php endif; ?>
             </td>
             <td><?php echo !empty($e['mail_sent']) ? 'Yes' : 'No'; ?></td>
@@ -565,13 +565,13 @@ header('Content-Type: text/html; charset=utf-8');
     <hr class="spaced-hr">
     <h2>Units Management</h2>
     <p class="small">Manage storage unit categories and listings shown on the public site.</p>
-    <div id="menu-admin-wrap" class="menu-admin-wrap" style="display:flex;gap:1rem;align-items:flex-start;margin-top:.5rem">
-  <div id="menu-admin" style="flex:1">
-  <div style="margin-bottom:.5rem"><button id="add-menu-item" type="button" class="btn btn-primary">Add Unit Category</button></div>
+    <div id="menu-admin-wrap" class="menu-admin-wrap">
+  <div id="menu-admin" class="flex-1">
+  <div class="mb-05"><button id="add-menu-item" type="button" class="btn btn-primary">Add Unit Category</button></div>
         <div id="menu-list"></div>
       </div>
-      <div id="menu-preview" style="flex:1;min-width:300px;max-width:480px">
-        <h3 style="margin-top:0">Live Preview</h3>
+      <div id="menu-preview" class="menu-preview">
+        <h3 class="mt-0">Live Preview</h3>
   <div id="preview-area" class="preview-area"></div>
       </div>
     </div>
@@ -590,9 +590,9 @@ header('Content-Type: text/html; charset=utf-8');
       }
     ?>
     <?php if (!empty($recentAudit)): ?>
-      <div class="card" style="margin-bottom:.75rem">
-        <h3 style="margin-top:0">Recent reservation summary</h3>
-        <ul class="small" style="margin:0;padding-left:1rem">
+      <div class="card mb-075">
+        <h3 class="mt-0">Recent reservation summary</h3>
+        <ul class="small m-0 pl-1">
           <?php foreach ($recentAudit as $a): ?>
             <li><?php echo htmlspecialchars(($a['timestamp'] ?? '') . ' — ' . ($a['name'] ?? 'Unknown') . ' — ' . ($a['guests'] ?? '')); ?></li>
           <?php endforeach; ?>
@@ -631,7 +631,7 @@ header('Content-Type: text/html; charset=utf-8');
             <td><?php echo htmlspecialchars($r['guests'] ?? ''); ?></td>
             <td><?php echo htmlspecialchars($r['event_type'] ?? ''); ?></td>
             <td>
-              <form method="post" style="display:inline" data-confirm="Delete this reservation?">
+              <form method="post" class="d-inline" data-confirm="Delete this reservation?">
                 <?php echo csrf_input_field(); ?>
                 <input type="hidden" name="action" value="delete_reservation">
                 <input type="hidden" name="idx" value="<?php echo (int)$i; ?>">
@@ -663,11 +663,11 @@ header('Content-Type: text/html; charset=utf-8');
       </div>
 
       <!-- Application detail modal -->
-      <div id="app-modal" role="dialog" aria-hidden="true" style="display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:9999">
-        <div role="document" style="background:var(--card-bg, #fff);max-width:720px;width:95%;margin:auto;padding:1rem;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.4)">
-          <button id="app-modal-close" type="button" class="btn btn-ghost" style="float:right">Close</button>
+      <div id="app-modal" role="dialog" aria-hidden="true" class="modal-backdrop">
+        <div role="document" class="app-modal-dialog">
+          <button id="app-modal-close" type="button" class="btn btn-ghost app-modal-close">Close</button>
           <h3 id="app-modal-title">Application</h3>
-          <div id="app-modal-body" style="clear:both;max-height:60vh;overflow:auto"></div>
+          <div id="app-modal-body" class="app-modal-body"></div>
         </div>
       </div>
 
@@ -683,8 +683,8 @@ header('Content-Type: text/html; charset=utf-8');
             try { var obj = JSON.parse(data); } catch(e){ obj = null; }
             if (!obj) return;
             var html = '';
-            html += '<table class="small" style="width:100%;border-collapse:collapse">';
-            function row(k,v){ return '<tr><th style="text-align:left;padding:.25rem .5rem">'+k+'</th><td style="padding:.25rem .5rem">'+(v||'')+'</td></tr>'; }
+            html += '<table class="small app-modal-table">';
+            function row(k,v){ return '<tr><th class="app-modal-table">'+k+'</th><td class="app-modal-table">'+(v||'')+'</td></tr>'; }
             html += row('Name', (obj.first_name||'') + ' ' + (obj.last_name||''));
             html += row('Email', obj.email||'');
             html += row('Phone', obj.phone||'');

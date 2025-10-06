@@ -71,12 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <link rel="stylesheet" href="/assets/css/admin.css">
     </head>
     <body class="admin">
-        <div class="container container-narrow" style="padding:2rem 0">
+    <div class="container container-narrow pad-2rem">
             <div class="card">
                 <h1 class="card-title">Change Password</h1>
 
-                <?php if ($error): ?><div class="form-error" role="alert" style="margin-bottom:1rem"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-                <?php if ($success): ?><div class="form-note" role="status" style="margin-bottom:1rem;color:var(--success-color)"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
+                <?php if ($error): ?><div class="form-error mb-1" role="alert"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+                <?php if ($success): ?><div class="form-note mb-1 text-success" role="status"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
                 <form method="post">
                     <?php echo csrf_input_field(); ?>
@@ -95,9 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input name="confirm_password" type="password" required class="form-input">
                     </div>
 
-                    <div style="margin-top:1rem">
+                    <div class="mt-1">
                         <button type="submit" class="btn btn-primary">Change Password</button>
-                        <a href="index.php" class="btn btn-secondary" style="margin-left:.5rem">Back</a>
+                        <a href="index.php" class="btn btn-secondary ml-05">Back</a>
                     </div>
                 </form>
             </div>

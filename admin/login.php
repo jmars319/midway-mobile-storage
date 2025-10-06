@@ -168,7 +168,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
             <button type="submit" class="btn-login">Login</button>
         </form>
         
-        <p class="muted" style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+        <p class="muted text-center mt-15 muted-footer">
             Forgot password? Contact your administrator
         </p>
     </div>
