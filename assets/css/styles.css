@@ -185,6 +185,12 @@
     --font-family-headings: 'Montserrat', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-family-accent: 'Roboto Condensed', 'Roboto', sans-serif;
     --font-family-mono: 'Roboto Mono', 'Courier New', Courier, monospace;
+    /* Logo badge background (light and dark variants). Use a subtle tint of the
+       primary brand color on light backgrounds so the badge reads as intentional
+       while preserving the original white surface feel. Dark variant remains a
+       subtle translucent white to keep contrast without inverting the logo. */
+    --logo-badge-bg: rgba(59,90,223,0.06); /* using --primary-300 with low alpha */
+    --logo-badge-bg-dark: rgba(255,255,255,0.06);
 }
 
     /* Accent variables for separators so color can be toggled easily */
@@ -497,7 +503,7 @@ textarea.form-input { min-height: 70px; resize:vertical; }
     justify-content: center;
     padding: 6px 10px;
     border-radius: 999px;
-    background: var(--surface-color); /* white oval background for clarity */
+    background: var(--logo-badge-bg, var(--surface-color)); /* subtle brand-tinted background */
     box-shadow: 0 6px 20px rgba(16,24,40,0.08);
 }
 .site-logo-img { height: 44px; width: auto; display: inline-block; vertical-align: middle; image-rendering: -webkit-optimize-contrast; }
@@ -508,8 +514,24 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 /* Ensure badge remains readable in dark mode without inverting the logo */
 .logo-badge { background: var(--surface-color); }
 @media (prefers-color-scheme: dark) {
-    .logo-badge { background: rgba(255,255,255,0.06); }
+    .logo-badge { background: var(--logo-badge-bg-dark); }
     .logo img, .site-logo-img { filter: none !important; mix-blend-mode: normal !important; }
+}
+
+/* Compact header / small logo variant
+   Use the utility class `header-compact` on the header/nav container to reduce
+   vertical spacing and use `.logo--small` on the logo element to shrink the
+   logo image and badge for tighter layouts (mobile header, compact toolbars). */
+.header-compact { box-shadow: var(--shadow-sm); }
+.header-compact .navbar { padding: calc(var(--spacing-sm) - 2px) 0; gap: calc(var(--spacing-sm) - 2px); }
+.logo--small { font-size: var(--font-size-lg); }
+.logo--small .logo-badge { padding: 4px 8px; }
+.logo--small .site-logo-img { height: 32px; }
+
+/* Small adjustments for very narrow viewports when the compact header is used */
+@media (max-width: 480px) {
+    .header-compact .navbar { padding: .4rem 0; }
+    .logo--small .site-logo-img { height: 28px; }
 }
 
 .nav-menu {
