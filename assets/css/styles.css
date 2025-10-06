@@ -1074,15 +1074,20 @@ a.btn.btn-primary:focus {
 .map-links { position: relative; z-index: 20; }
 .map-links.visible { opacity: 1 !important; transform: none !important; }
 
-/* translucent backdrop for map action row to improve legibility */
-.map-links { background: color-mix(in srgb, var(--card-bg) 86%, black 8%); border-radius: 10px; padding: 0.35rem; box-shadow: 0 6px 18px rgba(2,6,23,0.12); }
-.map-links { display:flex; gap:0.5rem; align-items:center; }
-.map-links::before { content: ''; position: absolute; inset: 0; z-index: 19; border-radius: 10px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); pointer-events: none; }
+/* translucent solid backdrop for map action row (no blur for clarity on mobile) */
+.map-links { background: rgba(255,255,255,0.94); border-radius: 10px; padding: 0.35rem; box-shadow: 0 6px 18px rgba(2,6,23,0.12); display:flex; gap:0.5rem; align-items:center; }
 
 /* Button visual styles for map action row */
-.map-links .btn { box-shadow: var(--shadow-sm); }
+.map-links .btn { box-shadow: var(--shadow-sm); padding: 0.6rem 0.9rem; font-size: 0.95rem; }
 .map-links .btn.btn-primary { background: var(--primary-color) !important; color: var(--card-bg) !important; border: none !important; }
 .map-links .btn.btn-outline { background: transparent !important; color: var(--primary-color) !important; border: 2px solid var(--primary-color) !important; }
+
+/* Mobile-friendly stacking and spacing */
+@media (max-width: 768px) {
+    .map-links { flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.5rem; }
+    .map-links .btn { width: 100%; font-size: 1rem; padding: 0.65rem 0.9rem; }
+    .map-links { background: rgba(255,255,255,0.96); }
+}
 .map-links .btn-sm { padding: 0.35rem 0.6rem; font-size: 0.85rem; }
 
 /* Icons inside map buttons and responsive label hiding */
