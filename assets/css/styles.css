@@ -15,88 +15,9 @@
    CSS CUSTOM PROPERTIES (CSS VARIABLES)
    Centralized design system for easy theming
    ============================================== */
-/* Local webfont loading (self-hosted). Place WOFF2 files under assets/fonts/ as listed in assets/fonts/README.md. */
-/* Font-face declarations (self-hosted) */
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 300;
-    font-display: swap;
-    src: url('../fonts/Inter-300.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('../fonts/Inter-400.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('../fonts/Inter-500.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('../fonts/Inter-600.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('../fonts/Inter-700.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('../fonts/Montserrat-600.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('../fonts/Montserrat-700.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Roboto Condensed';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('../fonts/RobotoCondensed-400.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Roboto Condensed';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('../fonts/RobotoCondensed-700.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Roboto Mono';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('../fonts/RobotoMono-400.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Roboto Mono';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('../fonts/RobotoMono-700.woff2') format('woff2');
-}
+/* Use system font stacks instead of self-hosted WOFF2 files to avoid 404s
+   and reduce maintenance. If you later want to self-host fonts, place WOFF2
+   files under assets/fonts/ and add @font-face declarations here. */
 
 :root {
     /* Color Palette (brand) */
