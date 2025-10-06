@@ -67,6 +67,10 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
     </section>
   </main>
 
+  <!-- IMPORTANT: keep this <footer> element outside any .container or .container-narrow wrappers
+    so the footer background can span the full viewport width (full-bleed). The inner
+    <div class="container"> should be used to center footer content only. Do not nest
+    page sections inside this footer. -->
   <footer class="footer">
   <div class="container pb-2rem text-center muted-text">&copy; <?php echo date('Y'); ?> Midway Mobile Storage</div>
   </footer>

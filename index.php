@@ -45,35 +45,30 @@ function getContent($content, $key, $fallback = '') {
     return $value;
 }
 ?>
-
 <?php
-// Cache-busting version string for static assets during development
-$cssPath = 'assets/css/styles.css';
-$cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
+// Start session before any output
+session_start();
+$form_flash = $_SESSION['form_flash'] ?? null;
+// Emit document head (doctype, meta, CSS)
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Midway Mobile Storage | Midway, NC</title>
-    <link rel="stylesheet" href="<?php echo htmlspecialchars($cssPath . '?v=' . $cssVersion, ENT_QUOTES, 'UTF-8'); ?>">
-    <!-- Favicons -->
-    <link rel="icon" type="image/x-icon" href="/uploads/images/favicon-set/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/uploads/images/favicon-set/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/uploads/images/favicon-set/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/uploads/images/favicon-set/favicon-180x180.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <!-- Typography: load from Google Fonts CDN for Montserrat, Inter, Roboto Condensed and Roboto Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="assets/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
 <?php
 // Show form flash if present (non-AJAX submission validation errors)
-session_start();
-$form_flash = $_SESSION['form_flash'] ?? null;
+if (!empty($_SESSION['form_flash'])) {
+    $form_flash = $_SESSION['form_flash'];
+    // clear it so it doesn't persist
+    unset($_SESSION['form_flash']);
+} else {
+    $form_flash = null;
+}
 if ($form_flash) {
     // clear it so it doesn't persist
     unset($_SESSION['form_flash']);
@@ -115,13 +110,18 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 <li><a class="nav-link" href="#contact">Contact</a></li>
             </ul>
 
-            </nav>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            <!-- ==============================================
-             HERO SECTION
-             ============================================== -->
+    <!-- Close job-application containers so footer is full-bleed -->
+    </div>
+    </section>
+
         <?php
-            $heroTitle = getContent($content, 'hero.title', 'Secure, convenient storage solutions');
+            // Hero content variables (provide safe defaults)
+            $heroTitle = getContent($content, 'hero.title', $content['business_info']['name'] ?? 'Midway Mobile Storage');
             $heroSubtitle = getContent($content, 'hero.subtitle', 'Flexible unit sizes, affordable pricing, and reliable service.');
             $heroImage = getContent($content, 'hero.image', '');
             $heroBtn1 = getContent($content, 'hero.btn_text', 'View Units');
@@ -133,7 +133,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 // prefer full URL when provided
                 $imgUrl = preg_match('#^https?://#i', $heroImage) ? $heroImage : 'uploads/images/'.ltrim($heroImage, '/');
                 // emit a small style block to avoid inline style attributes on the section element
-                $heroBackgroundStyleTag = '<style>.hero{background-image: url("' . htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') . '"); background-size: cover; background-position: center;}</style>';
+                $heroBackgroundStyleTag = '<style>.hero{background-image: url("' . htmlspecialchars((string)$imgUrl, ENT_QUOTES, 'UTF-8') . '"); background-size: cover; background-position: center;}</style>';
             }
         ?>
         <?php echo $heroBackgroundStyleTag; ?>
@@ -312,74 +312,11 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
         </div>
     </section>
 
-    <script>
-    // Reservation confirmation helper: if the page is loaded with
-    // ?success=1&guests=N in the hash/query, show a confirmation message.
-    (function(){
-        try {
-            var params = new URLSearchParams(window.location.hash.replace(/^#/, '?'));
-            if (!params || params.get('success') !== '1') return;
-            var guests = params.get('guests') || '';
-            var wrap = document.getElementById('reservation-confirm');
-            var outer = document.getElementById('reservation-confirm-msg');
-            var text = document.getElementById('reservation-confirm-text');
-            if (!wrap || !outer || !text) return;
-
-            // Respect user dismissal stored in localStorage
-            var dismissKey = 'reservation_confirm_dismissed';
-            if (localStorage.getItem(dismissKey) === '1') return;
-
-            text.textContent = 'Thank you! Your reservation request has been received' + (guests ? (' for ' + guests + ' guest' + (guests === '1' ? '' : 's')) : '') + '. We will contact you to confirm.';
-            wrap.style.display = 'block';
-            outer.focus({preventScroll:true});
-
-            // Wire dismiss button to hide and remember dismissal
-            var close = document.getElementById('reservation-confirm-close');
-            if (close) {
-                close.addEventListener('click', function(){
-                    wrap.style.display = 'none';
-                    try { localStorage.setItem(dismissKey, '1'); } catch(e){}
-                });
-            }
-
-            // clear hash so refreshing doesn't re-show
-            try { history.replaceState(null, '', window.location.pathname + window.location.search + '#reservation'); } catch(e){}
-        }
-    })();
-    </script>
-
-        <script>
-            // Menu card expand/collapse (toggle class + aria and label)
-            (function(){
-                    function toggleForButton(btn){
-                        var card = btn.closest('.menu-card'); if (!card) return;
-                        var expanded = card.classList.toggle('expanded');
-                        btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-                        var label = btn.querySelector('.expand-label'); if (label) label.textContent = expanded ? 'Less' : 'View All';
-                        return expanded;
-                    }
-
-                    document.addEventListener('click', function(e){
-                        var btn = e.target.closest && e.target.closest('.expand-btn');
-                        if (!btn) return;
-                        toggleForButton(btn);
-                    });
-
-                    // keyboard activation: support Enter and Space on the button
-                    document.addEventListener('keydown', function(e){
-                        if (!e.target) return;
-                        if (!e.target.classList || !e.target.classList.contains('expand-btn')) return;
-                        if (e.key === 'Enter') { e.preventDefault(); toggleForButton(e.target); }
-                        if (e.key === ' ') { e.preventDefault(); toggleForButton(e.target); }
-                    });
-                })();
-        </script>
-
-    <!-- Footer will be rendered at the end of the page to ensure it stays below main content -->
+    </form>
 
     <!-- ==============================================
-         CAREERS / JOB APPLICATION SECTION (moved into main body)
-         ============================================== -->
+     CAREERS / JOB APPLICATION SECTION (moved into main body)
+     ============================================== -->
     <section class="section" id="job-application">
     <div class="container">
         <div class="section-header">
@@ -454,136 +391,20 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                             <option value="fabricator" <?php if(fv('position_desired')==='fabricator') echo 'selected'; ?>>Fabricator / Custom Technician</option>
                             <option value="customer-service" <?php if(fv('position_desired')==='customer-service') echo 'selected'; ?>>Customer Service</option>
                             <option value="manager" <?php if(fv('position_desired')==='manager') echo 'selected'; ?>>Manager</option>
-                            <option value="other" <?php if(fv('position_desired')==='other') echo 'selected'; ?>>Other</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="employment-type" class="form-label">Employment Type *</label>
-                        <select id="employment-type" name="employment_type" required class="form-input">
-                            <option value="">Select Type</option>
-                            <option value="full-time" <?php if(fv('employment_type')==='full-time') echo 'selected'; ?>>Full Time</option>
-                            <option value="part-time" <?php if(fv('employment_type')==='part-time') echo 'selected'; ?>>Part Time</option>
-                            <option value="seasonal" <?php if(fv('employment_type')==='seasonal') echo 'selected'; ?>>Seasonal</option>
-                        </select>
                     </div>
-                </div>
-                
-                <div class="grid grid-2">
-                    <div>
-                        <label for="desired-salary" class="form-label">Desired Salary/Hourly Rate</label>
-                        <input type="text" id="desired-salary" name="desired_salary" class="form-input" placeholder="e.g., $15/hour" value="<?php echo fv('desired_salary'); ?>">
-                    </div>
-                    <div>
-                        <label for="start-date" class="form-label">Available Start Date</label>
-                        <input type="date" id="start-date" name="start_date" class="form-input" value="<?php echo fv('start_date'); ?>">
-                    </div>
-                </div>
-                
-                <!-- Availability -->
-                <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Availability</h3>
-                <p style="margin-bottom: 1rem; color: var(--text-secondary);">Check all days you are available to work:</p>
-                <div class="grid grid-2">
-                    <div>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="monday" <?php if(!empty($form_flash['values']['availability']) && in_array('monday',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Monday</span>
-                        </label>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="tuesday" <?php if(!empty($form_flash['values']['availability']) && in_array('tuesday',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Tuesday</span>
-                        </label>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="wednesday" <?php if(!empty($form_flash['values']['availability']) && in_array('wednesday',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Wednesday</span>
-                        </label>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="thursday" <?php if(!empty($form_flash['values']['availability']) && in_array('thursday',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Thursday</span>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="friday" <?php if(!empty($form_flash['values']['availability']) && in_array('friday',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Friday</span>
-                        </label>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="saturday" <?php if(!empty($form_flash['values']['availability']) && in_array('saturday',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Saturday</span>
-                        </label>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="sunday" <?php if(!empty($form_flash['values']['availability']) && in_array('sunday',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Sunday</span>
-                        </label>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="availability[]" value="holidays" <?php if(!empty($form_flash['values']['availability']) && in_array('holidays',$form_flash['values']['availability'])) echo 'checked'; ?>>
-                            <span>Holidays</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="grid grid-2">
-                    <div>
-                        <label for="shift-preference" class="form-label">Shift Preference</label>
-                        <select id="shift-preference" name="shift_preference" class="form-input">
-                            <option value="">No Preference</option>
-                            <option value="morning" <?php if(fv('shift_preference')==='morning') echo 'selected'; ?>>Morning (8am-4pm)</option>
-                            <option value="evening" <?php if(fv('shift_preference')==='evening') echo 'selected'; ?>>Evening (4pm-close)</option>
-                            <option value="night" <?php if(fv('shift_preference')==='night') echo 'selected'; ?>>Night (close)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="hours-per-week" class="form-label">Preferred Hours per Week</label>
-                        <div class="stepper" role="group" aria-label="Preferred hours per week">
-                            <button type="button" class="stepper-btn" data-step="down" aria-label="Decrease hours"> <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13H5v-2h14v2z"/></svg> </button>
-                            <input type="number" id="hours-per-week" name="hours_per_week" min="1" max="60" class="form-input" value="<?php echo fv('hours_per_week'); ?>">
-                            <button type="button" class="stepper-btn" data-step="up" aria-label="Increase hours"> <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> </button>
-                        </div>
-                        <div class="form-note small" style="margin-top:.35rem">Typical availability: 20–40 hours per week.</div>
-                    </div>
-                </div>
-                
-                <!-- Experience -->
-                <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Experience</h3>
-                <div>
-                    <label for="restaurant-experience" class="form-label">Storage / Equipment Experience</label>
-                    <textarea id="restaurant-experience" name="restaurant_experience" rows="4" placeholder="List experience with storage facilities, material handling, equipment or relevant trade skills..." class="form-input"><?php echo fv('restaurant_experience'); ?></textarea>
-                </div>
+                </form>
 
-                <div>
-                    <label for="other-experience" class="form-label">Other Relevant Experience</label>
-                    <textarea id="other-experience" name="other_experience" rows="3" placeholder="Any other work experience that might be relevant (e.g., customer service, fabrication, welding, driving)..." class="form-input"><?php echo fv('other_experience'); ?></textarea>
-                </div>
-                
-                <div>
-                    <label for="why-work-here" class="form-label">Why do you want to work here? *</label>
-                    <textarea id="why-work-here" name="why_work_here" rows="3" required placeholder="Tell us why you're interested in joining our team..." class="form-input"><?php echo fv('why_work_here'); ?></textarea>
-                </div>
-                
-                <!-- References -->
-                <div>
-                    <label class="form-label">Certifications / Licenses</label>
-                    <p class="form-note small">Check any that apply (optional):</p>
-                    <label class="form-checkbox"><input type="checkbox" name="certifications[]" value="drivers_license" <?php if(!empty($form_flash['values']['certifications']) && in_array('drivers_license', $form_flash['values']['certifications'])) echo 'checked'; ?>> <span>Driver's License</span></label>
-                    <label class="form-checkbox"><input type="checkbox" name="certifications[]" value="cdl" <?php if(!empty($form_flash['values']['certifications']) && in_array('cdl', $form_flash['values']['certifications'])) echo 'checked'; ?>> <span>CDL</span></label>
-                    <label class="form-checkbox"><input type="checkbox" name="certifications[]" value="forklift" <?php if(!empty($form_flash['values']['certifications']) && in_array('forklift', $form_flash['values']['certifications'])) echo 'checked'; ?>> <span>Forklift / Material Handling</span></label>
-                    <label class="form-checkbox"><input type="checkbox" name="certifications[]" value="welding" <?php if(!empty($form_flash['values']['certifications']) && in_array('welding', $form_flash['values']['certifications'])) echo 'checked'; ?>> <span>Welding / Fabrication</span></label>
-                    <label class="form-checkbox"><input type="checkbox" name="certifications[]" value="other_cert" <?php if(!empty($form_flash['values']['certifications']) && in_array('other_cert', $form_flash['values']['certifications'])) echo 'checked'; ?>> <span>Other (specify in Other Relevant Experience)</span></label>
-
-                    <div style="margin-top:1rem">
-                        <label for="resume" class="form-label">Upload Resume (optional)</label>
-                        <input type="file" id="resume" name="resume" accept="application/pdf,.doc,.docx" class="form-input">
-                        <div class="form-note small">PDF or Word files only. Max 2MB.</div>
-                    </div>
-
-                    <label for="references" class="form-label">References</label>
-                    <textarea id="references" name="references" rows="3" placeholder="Please provide 2-3 professional references (name, relationship, phone number)" class="form-input"></textarea>
-                </div>
-                
-                <button type="submit" class="btn btn-primary form-submit-btn">Submit Application</button>
-            </form>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
+
+        <!-- Footer -->
+        <!-- IMPORTANT: keep this <footer> element outside any .container or .container-narrow wrappers
+             so the footer background can span the full viewport width (full-bleed). The inner
+             <div class="container"> should be used to center footer content only. Do not nest
+             page sections inside this footer. -->
     <footer class="footer" id="contact">
         <div class="container">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
@@ -601,287 +422,14 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                         <a href="#reservation">Reservations</a>
                         <a href="#about">About</a>
                         <a href="#job-application">Careers</a>
-                        <a href="#" id="footer-contact-link">Contact</a>
+                        <a href="#contact">Contact</a>
                     </nav>
                 </div>
-                <!-- footer preferences removed: theme now follows system preference only -->
             </div>
         </div>
     </footer>
 
-    <!-- External JavaScript File -->
-    <script>
-    // Accessibility helpers:
-    // 1) Mark the current nav link with aria-current when the user scrolls to a section.
-    // 2) Briefly toggle aria-pressed on map action buttons when clicked to provide
-    //    assistive feedback; they remain links (open in new tab) so we don't change default behavior.
-    (function(){
-        try {
-            // aria-current for nav links based on scroll position
-            var navLinks = document.querySelectorAll('.nav-link');
-            var sections = Array.from(navLinks).map(function(a){
-                var href = a.getAttribute('href') || ''; if (!href.startsWith('#')) return null; return document.querySelector(href);
-            });
-            function updateCurrent(){
-                var top = window.scrollY + 96; // header offset
-                for (var i=0;i<navLinks.length;i++){
-                    var a = navLinks[i]; var sec = sections[i];
-                    if (!sec) { a.removeAttribute('aria-current'); continue; }
-                    var rect = sec.getBoundingClientRect();
-                    var inView = (rect.top + window.scrollY) <= top && (rect.bottom + window.scrollY) > top;
-                    if (inView) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
-                }
-            }
-            window.addEventListener('scroll', updateCurrent, {passive:true});
-            window.addEventListener('resize', updateCurrent);
-            updateCurrent();
-
-            // aria-pressed toggling for map buttons
-            var mapBtns = document.querySelectorAll('.map-links a[aria-pressed]');
-            mapBtns.forEach(function(b){
-                b.addEventListener('click', function(){
-                    try { b.setAttribute('aria-pressed','true'); } catch(e){}
-                    // revert after a short delay so assistive tech notices the change
-                    setTimeout(function(){ try { b.setAttribute('aria-pressed','false'); } catch(e){} }, 1200);
-                });
-            });
-
-            // Reveal map action buttons with a subtle animation once the iframe has loaded
-            var mapLinks = document.querySelector('.map-links');
-            if (mapLinks) {
-                var iframe = document.querySelector('.about-map');
-                var reveal = function(){ mapLinks.classList.add('visible'); };
-                if (iframe) {
-                    if (iframe.addEventListener) iframe.addEventListener('load', reveal); else iframe.onload = reveal;
-                    // fallback reveal in case the load event doesn't fire
-                    setTimeout(reveal, 1200);
-                } else {
-                    // no iframe found, reveal immediately
-                    reveal();
-                }
-            }
-
-            // contact modal elements (safely resolve; modal may be absent on some pages)
-            var modal = document.getElementById('contact-modal');
-            var footerLink = document.getElementById('footer-contact-link');
-            var form = document.getElementById('footer-contact-form');
-            var backdrop = modal ? (modal.querySelector('.modal-backdrop') || document.getElementById('contact-modal-backdrop')) : document.getElementById('contact-modal-backdrop');
-            var closeBtn = modal ? modal.querySelector('.modal-close') : null;
-
-    var removeFocusTrap = null;
-    function openModal(e){
-        if (e && e.preventDefault) e.preventDefault();
-        // determine opener element (either event target or element passed directly)
-        var opener = (e && e.currentTarget) ? e.currentTarget : (e && e.target) ? e.target : null;
-        if (e && e.dataset && e.dataset.contactMessage) opener = e;
-        modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.style.overflow='hidden';
-        // prefill message if opener carries a data-contact-message
-        try {
-            var msgNode = form.querySelector('[name="message"]');
-            if (opener && opener.dataset && opener.dataset.contactMessage && msgNode) {
-                msgNode.value = opener.dataset.contactMessage;
-                msgNode.focus();
-            } else {
-                var first = form.querySelector('[name="first_name"]'); if (first) first.focus();
-            }
-        } catch(e) { var first = form.querySelector('[name="first_name"]'); if (first) first.focus(); }
-        removeFocusTrap = trapFocus(modal);
-    }
-    function closeModal(){ modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; if (typeof removeFocusTrap === 'function') { removeFocusTrap(); removeFocusTrap = null; } }
-
-    if (footerLink) footerLink.addEventListener('click', openModal);
-    // Also attach to any elements that should open the contact modal (e.g., Learn More button)
-    var extraOpeners = document.querySelectorAll('.open-contact');
-    extraOpeners.forEach(function(el){ if (el !== footerLink) el.addEventListener('click', openModal); });
-    if (backdrop) backdrop.addEventListener('click', closeModal);
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-
-        // When the FormHandler shows success message, close the modal automatically
-        var observer = new MutationObserver(function(m){
-            m.forEach(function(rec){
-                if (rec.addedNodes && rec.addedNodes.length) {
-                    rec.addedNodes.forEach(function(n){
-                        if (n.classList && n.classList.contains('form-success')) {
-                            // close the modal after a short delay so user sees the message
-                            setTimeout(closeModal, 900);
-                        }
-                    });
-                }
-            });
-        });
-        observer.observe(form.parentNode, { childList: true });
-
-        // Ensure modal form uses the same submission endpoint as other forms
-        form.setAttribute('action', '/contact.php');
-        // Let FormHandler intercept submission (no data-no-ajax attribute)
-
-        // Move modal styles into assets/css/styles.css; implement focus trap for accessibility
-        function trapFocus(modalEl) {
-            var focusableSelectors = 'a[href], area[href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
-            var focusable = Array.from(modalEl.querySelectorAll(focusableSelectors)).filter(function(el){ return el.offsetParent !== null; });
-            if (!focusable.length) return function(){};
-            var first = focusable[0]; var last = focusable[focusable.length - 1];
-            function keyHandler(e) {
-                if (e.key === 'Tab') {
-                    if (e.shiftKey) { // shift + tab
-                        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-                    } else { // tab
-                        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-                    }
-                }
-                if (e.key === 'Escape') { closeModal(); }
-            }
-            document.addEventListener('keydown', keyHandler);
-            return function remove() { document.removeEventListener('keydown', keyHandler); };
-        } catch(e) { /* non-fatal */ }
-    })();
-        // Hours modal: show business hours from content.json with a safe fallback
-        (function(){
-                var hoursLink = document.getElementById('footer-hours-link');
-                if (!hoursLink) return;
-                var hoursData = <?php echo json_encode($content['hours'] ?? new stdClass()); ?>;
-
-                var modal = null, backdrop = null, closeBtn = null, popupWin = null;
-
-                function buildModal() {
-                    try {
-                        var html = ''+
-                        '<div id="hours-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="hours-modal-title">'+
-                            '<div class="modal-backdrop" id="hours-modal-backdrop"></div>'+
-                            '<div class="modal-panel" role="document">'+
-                                '<button type="button" class="modal-close" aria-label="Close hours">✕</button>'+
-                                '<h2 id="hours-modal-title">Hours</h2>'+
-                                '<div class="card">'+
-                                    '<div class="hours-list">';
-                        var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
-                        var todayKey = daysMap[new Date().getDay()];
-                        for (var d in hoursData) {
-                            if (!hoursData.hasOwnProperty(d)) continue;
-                            var isToday = (d.toLowerCase() === todayKey);
-                            var cls = isToday ? 'hours-today' : '';
-                            var badge = isToday ? ' <span class="today-badge">Today</span>' : '';
-                            html += '<div class="'+cls+'" style="display:flex;justify-content:space-between;padding:.25rem 0"><div style="text-transform:capitalize">'+d.replace(/_/g,' ') + badge +'</div><div>'+hoursData[d]+'</div></div>';
-                        }
-                        html +=      '</div>'+
-                                '</div>'+
-                            '</div>'+
-                        '</div>';
-                        var wrap = document.createElement('div'); wrap.innerHTML = html;
-                        document.body.appendChild(wrap.firstChild);
-                        modal = document.getElementById('hours-modal');
-                        backdrop = document.getElementById('hours-modal-backdrop');
-                        closeBtn = modal ? modal.querySelector('.modal-close') : null;
-                        return !!modal;
-                    } catch (e) {
-                        return false;
-                    }
-                }
-
-                function openPopupFallback() {
-                    try {
-                        var winOpts = 'width=420,height=520,toolbar=no,menubar=no,location=no,status=no,resizable=yes,scrollbars=yes';
-                        popupWin = window.open('', 'BusinessHours', winOpts);
-                        if (!popupWin) { alert(formatHoursPlain()); return; }
-                        var doc = popupWin.document;
-                        doc.open();
-                        doc.write('<!doctype html><html><head><meta charset="utf-8"><title>Hours</title>');
-                        doc.write('<meta name="viewport" content="width=device-width,initial-scale=1">');
-                        doc.write('<style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:1rem;color:#0f172a}h1{font-size:1.25rem;margin:0 0 .5rem} .hours-list div{display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px dashed #e6eef8} .today{background:rgba(245,158,11,0.06);padding:.35rem;border-radius:6px;font-weight:700}</style>');
-                        doc.write('</head><body>');
-                        doc.write('<h1>Hours</h1>');
-                        doc.write('<div class="hours-list">');
-                        var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
-                        var todayKey = daysMap[new Date().getDay()];
-                        for (var d in hoursData) {
-                            if (!hoursData.hasOwnProperty(d)) continue;
-                            var isToday = (d.toLowerCase() === todayKey);
-                            var cls = isToday ? 'today' : '';
-                            doc.write('<div class="'+cls+'"><div style="text-transform:capitalize">'+d.replace(/_/g,' ')+(isToday? ' <strong>Today</strong>':'')+'</div><div>'+hoursData[d]+'</div></div>');
-                        }
-                        doc.write('</div>');
-                        doc.write('</body></html>');
-                        doc.close();
-                        popupWin.focus();
-                    } catch (e) {
-                        // final fallback: simple alert
-                        alert(formatHoursPlain());
-                    }
-                }
-
-                function formatHoursPlain() {
-                    var out = '';
-                    for (var d in hoursData) { if (!hoursData.hasOwnProperty(d)) continue; out += d.replace(/_/g,' ') + ': ' + hoursData[d] + '\n'; }
-                    return out || 'No hours available';
-                }
-
-                function openModal() {
-                    if (!modal) {
-                        if (!buildModal()) { openPopupFallback(); return; }
-                        // attach handlers
-                        if (backdrop) backdrop.addEventListener('click', closeModal);
-                        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-                    }
-                    modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.style.overflow='hidden';
-                    // focus the close button for keyboard users
-                    try { if (closeBtn) closeBtn.focus(); } catch(e){}
-                }
-
-                function closeModal() {
-                    if (modal) { modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; }
-                    if (popupWin && !popupWin.closed) { try { popupWin.close(); } catch(e){} popupWin = null; }
-                }
-
-                hoursLink.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
-        })();
-        // Toggle fixed footer only when its content fits the configured height
-        (function(){
-            function updateFooterFixed() {
-                var footer = document.querySelector('.footer');
-                if (!footer) return;
-                // compute required height for footer content
-                footer.classList.remove('footer--fixed');
-                document.body.classList.remove('footer-has-fixed-footer');
-                var required = footer.scrollHeight;
-                // read CSS var --footer-height (fallback to 96)
-                var cssVal = getComputedStyle(document.documentElement).getPropertyValue('--footer-height') || '96px';
-                var footerHeight = parseInt(cssVal, 10) || 96;
-                if (required <= footerHeight) {
-                    footer.classList.add('footer--fixed');
-                    document.body.classList.add('footer-has-fixed-footer');
-                } else {
-                    footer.classList.remove('footer--fixed');
-                    document.body.classList.remove('footer-has-fixed-footer');
-                }
-            }
-            window.addEventListener('load', updateFooterFixed);
-            window.addEventListener('resize', function(){ setTimeout(updateFooterFixed, 120); });
-            // also attempt after fonts/images load
-            window.addEventListener('DOMContentLoaded', function(){ setTimeout(updateFooterFixed, 200); });
-        })();
-        // Reservation guests advisory: show note for large parties and prevent very large parties
-        (function(){
-            var guests = document.getElementById('res-guests');
-            var note = document.getElementById('res-guests-note');
-            var err = document.getElementById('res-guests-error');
-            var form = document.getElementById('reservation-form');
-            if (!guests || !form) return;
-            function update(){
-                var v = parseInt(guests.value, 10) || 0;
-                if (v >= 8 && v <= 50) { note.style.display = 'block'; err.style.display = 'none'; }
-                else if (v > 50) { note.style.display = 'none'; err.style.display = 'block'; }
-                else { note.style.display = 'none'; err.style.display = 'none'; }
-            }
-            guests.addEventListener('input', update);
-            form.addEventListener('submit', function(e){
-                var v = parseInt(guests.value, 10) || 0;
-                if (v > 50) {
-                    e.preventDefault();
-                    guests.focus();
-                    update();
-                    return false;
-                }
-            });
-        })();
-    </script>
+    <script>window.__HOURS_DATA = <?php echo json_encode($content['hours'] ?? new stdClass()); ?>;</script>
+    <script src="assets/js/inline.js" defer></script>
 </body>
 </html>
