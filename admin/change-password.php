@@ -77,12 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ensure a CSRF token exists for the form
-generate_csrf_token();
-function csrf_input_field() {
-    $t = htmlspecialchars(generate_csrf_token(), ENT_QUOTES);
-    return "<input type=\"hidden\" name=\"csrf_token\" value=\"{$t}\">";
-}
+// CSRF helpers are provided by admin/config.php (generate_csrf_token(), csrf_input_field(), verify_csrf_token())
 ?>
 <!doctype html>
 <html>
