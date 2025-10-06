@@ -1068,6 +1068,13 @@ a.btn.btn-primary:focus {
     box-sizing: border-box;
     padding: 0.5rem 0;
 }
+.map-frame { position: relative; }
+/* Ensure the iframe and the action row stack predictably; buttons must appear above the iframe */
+.map-frame .about-map { position: relative; z-index: 1; }
+.map-links { position: relative; z-index: 2; }
+.map-links.visible { opacity: 1 !important; transform: none !important; }
+.map-links .btn { background: var(--surface-color) !important; color: var(--text-primary) !important; box-shadow: var(--shadow-sm) !important; border: 1px solid var(--border-color) !important; }
+.map-links .btn.btn-outline { background: transparent !important; color: var(--primary-color) !important; border: 2px solid var(--primary-color) !important; }
 .map-links .btn-sm { padding: 0.35rem 0.6rem; font-size: 0.85rem; }
 
 /* Icons inside map buttons and responsive label hiding */
