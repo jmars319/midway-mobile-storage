@@ -87,16 +87,24 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             <a href="/" class="logo">
                 <?php if ($logoUrl): ?>
                     <?php
-                      // prefer optimized responsive variants when available
-                      $base = dirname($logoUrl) . '/' . pathinfo($logoUrl, PATHINFO_FILENAME);
-                      $logo48 = 'uploads/images/' . ($content['images']['logo'] ? preg_replace('/\.png$/i','-48.png', $content['images']['logo']) : 'logo-48.png');
-                      $logo96 = 'uploads/images/' . ($content['images']['logo'] ? preg_replace('/\.png$/i','-96.png', $content['images']['logo']) : 'logo-96.png');
-                      $logo192 = 'uploads/images/' . ($content['images']['logo'] ? preg_replace('/\.png$/i','-192.png', $content['images']['logo']) : 'logo-192.png');
+                        // Compute responsive logo paths based on the stored image path (may be "logo/logo.png" or a URL)
+                        $logoVal = $content['images']['logo'] ?? '';
+                        if (preg_match('#^https?://#i', $logoVal)) {
+                            $logo48 = $logo96 = $logo192 = $logoVal;
+                            $logo48_webp = $logo96_webp = $logo192_webp = $logoVal;
+                        } else {
+                            $logo48 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-48.png', $logoVal) : 'logo-48.png');
+                            $logo96 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-96.png', $logoVal) : 'logo-96.png');
+                            $logo192 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-192.png', $logoVal) : 'logo-192.png');
+                            $logo48_webp = preg_replace('/\.png$/i', '.webp', $logo48);
+                            $logo96_webp = preg_replace('/\.png$/i', '.webp', $logo96);
+                            $logo192_webp = preg_replace('/\.png$/i', '.webp', $logo192);
+                        }
                     ?>
-                                        <picture>
-                                            <source type="image/webp" srcset="/uploads/images/logo-48.webp 1x, /uploads/images/logo-96.webp 2x, /uploads/images/logo-192.webp 4x">
-                                            <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="<?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>" class="site-logo-img">
-                                        </picture>
+                    <picture>
+                        <source type="image/webp" srcset="<?php echo htmlspecialchars($logo48_webp); ?> 1x, <?php echo htmlspecialchars($logo96_webp); ?> 2x, <?php echo htmlspecialchars($logo192_webp); ?> 4x">
+                        <img src="<?php echo htmlspecialchars($logo48); ?>" srcset="<?php echo htmlspecialchars($logo48); ?> 1x, <?php echo htmlspecialchars($logo96); ?> 2x, <?php echo htmlspecialchars($logo192); ?> 4x" alt="<?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>" class="site-logo-img">
+                    </picture>
                 <?php else: ?>
                     <?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>
                 <?php endif; ?>

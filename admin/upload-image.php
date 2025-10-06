@@ -36,6 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     $image = $_FILES['image'];
     $imageType = preg_replace('/[^a-z0-9_\-]/i', '', ($_POST['type'] ?? 'general'));
 
+    // Map certain known image types to subfolders. Unknown types go into 'general'.
+    $allowedTypes = ['hero','logo','gallery','general'];
+    $typeFolder = in_array(strtolower($imageType), $allowedTypes, true) ? strtolower($imageType) : 'general';
+    $baseUploadDir = rtrim(UPLOAD_DIR, '/') . '/';
+    $targetDir = $baseUploadDir . ($typeFolder !== 'general' ? $typeFolder . '/' : '');
+    if (!is_dir($targetDir)) @mkdir($targetDir, 0755, true);
+
     // Basic upload error check
     if (!isset($image['error']) || $image['error'] !== UPLOAD_ERR_OK) {
         http_response_code(400);
@@ -104,13 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
             exit;
         }
 
-        // map to svg extension and prepare final filename
-        $extension = 'svg';
-        $safeType = preg_replace('/[^a-z0-9_\-]/i','', $imageType ?: 'general');
-        $filename = $safeType . '-' . time() . '-' . bin2hex(random_bytes(6)) . '.' . $extension;
-        $uploadPath = rtrim(UPLOAD_DIR, '/') . '/' . $filename;
+    // map to svg extension and prepare final filename
+    $extension = 'svg';
+    // preserve original (sanitized) name and prefix with type-mms
+    $origBase = pathinfo($image['name'] ?? 'image', PATHINFO_FILENAME);
+    $origBase = preg_replace('/[^a-z0-9_\-]/i', '-', $origBase);
+    $prefix = ($typeFolder !== 'general' ? $typeFolder : $imageType) . '-mms-';
+    $filename = $prefix . $origBase . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
+    $uploadPath = rtrim($targetDir, '/') . '/' . $filename;
 
-        if (!is_dir(UPLOAD_DIR)) @mkdir(UPLOAD_DIR, 0755, true);
+        if (!is_dir($targetDir)) @mkdir($targetDir, 0755, true);
         if (file_put_contents($uploadPath, $svg) === false) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to save sanitized SVG']);
@@ -118,8 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
         }
         @chmod($uploadPath, 0644);
 
-        // Update content.json with new image path
-        updateImagePath($imageType, $filename);
+    // Update content.json with new image path (store relative path under uploads/images)
+    $relativePath = ($typeFolder !== 'general' ? $typeFolder . '/' : '') . $filename;
+    updateImagePath($imageType, $relativePath);
 
         // Write audit log for the upload
         write_upload_audit([
@@ -138,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
             'success' => true,
             'message' => 'SVG uploaded and sanitized successfully!',
             'filename' => $filename,
-            'url' => '../uploads/images/' . $filename,
+            'url' => '../uploads/images/' . $relativePath,
             'thumbnail' => null,
         ]);
         exit;
@@ -187,19 +198,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
         echo json_encode(['success' => false, 'message' => 'Image dimensions too large. Maximum is '.$maxWidth.'x'.$maxHeight.' pixels.']);
         exit;
     }
-    // generate a filesystem-safe filename (no user input preserved)
-    $safeType = preg_replace('/[^a-z0-9_\-]/i','', $imageType ?: 'general');
-    $filename = $safeType . '-' . time() . '-' . bin2hex(random_bytes(6)) . '.' . $extension;
-    $uploadPath = rtrim(UPLOAD_DIR, '/') . '/' . $filename;
+    // generate a filesystem-safe filename that preserves a sanitized version of the original name
+    $origBase = pathinfo($image['name'] ?? 'image', PATHINFO_FILENAME);
+    $origBase = preg_replace('/[^a-z0-9_\-]/i', '-', $origBase);
+    $prefix = ($typeFolder !== 'general' ? $typeFolder : $imageType) . '-mms-';
+    $filename = $prefix . $origBase . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
+    $uploadPath = rtrim($targetDir, '/') . '/' . $filename;
     
-    // Create upload directory if it doesn't exist
-    if (!is_dir(UPLOAD_DIR)) {
-        mkdir(UPLOAD_DIR, 0755, true);
-    }
-    
-    // Move uploaded file to uploads directory first
-    if (!is_dir(UPLOAD_DIR)) {
-        if (!@mkdir(UPLOAD_DIR, 0755, true)) {
+    // Ensure the target upload directory exists
+    if (!is_dir($targetDir)) {
+        if (!@mkdir($targetDir, 0755, true)) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to create upload directory']);
             exit;
@@ -219,16 +227,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     // Always re-encode the image using GD to strip metadata and ensure safe format
     reencodeImage($uploadPath, $mime);
 
-    // Create thumbnails dir
-    $thumbDir = rtrim(UPLOAD_DIR, '/') . '/thumbs/';
+    // Create thumbnails dir inside the same type folder so thumbs stay with their images
+    $thumbDir = rtrim($targetDir, '/') . '/thumbs/';
     if (!is_dir($thumbDir)) @mkdir($thumbDir, 0755, true);
 
     // Generate thumbnail (server-side)
     $thumbPath = $thumbDir . $filename;
     createThumbnail($uploadPath, $thumbPath, 320, 180);
 
-    // Update content.json with new image path
-    updateImagePath($imageType, $filename);
+    // Update content.json with new image path (relative path under uploads/images)
+    $relativePath = ($typeFolder !== 'general' ? $typeFolder . '/' : '') . $filename;
+    updateImagePath($imageType, $relativePath);
 
     // Write audit log for the upload
     write_upload_audit([
@@ -247,8 +256,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
         'success' => true,
         'message' => 'Image uploaded successfully!',
         'filename' => $filename,
-        'url' => '../uploads/images/' . $filename,
-        'thumbnail' => file_exists($thumbPath) ? '../uploads/images/thumbs/' . $filename : null,
+        'url' => '../uploads/images/' . $relativePath,
+        'thumbnail' => file_exists($thumbPath) ? ('../uploads/images/' . ($typeFolder !== 'general' ? $typeFolder . '/' : '') . 'thumbs/' . $filename) : null,
     ]);
 } else {
     http_response_code(400);

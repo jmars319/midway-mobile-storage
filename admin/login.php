@@ -39,10 +39,25 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                             if ($logo) { $logoUrl = preg_match('#^https?://#i', $logo) ? $logo : '../uploads/images/'.ltrim($logo, '/'); }
                         ?>
                         <?php if ($logoUrl): ?>
-                                                        <picture>
-                                                            <source type="image/webp" srcset="/uploads/images/logo-48.webp 1x, /uploads/images/logo-96.webp 2x, /uploads/images/logo-192.webp 4x">
-                                                            <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="Admin" class="admin-logo">
-                                                        </picture>
+                            <?php
+                                // Compute responsive logo paths based on the stored image path (may be "logo/logo.png" or a URL)
+                                $logoVal = $c['images']['logo'] ?? '';
+                                if (preg_match('#^https?://#i', $logoVal)) {
+                                    $logo48 = $logo96 = $logo192 = $logoVal;
+                                    $logo48_webp = $logo96_webp = $logo192_webp = $logoVal;
+                                } else {
+                                    $logo48 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-48.png', $logoVal) : 'logo-48.png');
+                                    $logo96 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-96.png', $logoVal) : 'logo-96.png');
+                                    $logo192 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-192.png', $logoVal) : 'logo-192.png');
+                                    $logo48_webp = preg_replace('/\.png$/i', '.webp', $logo48);
+                                    $logo96_webp = preg_replace('/\.png$/i', '.webp', $logo96);
+                                    $logo192_webp = preg_replace('/\.png$/i', '.webp', $logo192);
+                                }
+                            ?>
+                            <picture>
+                                <source type="image/webp" srcset="<?php echo htmlspecialchars($logo48_webp); ?> 1x, <?php echo htmlspecialchars($logo96_webp); ?> 2x, <?php echo htmlspecialchars($logo192_webp); ?> 4x">
+                                <img src="<?php echo htmlspecialchars($logo48); ?>" srcset="<?php echo htmlspecialchars($logo48); ?> 1x, <?php echo htmlspecialchars($logo96); ?> 2x, <?php echo htmlspecialchars($logo192); ?> 4x" alt="Admin" class="admin-logo">
+                            </picture>
                         <?php else: ?>
                             <h1>🔐 Admin Login</h1>
                         <?php endif; ?>
