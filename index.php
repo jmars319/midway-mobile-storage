@@ -730,7 +730,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             }
             document.addEventListener('keydown', keyHandler);
             return function remove() { document.removeEventListener('keydown', keyHandler); };
-        }
+        } catch(e) { /* non-fatal */ }
     })();
         // Hours modal: show business hours from content.json with a safe fallback
         (function(){
