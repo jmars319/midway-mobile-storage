@@ -230,36 +230,62 @@
         if (btn) { btn.dataset.orig = btn.textContent; btn.textContent = 'Uploading...'; }
         // insert status after the form
         form.parentNode.insertBefore(status, form.nextSibling);
+        // Client-side validation: size and type
+        const fileInput = form.querySelector('input[type="file"][name="image"]');
+        if (!fileInput || !fileInput.files || !fileInput.files.length) { status.textContent = 'Please choose a file'; btn && btn.removeAttribute('disabled'); return; }
+        const file = fileInput.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) { status.textContent = 'File too large (max 5MB)'; btn && btn.removeAttribute('disabled'); return; }
+        const allowed = ['image/jpeg','image/png','image/gif','image/webp','image/svg+xml'];
+        if (allowed.indexOf(file.type) === -1) { status.textContent = 'Unsupported file type'; btn && btn.removeAttribute('disabled'); return; }
+
+        // Use XMLHttpRequest to get upload progress events
+        const xhr = new XMLHttpRequest();
         const fd = new FormData(form);
-        // include csrf token if not present
         if (!fd.get('csrf_token')) {
           const token = (document.querySelector('input[name="csrf_token"]') || {}).value || window.__csrfToken || '';
           if (token) fd.append('csrf_token', token);
         }
-        fetch('upload-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(j=>{
-          if (j && j.success) {
-            status.textContent = 'Uploaded: ' + (j.filename || j.message || '');
-            try {
-              // update preview in this section if present
+        const progressBar = document.createElement('div'); progressBar.className = 'image-upload-progress'; progressBar.innerHTML = '<div class="bar"><div class="fill" style="width:0%"></div></div>';
+        form.parentNode.insertBefore(progressBar, form.nextSibling);
+
+        xhr.upload.addEventListener('progress', function(e){
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            const fill = progressBar.querySelector('.fill'); if (fill) fill.style.width = pct + '%';
+            status.textContent = 'Uploading: ' + pct + '%';
+          }
+        });
+        xhr.addEventListener('load', function(){
+          try { const j = JSON.parse(xhr.responseText || '{}');
+            if (j && j.success) {
+              status.textContent = 'Uploaded: ' + (j.filename || j.message || '');
+              // update preview and per-section list
               const sect = form.closest('.image-section');
               if (sect) {
                 const img = sect.querySelector('img');
                 if (img) {
-                  // prefer thumbnail from response, fallback to url
                   const src = j.thumbnail ? j.thumbnail : (j.url ? j.url : ('../uploads/images/' + j.filename));
                   img.src = src + (src.indexOf('?') === -1 ? ('?v=' + Date.now()) : ('&v=' + Date.now()));
                 }
+                // auto-close the section after success
+                try { if (sect.hasAttribute('open')) sect.removeAttribute('open'); } catch(e){}
               }
-              // refresh the image listing area
+              // refresh global and per-section image lists
               refreshImageList();
-            } catch(e){ console.error(e); }
-          } else {
-            status.textContent = 'Upload failed: ' + (j && j.message ? j.message : 'unknown');
-          }
-        }).catch(err=>{ status.textContent = 'Upload error: ' + err.message; }).finally(()=>{
-          btn && btn.removeAttribute('disabled');
-          if (btn && btn.dataset && btn.dataset.orig) btn.textContent = btn.dataset.orig;
+              refreshPerSectionLists();
+              showToast('Upload successful', 'success');
+            } else {
+              status.textContent = 'Upload failed: ' + (j && j.message ? j.message : 'unknown');
+              showToast('Upload failed: ' + (j && j.message ? j.message : 'unknown'), 'error');
+            }
+          } catch (err) { status.textContent = 'Upload response parse error'; showToast('Upload response parse error','error'); }
         });
+        xhr.addEventListener('error', function(){ status.textContent = 'Upload error'; showToast('Upload error','error'); });
+        xhr.open('POST', 'upload-image.php');
+        xhr.send(fd);
+        // cleanup
+        xhr.addEventListener('readystatechange', function(){ if (xhr.readyState === 4) { btn && btn.removeAttribute('disabled'); if (btn && btn.dataset && btn.dataset.orig) btn.textContent = btn.dataset.orig; setTimeout(()=>{ if (progressBar && progressBar.parentNode) progressBar.remove(); }, 700); } });
       });
     });
   }
@@ -297,6 +323,41 @@
         list.appendChild(row);
       });
     }).catch(()=>{ list.innerHTML = '<i>Failed to list images</i>'; });
+  }
+
+  // Refresh per-section image containers (if present) to show images relevant to that section
+  function refreshPerSectionLists(){
+    const containers = document.querySelectorAll('.section-image-list');
+    if (!containers || !containers.length) return;
+    fetch('list-images.php').then(r=>r.json()).then(j=>{
+      if (!j || !Array.isArray(j.files)) { containers.forEach(c=> c.innerHTML = '<i>No images</i>'); return; }
+      containers.forEach(c=>{
+        const type = c.getAttribute('data-type');
+        c.innerHTML = '';
+        // Simple heuristic: show images whose filename contains the type key when available, else show first 6 images
+        const matches = j.files.filter(fn => fn && fn.toLowerCase().indexOf(type) !== -1);
+        const toShow = (matches.length ? matches.slice(0,12) : j.files.slice(0,12));
+        toShow.forEach(f=>{
+          if (!f || f.charAt(0) === '.') return;
+          const ext = (f.split('.').pop() || '').toLowerCase();
+          if (['png','jpg','jpeg','gif','webp','svg','ico'].indexOf(ext) === -1) return;
+          const el = document.createElement('div'); el.style.display='inline-block'; el.style.marginRight='.5rem'; el.style.textAlign='center'; el.style.width='80px';
+          const img = document.createElement('img'); img.src = '../uploads/images/'+f; img.style.width='80px'; img.style.height='60px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
+          img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="8" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
+          const caption = document.createElement('div'); caption.textContent = f; caption.style.fontSize='0.72rem'; caption.style.overflow='hidden'; caption.style.textOverflow='ellipsis'; caption.style.whiteSpace='nowrap';
+          el.appendChild(img); el.appendChild(caption);
+          el.addEventListener('click', ()=>{ // clicking inserts filename into nearest image picker if present
+            const sect = c.closest('.image-section');
+            if (!sect) return;
+            const picker = sect.querySelector('input[type="file"]').closest('form').querySelector('input[type="file"][name="image"]');
+            // we can't set file inputs programmatically; instead, if there's an image text field in the schema, set it. Otherwise no-op.
+            const imgText = sect.querySelector('input[data-field-type="image"]');
+            if (imgText) { imgText.value = f; imgText.dispatchEvent(new Event('input',{bubbles:true})); showToast('Selected '+f,'default'); }
+          });
+          c.appendChild(el);
+        });
+      });
+    }).catch(()=>{ containers.forEach(c=> c.innerHTML = '<i>Failed to load</i>'); });
   }
 
   // Load trashed images into a separate view

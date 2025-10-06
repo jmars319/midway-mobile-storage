@@ -726,6 +726,7 @@ header('Content-Type: text/html; charset=utf-8');
                 <span class="small ml-05">Tip: Use appropriately sized images for best performance.</span>
               </div>
             </form>
+            <div class="section-image-list small" data-type="<?php echo htmlspecialchars($tkey); ?>"></div>
           </div>
         </details>
       <?php endforeach; ?>
