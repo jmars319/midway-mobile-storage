@@ -248,6 +248,10 @@ body {
     .about-grid { grid-template-columns: 1fr; }
     .about-map { height:200px; }
 }
+/* map action buttons (open map / directions) */
+.map-links { margin-top: .75rem; display:flex; gap:.5rem; align-items:center; }
+.map-links .label { margin-left:.35rem }
+.map-links .btn { display:inline-flex; align-items:center; gap:.45rem }
 
 h1, h2, h3, h4, h5, h6 {
     margin: 0;
