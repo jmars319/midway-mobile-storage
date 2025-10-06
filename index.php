@@ -344,7 +344,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
 
             // clear hash so refreshing doesn't re-show
             try { history.replaceState(null, '', window.location.pathname + window.location.search + '#reservation'); } catch(e){}
-        } catch(e) { /* non-fatal */ }
+        }
     })();
     </script>
 
