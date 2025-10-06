@@ -54,6 +54,15 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
             text-align: center;
             margin-bottom: 2rem;
         }
+
+        /* Center the logo image on the admin login page */
+        .admin-logo {
+            display: block;
+            margin: 0 auto 0.5rem;
+            height: 72px;
+            width: auto;
+            max-width: 80%;
+        }
         
         .login-header h1 { color: var(--admin-text); margin-bottom: 0.5rem }
         .login-header p { color: var(--muted) }
@@ -107,7 +116,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                             if ($logo) { $logoUrl = preg_match('#^https?://#i', $logo) ? $logo : '../uploads/images/'.ltrim($logo, '/'); }
                         ?>
                         <?php if ($logoUrl): ?>
-                            <img src="<?php echo htmlspecialchars($logoUrl); ?>" alt="Admin" style="height:72px;margin-bottom:0.5rem">
+                            <img src="<?php echo htmlspecialchars($logoUrl); ?>" alt="Admin" class="admin-logo">
                         <?php else: ?>
                             <h1>🔐 Admin Login</h1>
                         <?php endif; ?>
