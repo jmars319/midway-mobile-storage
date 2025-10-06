@@ -1,23 +1,5 @@
 # Midway Mobile Storage — Local Development
 
-NOTE: The previous `cookiecutter/` template has been moved to `deprecated_cookiecutter/` to keep this repository focused on runtime code. Remove `deprecated_cookiecutter/` if you don't need the template.
-
-For a minimal quick-start, see `README-clean.md`.
-
-Small dev README with the quick commands and notes you'll need when working locally.
-
-## Requirements
-- PHP 8.x installed and available on your PATH (php command).
-- A modern browser for testing (Chrome, Firefox, Safari).
-
-## Quick start (dev server)
-From the project root run one of these (zsh):
-
-Bind to localhost only (recommended):
-
-```
-# Midway Mobile Storage — Local Development
-
 Small dev README with the quick commands and notes you'll need when working locally.
 
 ## Requirements
@@ -61,7 +43,7 @@ ps aux | grep "php -S"
 ## Admin area
 - Admin UI: `/admin/index.php`
 - Default config file: `admin/config.php` (credentials stored/managed by the admin UI). If you used the change-password screen it will write a hashed password into the config.
-- Reservation audit: `/admin/reservation-audit.php` exposes a full reservation audit viewer and small management actions (download/clear).
+ - Quote audit: `/admin/quote-audit.php` exposes a full quote audit viewer and small management actions (download/clear).
 
 ## Contact form / email
 - The server-side processor is `contact.php`. To change the recipient email, open `contact.php` and update the `$to` variable near the top of that file.
@@ -77,7 +59,7 @@ mailhog &
 
 ## Logs & storage
 - Submissions (job applications) are logged to `data/applications.json` and archived into `data/archives/` when rotated.
-- Reservation audit entries are stored in `data/reservation-audit.json` and can be viewed/downloaded/cleared from the admin UI.
+- Quote audit entries are stored in `data/quote-audit.json` and can be viewed/downloaded/cleared from the admin UI.
 - If you need to clear application logs, use the admin UI Export/Purge actions in `/admin`. The purge action will create a gzipped backup in `data/archives/` before clearing.
 
 ## CSS/JS notes

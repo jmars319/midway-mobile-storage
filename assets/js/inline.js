@@ -1,24 +1,23 @@
 // Consolidated inline scripts previously embedded in index.php
 (function(){
-    // Reservation confirmation helper
+    // Storage quote confirmation helper
     (function(){
         try {
             var params = new URLSearchParams(window.location.hash.replace(/^#/, '?'));
             if (!params || params.get('success') !== '1') return;
-            var guests = params.get('guests') || '';
-            var wrap = document.getElementById('reservation-confirm');
-            var outer = document.getElementById('reservation-confirm-msg');
-            var text = document.getElementById('reservation-confirm-text');
+            var wrap = document.getElementById('storage-quote-confirm');
+            var outer = document.getElementById('storage-quote-confirm-msg');
+            var text = document.getElementById('storage-quote-confirm-text');
             if (!wrap || !outer || !text) return;
 
-            var dismissKey = 'reservation_confirm_dismissed';
+            var dismissKey = 'storage_quote_confirm_dismissed';
             if (localStorage.getItem(dismissKey) === '1') return;
 
-            text.textContent = 'Thank you! Your reservation request has been received' + (guests ? (' for ' + guests + ' guest' + (guests === '1' ? '' : 's')) : '') + '. We will contact you to confirm.';
+            text.textContent = 'Thank you! Your quote request has been received. We will contact you shortly with a custom estimate.';
             wrap.style.display = 'block';
             try { outer.focus({preventScroll:true}); } catch(e) {}
 
-            var close = document.getElementById('reservation-confirm-close');
+            var close = document.getElementById('storage-quote-confirm-close');
             if (close) {
                 close.addEventListener('click', function(){
                     wrap.style.display = 'none';
@@ -26,7 +25,7 @@
                 });
             }
 
-            try { history.replaceState(null, '', window.location.pathname + window.location.search + '#reservation'); } catch(e){}
+            try { history.replaceState(null, '', window.location.pathname + window.location.search + '#storage-quote'); } catch(e){}
         } catch(e) { /* non-fatal */ }
     })();
 
@@ -275,29 +274,6 @@
         window.addEventListener('DOMContentLoaded', function(){ setTimeout(updateFooterFixed, 200); });
     })();
 
-    // Reservation guests advisory
-    (function(){
-        var guests = document.getElementById('res-guests');
-        var note = document.getElementById('res-guests-note');
-        var err = document.getElementById('res-guests-error');
-        var form = document.getElementById('reservation-form');
-        if (!guests || !form) return;
-        function update(){
-            var v = parseInt(guests.value, 10) || 0;
-            if (v >= 8 && v <= 50) { note.style.display = 'block'; err.style.display = 'none'; }
-            else if (v > 50) { note.style.display = 'none'; err.style.display = 'block'; }
-            else { note.style.display = 'none'; err.style.display = 'none'; }
-        }
-        guests.addEventListener('input', update);
-        form.addEventListener('submit', function(e){
-            var v = parseInt(guests.value, 10) || 0;
-            if (v > 50) {
-                e.preventDefault();
-                guests.focus();
-                update();
-                return false;
-            }
-        });
-    })();
+    // No guest advisory needed for the storage quote form
 
 })();

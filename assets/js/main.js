@@ -489,7 +489,7 @@ const FormHandler = {
         document.querySelectorAll('form').forEach(form => {
             // Allow forms to opt-out of AJAX interception by adding
             // data-no-ajax="1" or class="no-ajax". This keeps the
-            // reservation flow identical to the server-side handler (a
+            // quote flow identical to the server-side handler (a
             // normal POST) while still providing enhanced UX for other forms.
             if (form.getAttribute('data-no-ajax') === '1' || form.classList.contains('no-ajax')) return;
 

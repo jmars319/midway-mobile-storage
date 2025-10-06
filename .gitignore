@@ -20,3 +20,7 @@ uploads/images/*optimized*.png
 # Local development artifacts
 .devtmp/
 .rendered-index.html
+
+# Generated storage quote data - do not commit
+data/quotes.json
+data/quote-audit.json

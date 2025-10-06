@@ -104,7 +104,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
 
             <ul class="nav-menu">
                 <li><a class="nav-link" href="#units">Units</a></li>
-                <li><a class="nav-link" href="#reservation">Reserve</a></li>
+                <li><a class="nav-link" href="#storage-quote">Get a Quote</a></li>
                 <li><a class="nav-link" href="#about">About</a></li>
                 <li><a class="nav-link" href="#job-application">Careers</a></li>
                 <li><a class="nav-link" href="#contact">Contact</a></li>
@@ -126,8 +126,8 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             $heroImage = getContent($content, 'hero.image', '');
             $heroBtn1 = getContent($content, 'hero.btn_text', 'View Units');
             $heroBtn1Link = getContent($content, 'hero.btn_link', '#units');
-            $heroBtn2 = getContent($content, 'hero.btn2_text', 'Reserve a Unit');
-            $heroBtn2Link = getContent($content, 'hero.btn2_link', '#reservation');
+            $heroBtn2 = getContent($content, 'hero.btn2_text', 'Get a Quote');
+            $heroBtn2Link = getContent($content, 'hero.btn2_link', '#storage-quote');
             $heroBackgroundStyleTag = '';
             if ($heroImage) {
                 // prefer full URL when provided
@@ -143,7 +143,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 <?php if ($heroSubtitle): ?><p class="hero-subtitle"><?php echo htmlspecialchars($heroSubtitle); ?></p><?php endif; ?>
                 <div style="margin-top:1rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
                     <a class="btn btn-primary" href="<?php echo htmlspecialchars($heroBtn1Link); ?>"><?php echo htmlspecialchars($heroBtn1); ?></a>
-                    <a class="btn btn-outline" href="<?php echo htmlspecialchars($heroBtn2Link); ?>"><?php echo htmlspecialchars($heroBtn2); ?></a>
+                        <a class="btn btn-outline" href="<?php echo htmlspecialchars($heroBtn2Link); ?>"><?php echo htmlspecialchars($heroBtn2); ?></a>
                 </div>
             </div>
         </section>
@@ -197,60 +197,240 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             </div>
         </div>
     </section>
-    <section class="section" id="reservation">
+    <!-- ============================================
+         STORAGE CONTAINER RENTAL QUOTE FORM
+         ============================================ -->
+
+    <section class="section" id="storage-quote">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Make a Reservation</h2>
-                <p class="section-subtitle">Request a reservation and we'll confirm availability.</p>
+                <h2 class="section-title">Get Custom Storage Quote</h2>
+                <p class="section-subtitle">Tell us about your specific storage needs for an accurate quote</p>
             </div>
             <div class="container-narrow">
-                <form id="reservation-form" class="card" method="post" action="admin/reserve.php" data-no-ajax="1">
+                <form class="card" id="storage-quote-form" method="post" action="admin/reserve.php" data-no-ajax="1">
+                    <!-- Customer Information -->
+                    <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Contact Information</h3>
                     <div class="grid grid-2">
                         <div>
-                            <label for="res-name" class="form-label">Name *</label>
-                            <input type="text" id="res-name" name="name" required class="form-input">
+                            <label for="customer-name-storage" class="form-label">Full Name *</label>
+                            <input type="text" id="customer-name-storage" name="customer_name" required class="form-input">
                         </div>
                         <div>
-                            <label for="res-phone" class="form-label">Phone *</label>
-                            <input type="tel" id="res-phone" name="phone" required class="form-input">
+                            <label for="company-name" class="form-label">Company Name (if applicable)</label>
+                            <input type="text" id="company-name" name="company_name" class="form-input">
                         </div>
                     </div>
+                    
                     <div class="grid grid-2">
                         <div>
-                            <label for="res-date" class="form-label">Date *</label>
-                            <input type="date" id="res-date" name="date" required class="form-input">
+                            <label for="customer-phone-storage" class="form-label">Phone Number *</label>
+                            <input type="tel" id="customer-phone-storage" name="customer_phone" required class="form-input">
                         </div>
                         <div>
-                            <label for="res-time" class="form-label">Time *</label>
-                            <input type="time" id="res-time" name="time" required class="form-input">
+                            <label for="customer-email-storage" class="form-label">Email Address *</label>
+                            <input type="email" id="customer-email-storage" name="customer_email" required class="form-input">
                         </div>
                     </div>
+                    
+                    <!-- Storage Requirements -->
+                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Storage Requirements</h3>
+                    <div class="grid grid-2">
+                        <div>
+                            <label for="container-size-storage" class="form-label">Container Size Needed *</label>
+                            <select id="container-size-storage" name="container_size" required class="form-input">
+                                <option value="">Select Size</option>
+                                <option value="10ft">10ft Container (560 cu ft)</option>
+                                <option value="20ft">20ft Container (1,120 cu ft)</option>
+                                <option value="40ft">40ft Container (2,240 cu ft)</option>
+                                <option value="multiple">Multiple Containers</option>
+                                <option value="not-sure">Not Sure - Need Recommendation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="quantity" class="form-label">Quantity Needed</label>
+                            <input type="number" id="quantity" name="quantity" min="1" max="20" value="1" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-2">
+                        <div>
+                            <label for="rental-duration" class="form-label">Rental Duration *</label>
+                            <select id="rental-duration" name="rental_duration" required class="form-input">
+                                <option value="">Select Duration</option>
+                                <option value="1-week">1 Week</option>
+                                <option value="2-weeks">2 Weeks</option>
+                                <option value="1-month">1 Month</option>
+                                <option value="2-months">2 Months</option>
+                                <option value="3-months">3 Months</option>
+                                <option value="6-months">6 Months</option>
+                                <option value="12-months">12+ Months</option>
+                                <option value="ongoing">Ongoing/Month-to-Month</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="start-date-storage" class="form-label">Needed By Date</label>
+                            <input type="date" id="start-date-storage" name="start_date" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery Information -->
+                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Delivery Information</h3>
                     <div>
-                        <label for="res-event" class="form-label">Event type (optional)</label>
-                        <input type="text" id="res-event" name="event_type" class="form-input" placeholder="Birthday, meeting, etc.">
+                        <label for="delivery-address" class="form-label">Delivery Address *</label>
+                        <textarea id="delivery-address" name="delivery_address" rows="3" required placeholder="Full street address including city, state, and zip code" class="form-input"></textarea>
                     </div>
+                    
+                    <div class="grid grid-2">
+                        <div>
+                            <label for="access-type" class="form-label">Property Type</label>
+                            <select id="access-type" name="access_type" class="form-input">
+                                <option value="">Select Type</option>
+                                <option value="residential">Residential Home</option>
+                                <option value="apartment">Apartment Complex</option>
+                                <option value="commercial">Commercial Property</option>
+                                <option value="construction">Construction Site</option>
+                                <option value="storage-facility">Storage Facility</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="surface-type" class="form-label">Surface Type</label>
+                            <select id="surface-type" name="surface_type" class="form-input">
+                                <option value="">Select Surface</option>
+                                <option value="concrete">Concrete/Asphalt</option>
+                                <option value="gravel">Gravel</option>
+                                <option value="dirt">Dirt/Grass</option>
+                                <option value="paved">Paved Driveway</option>
+                                <option value="unknown">Not Sure</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div>
-                        <label for="res-guests" class="form-label">Number of Guests *</label>
-                        <div style="display:flex;align-items:center;gap:.5rem">
-                            <div class="stepper" aria-label="Number of guests" role="group">
-                                <button type="button" class="stepper-btn" data-step="down" aria-label="Decrease guests"> <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13H5v-2h14v2z"/></svg> </button>
-                                <input type="number" id="res-guests" name="guests" required class="form-input" min="1" value="1" aria-describedby="res-guests-note res-guests-error">
-                                <button type="button" class="stepper-btn" data-step="up" aria-label="Increase guests">+</button>
-                            </div>
+                        <label for="access-restrictions" class="form-label">Access Restrictions</label>
+                        <textarea id="access-restrictions" name="access_restrictions" rows="3" placeholder="Gates, low overhangs, narrow driveways, stairs, or other delivery challenges?" class="form-input"></textarea>
+                    </div>
+                    
+                    <!-- Usage Information -->
+                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Usage Information</h3>
+                    <div>
+                        <label for="storage-purpose" class="form-label">What will you be storing? *</label>
+                        <select id="storage-purpose" name="storage_purpose" required class="form-input">
+                            <option value="">Select Purpose</option>
+                            <option value="household-move">Household Moving/Storage</option>
+                            <option value="home-renovation">Home Renovation</option>
+                            <option value="business-storage">Business Storage</option>
+                            <option value="construction-tools">Construction Tools/Materials</option>
+                            <option value="seasonal-items">Seasonal Items</option>
+                            <option value="commercial-inventory">Commercial Inventory</option>
+                            <option value="vehicle-storage">Vehicle Storage</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="items-description" class="form-label">Description of Items</label>
+                        <textarea id="items-description" name="items_description" rows="3" placeholder="Briefly describe what you'll be storing (helps us recommend the right size)" class="form-input"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-2">
+                        <div>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="climate_sensitive" value="yes">
+                                <span>Items are temperature/humidity sensitive</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="valuable_items" value="yes">
+                                <span>High-value items needing extra security</span>
+                            </label>
                         </div>
-                        <?php $phone = htmlspecialchars($content['business_info']['phone'] ?? ''); ?>
-                        <div id="res-guests-note" class="form-note small text-muted" style="display:none;margin-top:.35rem">For parties of 8 or more, please call us at <?php echo $phone ?: 'the restaurant'; ?> to arrange seating.</div>
-                        <div id="res-guests-error" class="form-error small" style="display:none;margin-top:.35rem">Please call us for very large parties (over 50 guests).</div>
-                    </div>
-                    <div id="reservation-confirm" style="margin-top:1rem; display:none">
-                        <div class="card form-success" id="reservation-confirm-msg" tabindex="-1">
-                            <button id="reservation-confirm-close" type="button" aria-label="Dismiss confirmation" style="float:right;background:none;border:none;font-weight:bold;font-size:1.1rem;cursor:pointer">✕</button>
-                            <div id="reservation-confirm-text"></div>
+                        <div>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="frequent_access" value="yes">
+                                <span>Need frequent access to stored items</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="loading_help" value="yes">
+                                <span>Interested in loading/unloading assistance</span>
+                            </label>
                         </div>
                     </div>
-                    <div style="margin-top:1rem">
-                        <button type="submit" class="btn btn-primary">Request Reservation</button>
+                    
+                    <!-- Additional Services -->
+                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Additional Services</h3>
+                    <div class="grid grid-2">
+                        <div>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="services[]" value="locks-provided">
+                                <span>Provide high-security locks</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="services[]" value="insurance">
+                                <span>Storage insurance options</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="services[]" value="moving-supplies">
+                                <span>Moving supplies (boxes, padding)</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="services[]" value="pickup-service">
+                                <span>Pickup when rental ends</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="services[]" value="relocation">
+                                <span>Relocation to different address</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="services[]" value="extended-hours">
+                                <span>After-hours/weekend delivery</span>
+                            </label>
+                        </div>
                     </div>
+                    
+                    <!-- Budget and Special Requests -->
+                    <div>
+                        <label for="budget-range" class="form-label">Budget Range (optional)</label>
+                        <select id="budget-range" name="budget_range" class="form-input">
+                            <option value="">Select Range</option>
+                            <option value="under-100">Under $100/month</option>
+                            <option value="100-200">$100 - $200/month</option>
+                            <option value="200-500">$200 - $500/month</option>
+                            <option value="500-1000">$500 - $1,000/month</option>
+                            <option value="over-1000">Over $1,000/month</option>
+                            <option value="flexible">Flexible</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="special-requests" class="form-label">Special Requests or Questions</label>
+                        <textarea id="special-requests" name="special_requests" rows="4" placeholder="Any specific requirements, questions about our service, or special circumstances we should know about?" class="form-input"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="how-heard" class="form-label">How did you hear about us?</label>
+                        <select id="how-heard" name="how_heard" class="form-input">
+                            <option value="">Select Source</option>
+                            <option value="google">Google Search</option>
+                            <option value="referral">Referral from Friend/Family</option>
+                            <option value="social-media">Social Media</option>
+                            <option value="website">Our Website</option>
+                            <option value="advertisement">Advertisement</option>
+                            <option value="repeat-customer">Previous Customer</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-checkbox">
+                            <input type="checkbox" name="rush_quote" value="yes">
+                            <span>This is urgent - please contact me ASAP</span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary form-submit-btn">Get My Custom Quote</button>
                 </form>
             </div>
         </div>
@@ -419,7 +599,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 <div class="small footer-right right">
                     <nav class="footer-links" aria-label="Footer navigation">
                         <a href="#menu">Menu</a>
-                        <a href="#reservation">Reservations</a>
+                        <a href="#storage-quote">Quotes</a>
                         <a href="#about">About</a>
                         <a href="#job-application">Careers</a>
                         <a href="#contact">Contact</a>

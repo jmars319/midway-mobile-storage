@@ -3,7 +3,7 @@
  * admin/index.php
  * Main administration UI. This file provides:
  *  - Listing and export of job/contact submissions.
- *  - Management actions (download CSV/JSON, purge logs, manage reservations).
+ *  - Management actions (download CSV/JSON, purge logs, manage quotes).
  *
  * Security and assumptions:
  *  - Session-based admin auth is required (handled in `config.php`).
@@ -170,9 +170,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
   }
   
-  // reservations export
-  if ($action === 'download_reservations') {
-    $resFile = __DIR__ . '/../data/reservations.json';
+  // quotes export
+  if ($action === 'download_quotes') {
+    $resFile = __DIR__ . '/../data/quotes.json';
     $rows = [];
     if (file_exists($resFile)) {
       $j = @file_get_contents($resFile);
@@ -180,19 +180,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if (!is_array($rows)) $rows = [];
     }
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="reservations.csv"');
+    header('Content-Disposition: attachment; filename="quotes.csv"');
     $out = fopen('php://output','w');
-    fputcsv($out, ['timestamp','name','phone','date','time','guests','event','ip']);
+    // export a compact CSV with key quote fields
+    fputcsv($out, ['timestamp','customer_name','company_name','phone','email','container_size','quantity','rental_duration','start_date','delivery_address','ip']);
     foreach ($rows as $r) {
-      fputcsv($out, [ $r['timestamp'] ?? '', $r['name'] ?? '', $r['phone'] ?? '', $r['date'] ?? '', $r['time'] ?? '', $r['guests'] ?? '', $r['event_type'] ?? '', $r['ip'] ?? '' ]);
+      fputcsv($out, [ $r['timestamp'] ?? '', $r['customer_name'] ?? '', $r['company_name'] ?? '', $r['phone'] ?? '', $r['email'] ?? '', $r['container_size'] ?? '', $r['quantity'] ?? '', $r['rental_duration'] ?? '', $r['start_date'] ?? '', $r['delivery_address'] ?? '', $r['ip'] ?? '' ]);
     }
     fclose($out);
     exit;
   }
 
-  // download reservation audit as CSV
-  if ($action === 'download_reservation_audit') {
-    $auditFile = __DIR__ . '/../data/reservation-audit.json';
+  // download quote audit as CSV
+  if ($action === 'download_quote_audit') {
+    $auditFile = __DIR__ . '/../data/quote-audit.json';
     $rows = [];
     if (file_exists($auditFile)) {
       $j = @file_get_contents($auditFile);
@@ -200,28 +201,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if (!is_array($rows)) $rows = [];
     }
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="reservation-audit.csv"');
+    header('Content-Disposition: attachment; filename="quote-audit.csv"');
     $out = fopen('php://output','w');
-    fputcsv($out, ['timestamp','name','phone','date','time','guests','ip']);
+    fputcsv($out, ['timestamp','customer_name','phone','container_size','quantity','rental_duration','ip']);
     foreach ($rows as $r) {
-      fputcsv($out, [ $r['timestamp'] ?? '', $r['name'] ?? '', $r['phone'] ?? '', $r['date'] ?? '', $r['time'] ?? '', $r['guests'] ?? '', $r['ip'] ?? '' ]);
+      fputcsv($out, [ $r['timestamp'] ?? '', $r['customer_name'] ?? '', $r['phone'] ?? '', $r['container_size'] ?? '', $r['quantity'] ?? '', $r['rental_duration'] ?? '', $r['ip'] ?? '' ]);
     }
     fclose($out);
     exit;
   }
 
-  // clear reservation audit
-  if ($action === 'clear_reservation_audit') {
-    $auditFile = __DIR__ . '/../data/reservation-audit.json';
+  // clear quote audit
+  if ($action === 'clear_quote_audit') {
+    $auditFile = __DIR__ . '/../data/quote-audit.json';
   $json = json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
   if ($json !== false) { file_put_contents($auditFile . '.tmp', $json, LOCK_EX); @rename($auditFile . '.tmp', $auditFile); }
     header('Location: index.php'); exit;
   }
 
-  // delete reservation by index
-  if ($action === 'delete_reservation') {
+  // delete quote by index
+  if ($action === 'delete_quote') {
     $idx = isset($_POST['idx']) ? (int)$_POST['idx'] : -1;
-    $resFile = __DIR__ . '/../data/reservations.json';
+    $resFile = __DIR__ . '/../data/quotes.json';
     $rows = [];
     if (file_exists($resFile)) {
       $j = @file_get_contents($resFile);
@@ -435,23 +436,23 @@ header('Content-Type: text/html; charset=utf-8');
                     <button type="submit" class="btn btn-ghost"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Archive & clear all applications</button>
                   </form>
                 </div>
-                <!-- reservation audit submenu handled below -->
+                <!-- quote audit submenu handled below -->
                 <div class="pm-item">
                     <div class="pm-combo">
-                    <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M3 12h18M3 17h18" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Reservation Audit ▾</button>
+                    <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M3 12h18M3 17h18" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Quote Audit ▾</button>
                     <div class="pm-combo-menu">
-                      <a href="reservation-audit.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM4 10h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>View full reservation audit</a>
-                      <a href="reservation-audit.php?download=csv" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM8 10v6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV</a>
-                      <a href="reservation-audit.php?download=json" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON</a>
-                      <form method="post" class="m-0" data-confirm="Clear reservation audit? This will remove recent audit entries. Continue?">
+                      <a href="quote-audit.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM4 10h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>View full quote audit</a>
+                      <a href="quote-audit.php?download=csv" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM8 10v6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV</a>
+                      <a href="quote-audit.php?download=json" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON</a>
+                      <form method="post" class="m-0" data-confirm="Clear quote audit? This will remove recent audit entries. Continue?">
                         <?php echo csrf_input_field(); ?>
-                        <input type="hidden" name="action" value="clear_reservation_audit">
-                        <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear reservation audit</button>
+                        <input type="hidden" name="action" value="clear_quote_audit">
+                        <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear quote audit</button>
                       </form>
                       <form method="post" class="m-0">
                         <?php echo csrf_input_field(); ?>
-                        <input type="hidden" name="action" value="download_reservations">
-                        <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v10M8 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download Reservations (CSV)</button>
+                        <input type="hidden" name="action" value="download_quotes">
+                        <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v10M8 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download Quotes (CSV)</button>
                       </form>
                     </div>
                   </div>
@@ -557,8 +558,8 @@ header('Content-Type: text/html; charset=utf-8');
     
     <hr class="spaced-hr">
     <?php
-      // Compact recent reservation summary (last 5 audit entries)
-      $auditFile = __DIR__ . '/../data/reservation-audit.json';
+  // Compact recent quote summary (last 5 audit entries)
+  $auditFile = __DIR__ . '/../data/quote-audit.json';
       $recentAudit = [];
       if (file_exists($auditFile)) {
         $aj = @file_get_contents($auditFile);
@@ -570,49 +571,48 @@ header('Content-Type: text/html; charset=utf-8');
     ?>
     <?php if (!empty($recentAudit)): ?>
       <div class="card mb-075">
-        <h3 class="mt-0">Recent reservation summary</h3>
+        <h3 class="mt-0">Recent quote summary</h3>
         <ul class="small m-0 pl-1">
           <?php foreach ($recentAudit as $a): ?>
-            <li><?php echo htmlspecialchars(($a['timestamp'] ?? '') . ' — ' . ($a['name'] ?? 'Unknown') . ' — ' . ($a['guests'] ?? '')); ?></li>
+            <li><?php echo htmlspecialchars(($a['timestamp'] ?? '') . ' — ' . ($a['customer_name'] ?? 'Unknown') . ' — ' . ($a['container_size'] ?? '')); ?></li>
           <?php endforeach; ?>
         </ul>
       </div>
     <?php else: ?>
-      <p class="small">No recent reservation activity.</p>
+      <p class="small">No recent quote activity.</p>
     <?php endif; ?>
 
-    <h2>Reservations</h2>
-    <p class="small">Review reservations submitted through the public site.</p>
+  <h2>Quotes</h2>
+  <p class="small">Review quote requests submitted through the public site.</p>
     <?php
-      $resFile = __DIR__ . '/../data/reservations.json';
-      $reservations = [];
+  $resFile = __DIR__ . '/../data/quotes.json';
+      $quotes = [];
       if (file_exists($resFile)) {
         $j = @file_get_contents($resFile);
-        $reservations = $j ? json_decode($j, true) : [];
-        if (!is_array($reservations)) $reservations = [];
+        $quotes = $j ? json_decode($j, true) : [];
+        if (!is_array($quotes)) $quotes = [];
       }
     ?>
-    <?php if (empty($reservations)): ?>
-      <p>No reservations yet.</p>
+    <?php if (empty($quotes)): ?>
+      <p>No quotes yet.</p>
     <?php else: ?>
       <table class="admin-table">
         <thead>
-          <tr><th>Time</th><th>Name</th><th>Phone</th><th>Date</th><th>Time</th><th>Guests</th><th>Event</th><th></th></tr>
+          <tr><th>Time</th><th>Name</th><th>Phone</th><th>Container</th><th>Quantity</th><th>Duration</th><th></th></tr>
         </thead>
         <tbody>
-        <?php foreach ($reservations as $i => $r): ?>
+  <?php foreach ($quotes as $i => $r): ?>
           <tr>
             <td><?php echo htmlspecialchars($r['timestamp'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($r['name'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($r['customer_name'] ?? ''); ?></td>
             <td><?php echo htmlspecialchars($r['phone'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($r['date'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($r['time'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($r['guests'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($r['event_type'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($r['container_size'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($r['quantity'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($r['rental_duration'] ?? ''); ?></td>
             <td>
-              <form method="post" class="d-inline" data-confirm="Delete this reservation?">
+              <form method="post" class="d-inline" data-confirm="Delete this quote?">
                 <?php echo csrf_input_field(); ?>
-                <input type="hidden" name="action" value="delete_reservation">
+                <input type="hidden" name="action" value="delete_quote">
                 <input type="hidden" name="idx" value="<?php echo (int)$i; ?>">
                 <button type="submit" class="btn btn-ghost">Delete</button>
               </form>

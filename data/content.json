@@ -15,8 +15,8 @@
             "image": "",
             "btn_text": "View Units",
             "btn_link": "#units",
-            "btn2_text": "Reserve a Unit",
-            "btn2_link": "#reservation"
+            "btn2_text": "Get a Quote",
+            "btn2_link": "#storage-quote"
         },
         "about": {
             "heading": "About Midway Mobile Storage",

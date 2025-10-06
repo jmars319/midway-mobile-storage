@@ -17,8 +17,8 @@ define('CONTENT_FILE', '../data/content.json');
 // Upload directory
 define('UPLOAD_DIR', '../uploads/images/');
 
-// Notification email for reservation submissions (change as needed)
-define('RESERVATION_NOTIFICATION_EMAIL', 'thundergrillmidway@gmail.com');
+// Notification email for quote submissions (change as needed)
+define('QUOTE_NOTIFICATION_EMAIL', 'thundergrillmidway@gmail.com');
 
 // --- SMTP / mail configuration (for PHPMailer)
 // If you install dependencies via Composer and want to send via SMTP

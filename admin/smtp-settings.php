@@ -28,7 +28,7 @@ if (file_exists(CONTENT_FILE)) {
           <div><a href="index.php" class="btn btn-ghost">Back to dashboard</a></div>
         </div>
 
-        <p class="small">Enter the details your email provider gave you so the site can send emails (for example, reservation confirmations). We keep passwords out of the public repo.</p>
+  <p class="small">Enter the details your email provider gave you so the site can send emails (for example, quote notifications). We keep passwords out of the public repo.</p>
         <?php if (!file_exists(__DIR__ . '/../vendor/autoload.php')): ?>
           <div class="small mt-05"><span class="muted">Note:</span> <span class="muted-text">A helper library for sending email is not installed. The "Send Test Email" button will be disabled until you install the project's dependencies (see the README).</span></div>
         <?php endif; ?>

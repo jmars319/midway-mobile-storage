@@ -18,7 +18,7 @@ Copy the output and replace the `ADMIN_PASSWORD_HASH` constant in `admin/config.
    - The site stores editable content (like text and hours) in a content file on the server.
    - Uploaded images are saved on the server so they can be used on the site.
 
-- Reservation audit: recent reservation audit entries are stored in `data/reservation-audit.json`. A full viewer is available at `/admin/reservation-audit.php` that supports download and clearing of audit entries.
+ - Quote audit: recent quote audit entries are stored in `data/quote-audit.json`. A full viewer is available at `/admin/quote-audit.php` that supports download and clearing of audit entries.
 
 - CSRF protection: the admin endpoints now require a CSRF token on POST. Use `generate_csrf_token()` in PHP to embed the token in forms or send it via the `X-CSRF-Token` request header.
 

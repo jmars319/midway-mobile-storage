@@ -40,7 +40,7 @@ Admin
 
 Storage
 - Applications: `data/applications.json` (archived to `data/archives/` when rotated)
-- Reservations audit: `data/reservation-audit.json`
+ - Quote audit: `data/quote-audit.json`
 
 Contact form
 - Processor: `contact.php` — change recipient by editing the `$to` variable in that file.
