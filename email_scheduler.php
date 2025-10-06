@@ -14,6 +14,9 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 
 class EmailScheduler {
     private $db;
+    private $robotsCache = [];
+    private $cacheTtl = 600; // seconds
+    private $throttleDelayMicro = 500000; // 0.5s between scrapes
     
     public function __construct($dbPath = null) {
         // default DB location outside web root for security
@@ -52,10 +55,26 @@ class EmailScheduler {
                 name TEXT NOT NULL,
                 url TEXT NOT NULL,
                 selectors TEXT NOT NULL,
+                last_scraped_at TEXT,
+                last_result TEXT,
                 FOREIGN KEY (campaign_id) REFERENCES campaigns (id) ON DELETE CASCADE
             )
         ");
         
+
+        // Ensure columns exist (for upgrades where table existed before)
+        try {
+            $cols = $this->db->query("PRAGMA table_info(suppliers)")->fetchAll(PDO::FETCH_ASSOC);
+            $names = array_column($cols, 'name');
+            if (!in_array('last_scraped_at', $names)) {
+                $this->db->exec("ALTER TABLE suppliers ADD COLUMN last_scraped_at TEXT");
+            }
+            if (!in_array('last_result', $names)) {
+                $this->db->exec("ALTER TABLE suppliers ADD COLUMN last_result TEXT");
+            }
+        } catch (Exception $e) {
+            // ignore upgrade errors
+        }
         $this->db->exec("
             CREATE TABLE IF NOT EXISTS email_config (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -110,6 +129,48 @@ class EmailScheduler {
         }
         
         return $campaigns;
+    }
+
+    /**
+     * Return paginated campaigns with optional search and status filter.
+     * Returns array: ['total' => int, 'campaigns' => [ ... ]]
+     */
+    public function listCampaigns($page = 1, $perPage = 10, $q = null, $status = null) {
+        $offset = max(0, ($page - 1) * $perPage);
+        $where = [];
+        $params = [];
+
+        if ($q) {
+            $where[] = "(name LIKE :q OR subject LIKE :q)";
+            $params[':q'] = "%$q%";
+        }
+        if ($status !== null && ($status === 0 || $status === '0' || $status === 1 || $status === '1')) {
+            $where[] = "active = :active";
+            $params[':active'] = (int)$status;
+        }
+
+        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        // total count
+        $countStmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM campaigns $whereSql");
+        $countStmt->execute($params);
+        $total = (int)$countStmt->fetchColumn();
+
+        $sql = "SELECT * FROM campaigns $whereSql ORDER BY created_at DESC LIMIT :lim OFFSET :off";
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+        $stmt->bindValue(':lim', (int)$perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':off', (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $campaigns = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row['recipients'] = json_decode($row['recipients'], true);
+            $row['send_days'] = json_decode($row['send_days'], true);
+            $campaigns[] = $row;
+        }
+
+        return ['total' => $total, 'campaigns' => $campaigns];
     }
 
     public function getCampaign($id) {
@@ -186,6 +247,19 @@ class EmailScheduler {
         return $stmt->execute([$id]);
     }
 
+    /**
+     * Update an existing supplier by id.
+     */
+    public function updateSupplier($id, $data) {
+        $stmt = $this->db->prepare("UPDATE suppliers SET name = :name, url = :url, selectors = :selectors WHERE id = :id");
+        return $stmt->execute([
+            ':id' => $id,
+            ':name' => $data['name'] ?? null,
+            ':url' => $data['url'] ?? null,
+            ':selectors' => json_encode($data['selectors'] ?? [])
+        ]);
+    }
+
     /* ==================== EMAIL CONFIGURATION ==================== */
 
     public function saveEmailConfig($config) {
@@ -209,20 +283,41 @@ class EmailScheduler {
 
     /* ==================== WEB SCRAPING ==================== */
 
-    public function scrapeSupplierData($url, $selectors) {
+    public function scrapeSupplierData($url, $selectors, $supplierId = null, $force = false) {
+        // If supplier id provided and not forcing, return cached result when fresh
+        if ($supplierId && !$force) {
+            $cached = $this->getCachedSupplierResult($supplierId);
+            if ($cached !== null) return $cached;
+        }
+
+        // Respect robots.txt (basic check)
+        if (!$this->isAllowedByRobots($url)) return null;
+
+        // Throttle to avoid hammering remote hosts. If robots.txt specified crawl-delay for host, respect it.
+        $delay = $this->throttleDelayMicro;
+        $parts = parse_url($url);
+        if ($parts && !empty($parts['scheme']) && !empty($parts['host'])) {
+            $hostKey = $parts['scheme'].'://'.$parts['host'];
+            if (isset($this->robotsCache[$hostKey]) && !empty($this->robotsCache[$hostKey]['crawl_delay'])) {
+                $robotDelay = (int)round($this->robotsCache[$hostKey]['crawl_delay'] * 1000000);
+                $delay = max($delay, $robotDelay);
+            }
+        }
+        usleep($delay);
+
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            CURLOPT_USERAGENT => isset($_SERVER['HTTP_HOST']) ? "Midway-Mobile-Scraper/1.0 (+{$_SERVER['HTTP_HOST']})" : 'Midway-Mobile-Scraper/1.0',
             CURLOPT_TIMEOUT => 10
         ]);
-        
+
         $html = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        
+
         if ($httpCode != 200 || !$html) {
             return null;
         }
@@ -230,20 +325,89 @@ class EmailScheduler {
         $dom = new DOMDocument();
         @$dom->loadHTML($html);
         $xpath = new DOMXPath($dom);
-        
+
         $data = [];
         foreach ($selectors as $key => $selector) {
             $xpathQuery = $this->cssToXpath($selector);
             $nodes = $xpath->query($xpathQuery);
-            
+
             if ($nodes->length > 0) {
                 $data[$key] = trim($nodes->item(0)->textContent);
             } else {
                 $data[$key] = 'N/A';
             }
         }
-        
+
+        // If supplier id provided, persist cache (last_result + last_scraped_at)
+        if ($supplierId) {
+            try {
+                $stmt = $this->db->prepare("UPDATE suppliers SET last_scraped_at = :ts, last_result = :res WHERE id = :id");
+                $stmt->execute([
+                    ':ts' => date('c'),
+                    ':res' => json_encode($data),
+                    ':id' => $supplierId
+                ]);
+            } catch (Exception $e) {
+                // ignore writeback errors
+            }
+        }
+
         return $data;
+    }
+
+    public function getCachedSupplierResult($supplierId, $ttl = null){
+        $ttl = $ttl ?? $this->cacheTtl;
+        $stmt = $this->db->prepare("SELECT last_scraped_at, last_result FROM suppliers WHERE id = ?");
+        $stmt->execute([$supplierId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if(!$row || empty($row['last_scraped_at']) || empty($row['last_result'])) return null;
+        $ts = strtotime($row['last_scraped_at']); if(time() - $ts > $ttl) return null;
+        return json_decode($row['last_result'], true);
+    }
+
+    private function isAllowedByRobots($url){
+        // Improved robots.txt check with basic User-agent matching and Crawl-delay support.
+        $parts = parse_url($url);
+        if(!$parts || empty($parts['host'])) return true;
+        $host = $parts['scheme'].'://'.$parts['host'];
+
+        if(isset($this->robotsCache[$host])){
+            $entry = $this->robotsCache[$host];
+        } else {
+            $robotsUrl = $host . '/robots.txt';
+            $r = @file_get_contents($robotsUrl);
+            $entry = ['disallow'=>[], 'crawl_delay'=>null];
+            if($r){
+                $lines = preg_split('/\r?\n/', $r);
+                $ua = null; $applicable = false; // whether rules apply to our UA
+                $myAgent = 'Midway-Mobile-Scraper';
+                foreach($lines as $line){
+                    $line = trim($line);
+                    if($line === '') continue;
+                    if(stripos($line,'User-agent:')===0){
+                        $ua = trim(substr($line,10));
+                        $applicable = ($ua === '*' || stripos($myAgent, $ua) !== false || stripos($ua, $myAgent) !== false);
+                        continue;
+                    }
+                    if(!$applicable) continue;
+                    if(stripos($line,'Disallow:')===0){
+                        $path = trim(substr($line,9));
+                        $entry['disallow'][] = $path;
+                    }
+                    if(stripos($line,'Crawl-delay:')===0){
+                        $val = trim(substr($line,12));
+                        if(is_numeric($val)) $entry['crawl_delay'] = (int)$val;
+                    }
+                }
+            }
+            $this->robotsCache[$host] = $entry;
+        }
+
+        // If a Disallow contains '/' exactly, deny all scraping. Otherwise allow.
+        foreach($entry['disallow'] as $d) {
+            if($d === '/' ) return false;
+        }
+        return true;
     }
 
     private function cssToXpath($css) {
