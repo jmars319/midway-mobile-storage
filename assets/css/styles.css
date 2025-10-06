@@ -163,8 +163,11 @@ body {
 .mt-15 { margin-top:1.5rem !important; }
 .flex-center { display:flex !important; gap:1rem !important; justify-content:center !important; }
 .text-center { text-align:center !important; }
-.about-grid { display:grid; grid-template-columns: 1fr 340px; gap:1.25rem; align-items:start; }
-.about-map { width:100%; height:260px; border:0; border-radius:8px; display:block }
+/* About section layout: main content + map column.
+    Make the map column responsive and about 75% of the previous fixed width (≈510px).
+    Use minmax so the map can shrink on narrower screens but has a sensible maximum. */
+.about-grid { display:grid; grid-template-columns: 1fr minmax(280px, 510px); gap:1.25rem; align-items:start; }
+.about-map { width:100%; height:280px; border:0; border-radius:8px; display:block; object-fit:cover }
 @media (max-width:900px) {
     .about-grid { grid-template-columns: 1fr; }
     .about-map { height:200px; }
@@ -973,7 +976,8 @@ a.btn.btn-primary:focus {
 }
 
 @media (min-width: 769px) {
-    .about-map { height: 380px; }
+    /* Desktop: use a taller map but cap its height so it remains proportional */
+    .about-map { height: clamp(320px, 36vh, 360px); }
 }
 
 /* Small button-style link group used under embedded maps */
