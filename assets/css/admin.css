@@ -105,8 +105,33 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 .admin #profile-menu .pm-item:last-child { margin-bottom:0; }
 .admin #profile-menu .pm-sep { border-top:1px solid rgba(0,0,0,0.04); padding-top:.5rem; }
 .admin .tooltip { display:inline-block; margin-left:.45rem; background:rgba(0,0,0,0.03); color:var(--muted); border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center; font-size:12px; cursor:default; position:relative }
-.admin .tooltip::after { content: attr(data-tooltip); position:absolute; left:50%; transform:translateX(-50%); bottom:calc(100% + 8px); background:var(--card-bg); color:var(--admin-text); padding:.35rem .5rem; border-radius:6px; white-space:nowrap; font-size:12px; display:none; z-index:60 }
+
+/* Tooltip bubble: allow wrapping and constrain width so long text doesn't overflow the viewport */
+.admin .tooltip::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: calc(100% + 8px);
+	background: var(--card-bg);
+	color: var(--admin-text);
+	padding: .45rem .6rem;
+	border-radius: 6px;
+	white-space: normal;
+	font-size: 12px;
+	display: none;
+	z-index: 60;
+	max-width: min(88vw, 360px);
+	word-break: break-word;
+	box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+	border: 1px solid rgba(0,0,0,0.06);
+}
 .admin .tooltip:hover::after, .admin .tooltip:focus::after { display:block }
+
+/* On very small viewports, shift tooltip to be left-aligned to avoid being clipped */
+@media (max-width:420px) {
+	.admin .tooltip::after { left: 8px; transform: none; right: 8px; bottom: calc(100% + 6px); max-width: calc(100% - 16px); font-size: 11px; }
+}
 
 /* utility: visually hidden (screen-reader only) */
 .sr-only { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
