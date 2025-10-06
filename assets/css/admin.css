@@ -104,42 +104,17 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 .admin #profile-menu .pm-item { margin-bottom:.25rem; }
 .admin #profile-menu .pm-item:last-child { margin-bottom:0; }
 .admin #profile-menu .pm-sep { border-top:1px solid rgba(0,0,0,0.04); padding-top:.5rem; }
-.admin .tooltip { display:inline-block; margin-left:.45rem; background:rgba(0,0,0,0.03); color:var(--muted); border-radius:50%; width:18px; height:18px; line-height:18px; text-align:center; font-size:12px; cursor:default; position:relative }
+/* image-section: collapsible upload blocks used in the Image Uploads admin area */
+.admin .image-section { border: 1px solid var(--admin-border); border-radius:8px; margin-bottom:0.75rem; background: var(--card-bg); overflow:visible }
+.admin .image-section summary { list-style:none; cursor:pointer; padding:.6rem .8rem; display:flex; align-items:center; justify-content:space-between; gap:.5rem; font-weight:700; color:var(--admin-text); }
+.admin .image-section summary::-webkit-details-marker { display:none }
+.admin .image-section summary:after { content:'▾'; font-size:.85rem; color:var(--muted) }
+.admin .image-section[open] summary:after { content:'▴' }
+.admin .image-section-body { padding:.75rem .8rem; border-top:1px solid var(--admin-divider-weak); }
+.admin .image-section img { max-width:280px; max-height:140px; object-fit:contain; border:1px solid var(--admin-border); border-radius:6px }
 
-/* Tooltip bubble: allow wrapping and constrain width so long text doesn't overflow the viewport */
-.admin .tooltip::after {
-	content: attr(data-tooltip);
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
-	bottom: calc(100% + 8px);
-	background: var(--card-bg);
-	color: var(--admin-text);
-	padding: .45rem .6rem;
-	border-radius: 6px;
-	white-space: normal;
-	font-size: 12px;
-	display: none;
-	z-index: 60;
-	max-width: min(88vw, 360px);
-		/* prefer overflow-wrap to avoid odd single-letter breaks in some browsers */
-		overflow-wrap: anywhere;
-		word-break: normal;
-		line-height: 1.35;
-		text-align: left;
-		white-space: normal;
-		overflow-wrap: break-word;
-		/* ensure centering transform is preserved */
-		transform: translateX(-50%);
-		box-shadow: 0 6px 18px rgba(2,6,23,0.12);
-	border: 1px solid rgba(0,0,0,0.06);
-}
-.admin .tooltip:hover::after, .admin .tooltip:focus::after { display:block }
-
-/* On very small viewports, shift tooltip to be left-aligned to avoid being clipped */
-@media (max-width:420px) {
-	.admin .tooltip::after { left: 8px; transform: none; right: 8px; bottom: calc(100% + 6px); max-width: calc(100% - 16px); font-size: 11px; }
-}
+/* remove tooltip helper class; tooltips have been removed from the UI in favor of inline help text */
+.admin .tooltip { display:none !important }
 
 /* utility: visually hidden (screen-reader only) */
 .sr-only { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
