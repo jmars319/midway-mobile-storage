@@ -58,6 +58,12 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Midway Mobile Storage | Midway, NC</title>
     <link rel="stylesheet" href="<?php echo htmlspecialchars($cssPath . '?v=' . $cssVersion, ENT_QUOTES, 'UTF-8'); ?>">
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/uploads/images/favicon-set/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/uploads/images/favicon-set/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/uploads/images/favicon-set/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/uploads/images/favicon-set/favicon-180x180.png">
+    <link rel="manifest" href="/site.webmanifest">
     <!-- Typography is self-hosted from assets/fonts/ -->
 </head>
 <body>
