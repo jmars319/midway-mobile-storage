@@ -28,7 +28,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
     <!-- Favicons are included via admin/partials/head.php -->
     <!-- Login page styles have been moved to /assets/css/admin.css -->
 </head>
-<body class="admin">
+<body class="admin login-page">
     <div class="login-container">
                 <div class="login-header">
                         <?php
