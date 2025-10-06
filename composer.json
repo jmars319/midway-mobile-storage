@@ -1,6 +1,14 @@
 {
   "name": "midway-mobile/storage-site",
   "description": "Midway Mobile Storage site helper deps",
+  "homepage": "https://github.com/jmars319/midway-mobile-storage",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jason Marshall",
+      "email": "jmars319@example.com"
+    }
+  ],
   "require": {
     "phpmailer/phpmailer": "^6.11"
   },

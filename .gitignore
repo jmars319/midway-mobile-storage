@@ -26,3 +26,6 @@ data/quotes.json
 data/quote-audit.json
 
 new-admin-feature/
+
+# PHPUnit results cache (should not be committed)
+.phpunit.result.cache
