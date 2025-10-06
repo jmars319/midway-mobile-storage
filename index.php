@@ -732,44 +732,103 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             return function remove() { document.removeEventListener('keydown', keyHandler); };
         }
     })();
-        // Hours modal: show business hours from content.json
+        // Hours modal: show business hours from content.json with a safe fallback
         (function(){
                 var hoursLink = document.getElementById('footer-hours-link');
                 if (!hoursLink) return;
-                // Build markup using server-side hours injected into JS
                 var hoursData = <?php echo json_encode($content['hours'] ?? new stdClass()); ?>;
-                var html = ''+
-                '<div id="hours-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="hours-modal-title">'+
-                    '<div class="modal-backdrop" id="hours-modal-backdrop"></div>'+
-                    '<div class="modal-panel" role="document">'+
-                        '<button type="button" class="modal-close" aria-label="Close hours">✕</button>'+
-                        '<h2 id="hours-modal-title">Hours</h2>'+
-                        '<div class="card">'+
-                            '<div class="hours-list">';
-                // Determine today's key in the same format as the hours object
-                var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
-                var todayKey = daysMap[new Date().getDay()];
-                for (var d in hoursData) {
-                    if (!hoursData.hasOwnProperty(d)) continue;
-                    var isToday = (d.toLowerCase() === todayKey);
-                    var cls = isToday ? 'hours-today' : '';
-                    var badge = isToday ? ' <span class="today-badge">Today</span>' : '';
-                    html += '<div class="'+cls+'" style="display:flex;justify-content:space-between;padding:.25rem 0"><div style="text-transform:capitalize">'+d.replace(/_/g,' ') + badge +'</div><div>'+hoursData[d]+'</div></div>';
+
+                var modal = null, backdrop = null, closeBtn = null, popupWin = null;
+
+                function buildModal() {
+                    try {
+                        var html = ''+
+                        '<div id="hours-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="hours-modal-title">'+
+                            '<div class="modal-backdrop" id="hours-modal-backdrop"></div>'+
+                            '<div class="modal-panel" role="document">'+
+                                '<button type="button" class="modal-close" aria-label="Close hours">✕</button>'+
+                                '<h2 id="hours-modal-title">Hours</h2>'+
+                                '<div class="card">'+
+                                    '<div class="hours-list">';
+                        var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
+                        var todayKey = daysMap[new Date().getDay()];
+                        for (var d in hoursData) {
+                            if (!hoursData.hasOwnProperty(d)) continue;
+                            var isToday = (d.toLowerCase() === todayKey);
+                            var cls = isToday ? 'hours-today' : '';
+                            var badge = isToday ? ' <span class="today-badge">Today</span>' : '';
+                            html += '<div class="'+cls+'" style="display:flex;justify-content:space-between;padding:.25rem 0"><div style="text-transform:capitalize">'+d.replace(/_/g,' ') + badge +'</div><div>'+hoursData[d]+'</div></div>';
+                        }
+                        html +=      '</div>'+
+                                '</div>'+
+                            '</div>'+
+                        '</div>';
+                        var wrap = document.createElement('div'); wrap.innerHTML = html;
+                        document.body.appendChild(wrap.firstChild);
+                        modal = document.getElementById('hours-modal');
+                        backdrop = document.getElementById('hours-modal-backdrop');
+                        closeBtn = modal ? modal.querySelector('.modal-close') : null;
+                        return !!modal;
+                    } catch (e) {
+                        return false;
+                    }
                 }
-                html +=      '</div>'+
-                        '</div>'+
-                    '</div>'+
-                '</div>';
-                var wrap = document.createElement('div'); wrap.innerHTML = html;
-                document.body.appendChild(wrap.firstChild);
-                var modal = document.getElementById('hours-modal');
-                var backdrop = document.getElementById('hours-modal-backdrop');
-                var closeBtn = modal.querySelector('.modal-close');
-                function open(){ modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.style.overflow='hidden'; trapFocus(modal); }
-                function close(){ modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; }
-                hoursLink.addEventListener('click', function(e){ e.preventDefault(); open(); });
-                backdrop.addEventListener('click', close);
-                closeBtn.addEventListener('click', close);
+
+                function openPopupFallback() {
+                    try {
+                        var winOpts = 'width=420,height=520,toolbar=no,menubar=no,location=no,status=no,resizable=yes,scrollbars=yes';
+                        popupWin = window.open('', 'BusinessHours', winOpts);
+                        if (!popupWin) { alert(formatHoursPlain()); return; }
+                        var doc = popupWin.document;
+                        doc.open();
+                        doc.write('<!doctype html><html><head><meta charset="utf-8"><title>Hours</title>');
+                        doc.write('<meta name="viewport" content="width=device-width,initial-scale=1">');
+                        doc.write('<style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:1rem;color:#0f172a}h1{font-size:1.25rem;margin:0 0 .5rem} .hours-list div{display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px dashed #e6eef8} .today{background:rgba(245,158,11,0.06);padding:.35rem;border-radius:6px;font-weight:700}</style>');
+                        doc.write('</head><body>');
+                        doc.write('<h1>Hours</h1>');
+                        doc.write('<div class="hours-list">');
+                        var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
+                        var todayKey = daysMap[new Date().getDay()];
+                        for (var d in hoursData) {
+                            if (!hoursData.hasOwnProperty(d)) continue;
+                            var isToday = (d.toLowerCase() === todayKey);
+                            var cls = isToday ? 'today' : '';
+                            doc.write('<div class="'+cls+'"><div style="text-transform:capitalize">'+d.replace(/_/g,' ')+(isToday? ' <strong>Today</strong>':'')+'</div><div>'+hoursData[d]+'</div></div>');
+                        }
+                        doc.write('</div>');
+                        doc.write('</body></html>');
+                        doc.close();
+                        popupWin.focus();
+                    } catch (e) {
+                        // final fallback: simple alert
+                        alert(formatHoursPlain());
+                    }
+                }
+
+                function formatHoursPlain() {
+                    var out = '';
+                    for (var d in hoursData) { if (!hoursData.hasOwnProperty(d)) continue; out += d.replace(/_/g,' ') + ': ' + hoursData[d] + '\n'; }
+                    return out || 'No hours available';
+                }
+
+                function openModal() {
+                    if (!modal) {
+                        if (!buildModal()) { openPopupFallback(); return; }
+                        // attach handlers
+                        if (backdrop) backdrop.addEventListener('click', closeModal);
+                        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                    }
+                    modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.style.overflow='hidden';
+                    // focus the close button for keyboard users
+                    try { if (closeBtn) closeBtn.focus(); } catch(e){}
+                }
+
+                function closeModal() {
+                    if (modal) { modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; }
+                    if (popupWin && !popupWin.closed) { try { popupWin.close(); } catch(e){} popupWin = null; }
+                }
+
+                hoursLink.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
         })();
         // Toggle fixed footer only when its content fits the configured height
         (function(){
