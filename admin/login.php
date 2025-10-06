@@ -122,7 +122,10 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                             if ($logo) { $logoUrl = preg_match('#^https?://#i', $logo) ? $logo : '../uploads/images/'.ltrim($logo, '/'); }
                         ?>
                         <?php if ($logoUrl): ?>
-                            <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="Admin" class="admin-logo">
+                                                        <picture>
+                                                            <source type="image/webp" srcset="/uploads/images/logo-48.webp 1x, /uploads/images/logo-96.webp 2x, /uploads/images/logo-192.webp 4x">
+                                                            <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="Admin" class="admin-logo">
+                                                        </picture>
                         <?php else: ?>
                             <h1>🔐 Admin Login</h1>
                         <?php endif; ?>
