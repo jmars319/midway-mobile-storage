@@ -693,25 +693,45 @@ header('Content-Type: text/html; charset=utf-8');
 
     <hr class="spaced-hr">
     <h2>Image Uploads</h2>
-    <p class="small">Upload images (logo, hero, gallery). Uploaded files are placed in <code><?php echo htmlspecialchars(UPLOAD_DIR); ?></code>.</p>
+  <p class="small">Upload images used on the site. Open a section to upload or replace that specific image type.</p>
     <div class="upload-wrap">
-      <form id="upload-form" enctype="multipart/form-data">
-        <?php echo csrf_input_field(); ?>
-        <label>Type
-          <select name="type">
-            <option value="logo">Logo</option>
-            <option value="hero">Hero</option>
-            <option value="gallery">Gallery</option>
-            <option value="general">General</option>
-          </select>
-        </label>
-        <label>File
-          <input type="file" name="image" accept="image/*" required>
-        </label>
-        <button type="submit" class="btn btn-primary">Upload Image</button>
-        <div id="upload-result" class="small"></div>
-      </form>
-    <div id="image-list"></div>
+      <?php
+        $types = [
+          'logo' => 'Logo (site header)',
+          'hero' => 'Hero / banner',
+          'gallery' => 'Gallery image',
+          'general' => 'General image (other)'
+        ];
+      ?>
+      <?php foreach ($types as $tkey => $tlabel): ?>
+        <details class="image-section">
+          <summary><?php echo htmlspecialchars($tlabel); ?></summary>
+          <div class="image-section-body">
+            <?php // show current image preview when available ?>
+            <?php $current = $siteContent['images'][$tkey] ?? ''; if ($current): ?>
+              <?php $url = preg_match('#^https?://#i', $current) ? $current : ('../uploads/images/' . ltrim($current, '/')); ?>
+              <div class="mb-05">
+                <div class="small">Current:</div>
+                <img src="<?php echo htmlspecialchars($url); ?>" alt="<?php echo htmlspecialchars($tlabel); ?>" style="max-width:280px;max-height:140px;object-fit:contain;border:1px solid #eee;padding:4px;" />
+              </div>
+            <?php endif; ?>
+
+            <form method="post" action="upload-image.php" enctype="multipart/form-data" class="mb-05">
+              <?php echo csrf_input_field(); ?>
+              <input type="hidden" name="type" value="<?php echo htmlspecialchars($tkey); ?>">
+              <label class="small">Choose file
+                <input type="file" name="image" accept="image/*" required>
+              </label>
+              <div class="mt-05">
+                <button type="submit" class="btn btn-primary">Upload</button>
+                <span class="small ml-05">Tip: Use appropriately sized images for best performance.</span>
+              </div>
+            </form>
+          </div>
+        </details>
+      <?php endforeach; ?>
+
+      <div id="image-list"></div>
     </div>
 
 
