@@ -81,22 +81,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Change Admin Password</title>
-    <style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}label{display:block;margin-bottom:.5rem}input{width:100%;padding:.5rem;margin-bottom:1rem}.error{color:var(--admin-danger)}.success{color:var(--admin-success)}</style>
-  </head>
-  <body>
-    <h1>Change Password</h1>
-    <?php if ($error): ?><div class="error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-    <?php if ($success): ?><div class="success"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
-    <form method="post">
-      <?php echo csrf_input_field(); ?>
-      <label>Current password<input name="current_password" type="password" required></label>
-      <label>New password<input name="new_password" type="password" required></label>
-      <label>Confirm new password<input name="confirm_password" type="password" required></label>
-      <button type="submit">Change Password</button>
-    </form>
-    <p><a href="index.php">Back to admin</a></p>
-  </body>
+    <head>
+        <meta charset="utf-8">
+        <title>Change Admin Password</title>
+        <link rel="stylesheet" href="/assets/css/styles.css">
+        <link rel="stylesheet" href="/assets/css/admin.css">
+    </head>
+    <body class="admin">
+        <div class="container container-narrow" style="padding:2rem 0">
+            <div class="card">
+                <h1 class="card-title">Change Password</h1>
+
+                <?php if ($error): ?><div class="form-error" role="alert" style="margin-bottom:1rem"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+                <?php if ($success): ?><div class="form-note" role="status" style="margin-bottom:1rem;color:var(--success-color)"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
+
+                <form method="post">
+                    <?php echo csrf_input_field(); ?>
+                    <div class="form-group">
+                        <label class="form-label">Current password</label>
+                        <input name="current_password" type="password" required class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">New password</label>
+                        <input name="new_password" type="password" required class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirm new password</label>
+                        <input name="confirm_password" type="password" required class="form-input">
+                    </div>
+
+                    <div style="margin-top:1rem">
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                        <a href="index.php" class="btn btn-secondary" style="margin-left:.5rem">Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
 </html>
