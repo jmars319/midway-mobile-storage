@@ -48,7 +48,7 @@
         if (closeBtn) closeBtn.removeEventListener('click', onClose);
         document.removeEventListener('keydown', onKey);
         // restore previous focus
-        try { if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus(); } catch (e) {}
+  try { if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus(); } catch (e) { void 0; }
       }
       function onOk(){ cleanup(); resolve(true); }
       function onCancel(){ cleanup(); resolve(false); }
@@ -77,14 +77,13 @@
   }
 
   // expose a global helper so other inline/admin scripts can use the same modal
-  try { window.showAdminConfirm = showConfirm; window.showAdminToast = showToast; } catch(e){}
+  try { window.showAdminConfirm = showConfirm; window.showAdminToast = showToast; } catch(e){ /* no-op */ void 0; }
 
   // Main
   const sectionSelect = document.getElementById('section-select');
   const schemaFields = document.getElementById('schema-fields');
   const saveForm = document.getElementById('schema-form');
   const uploadForm = document.getElementById('upload-form');
-  const uploadResult = document.getElementById('upload-result');
 
   const siteContent = window.__siteContent || {};
   const schemaUrl = window.__schemaUrl || 'content-schemas.json';
@@ -132,7 +131,7 @@
   // authenticated; the server-side endpoint enforces auth and CSRF
   // where appropriate. The picker only displays filenames — the
   // chosen value is written into the text input for later saving.
-  fetch('list-images.php').then(r=>r.json()).then(j=>{
+    fetch('list-images.php').then(r=>r.json()).then(j=>{
       if (!j || !Array.isArray(j.files)) { grid.innerHTML = '<i>No images</i>'; return; }
     const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
     j.files.forEach(f=>{
@@ -149,12 +148,12 @@
   thumb.addEventListener('click', ()=>{ targetInput.value = f; targetInput.dispatchEvent(new Event('input', { bubbles: true })); backdrop.style.display='none'; });
     grid.appendChild(thumb);
   });
-    }).catch(()=>{ grid.innerHTML = '<i>Failed to load</i>'; });
+  }).catch(()=>{ grid.innerHTML = '<i>Failed to load</i>'; });
     const ok = document.getElementById('modal-ok'); const cancel = document.getElementById('modal-cancel');
-    function cleanup(){ backdrop.style.display='none'; ok.removeEventListener('click',onOk); cancel.removeEventListener('click',onCancel); }
-    function onOk(){ cleanup(); }
-    function onCancel(){ cleanup(); }
-    ok.addEventListener('click', onOk); cancel.addEventListener('click', onCancel);
+    const cleanup = function(){ backdrop.style.display='none'; ok.removeEventListener('click', onOk); cancel.removeEventListener('click', onCancel); };
+    const onOk = function(){ cleanup(); };
+    const onCancel = function(){ cleanup(); };
+      ok.addEventListener('click', onOk); cancel.addEventListener('click', onCancel);
   }
 
   function renderSection(sec){
@@ -269,7 +268,7 @@
                   img.src = src + (src.indexOf('?') === -1 ? ('?v=' + Date.now()) : ('&v=' + Date.now()));
                 }
                 // auto-close the section after success
-                try { if (sect.hasAttribute('open')) sect.removeAttribute('open'); } catch(e){}
+                try { if (sect.hasAttribute('open')) sect.removeAttribute('open'); } catch(e){ void 0; }
               }
               // refresh global and per-section image lists
               refreshImageList();
@@ -346,10 +345,9 @@
           img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="8" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
           const caption = document.createElement('div'); caption.textContent = f; caption.style.fontSize='0.72rem'; caption.style.overflow='hidden'; caption.style.textOverflow='ellipsis'; caption.style.whiteSpace='nowrap';
           el.appendChild(img); el.appendChild(caption);
-          el.addEventListener('click', ()=>{ // clicking inserts filename into nearest image picker if present
+            el.addEventListener('click', ()=>{ // clicking inserts filename into nearest image picker if present
             const sect = c.closest('.image-section');
             if (!sect) return;
-            const picker = sect.querySelector('input[type="file"]').closest('form').querySelector('input[type="file"][name="image"]');
             // we can't set file inputs programmatically; instead, if there's an image text field in the schema, set it. Otherwise no-op.
             const imgText = sect.querySelector('input[data-field-type="image"]');
             if (imgText) { imgText.value = f; imgText.dispatchEvent(new Event('input',{bubbles:true})); showToast('Selected '+f,'default'); }
@@ -559,7 +557,7 @@
 
               qtyContainer = document.createElement('div'); qtyContainer.className = 'qty-options'; qtyContainer.style.marginTop = '.3rem';
 
-              function createOptionRow(opt, optIndex) {
+              const createOptionRow = function(opt, optIndex) {
                 const row = document.createElement('div'); row.style.display='flex'; row.style.gap='.4rem'; row.style.alignItems='center'; row.style.marginTop='.3rem';
                 const labelInput = makeInput(opt.label || '', 'Label (e.g. 6 pc, 12 pc)'); labelInput.style.flex='1'; labelInput.addEventListener('input', ()=> { menuData[sidx].items[idx].quantities[optIndex].label = labelInput.value; });
 
@@ -592,7 +590,7 @@
                 return row;
               }
 
-              function renderQtyOptions() {
+              const renderQtyOptions = function() {
                 qtyContainer.innerHTML = '';
                 const opts = menuData[sidx].items[idx].quantities || [];
                 if (!opts.length) {
@@ -732,7 +730,7 @@
                 // validate per-option price (if provided)
                 const qpriceRaw = it.quantities[qi] && it.quantities[qi].price !== undefined ? String(it.quantities[qi].price).trim() : '';
                 if (qpriceRaw === '') { showToast('Price required for quantity option #' + (qi+1) + ' in: ' + (it.title || ''), 'error'); return; }
-                const qnum = Number(String(qpriceRaw).replace(/[^0-9\.\-]/g, ''));
+                const qnum = Number(String(qpriceRaw).replace(/[^0-9.-]/g, ''));
                 if (!isFinite(qnum) || qnum < 0) { showToast('Invalid price for quantity option #' + (qi+1) + ' in: ' + (it.title || ''), 'error'); return; }
                 it.quantities[qi].price = qnum.toFixed(2);
               }
@@ -744,7 +742,7 @@
             }
             if (it.price === undefined || it.price === null || String(it.price).trim() === '') { delete it.price; continue; }
             // normalize: allow numbers like 9.99 or 9 -> '9.00'
-            const num = Number(String(it.price).replace(/[^0-9\.\-]/g, ''));
+            const num = Number(String(it.price).replace(/[^0-9.-]/g, ''));
             if (!isFinite(num)) { showToast('Invalid price: ' + (it.title || ''), 'error'); return; }
             // round to 2 decimals
             it.price = num.toFixed(2).replace(/\.00$/, '.00').replace(/^(-?)0\./, '$1.');
@@ -778,8 +776,8 @@
       menu.tabIndex = -1;
     }
 
-    function openMenu(){ if (!menu) return; menu.style.display='block'; profileBtn.setAttribute('aria-expanded','true'); menu.querySelectorAll('button,a').forEach(el=>el.tabIndex=0); menu.focus(); }
-    function closeMenu(){ if (!menu) return; menu.style.display='none'; profileBtn.setAttribute('aria-expanded','false'); profileBtn.focus(); }
+  const openMenu = function(){ if (!menu) return; menu.style.display='block'; profileBtn.setAttribute('aria-expanded','true'); menu.querySelectorAll('button,a').forEach(el=>el.tabIndex=0); menu.focus(); };
+  const closeMenu = function(){ if (!menu) return; menu.style.display='none'; profileBtn.setAttribute('aria-expanded','false'); profileBtn.focus(); };
 
     profileBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if (!menu) return; (menu.style.display === 'block') ? closeMenu() : openMenu(); });
     profileBtn.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); profileBtn.click(); } if (e.key === 'ArrowDown') { e.preventDefault(); openMenu(); }});

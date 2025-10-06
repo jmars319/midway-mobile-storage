@@ -15,17 +15,17 @@
 
             text.textContent = 'Thank you! Your quote request has been received. We will contact you shortly with a custom estimate.';
             wrap.style.display = 'block';
-            try { outer.focus({preventScroll:true}); } catch(e) {}
+            try { outer.focus({preventScroll:true}); } catch(e) { /* no-op */ void 0; }
 
             var close = document.getElementById('storage-quote-confirm-close');
             if (close) {
                 close.addEventListener('click', function(){
                     wrap.style.display = 'none';
-                    try { localStorage.setItem(dismissKey, '1'); } catch(e){}
+                    try { localStorage.setItem(dismissKey, '1'); } catch(e){ void 0; }
                 });
             }
 
-            try { history.replaceState(null, '', window.location.pathname + window.location.search + '#storage-quote'); } catch(e){}
+            try { history.replaceState(null, '', window.location.pathname + window.location.search + '#storage-quote'); } catch(e){ void 0; }
         } catch(e) { /* non-fatal */ }
     })();
 
@@ -60,7 +60,7 @@
             var sections = Array.from(navLinks).map(function(a){
                 var href = a.getAttribute('href') || ''; if (!href.startsWith('#')) return null; return document.querySelector(href);
             });
-            function updateCurrent(){
+            const updateCurrent = function(){
                 var top = window.scrollY + 96;
                 for (var i=0;i<navLinks.length;i++){
                     var a = navLinks[i]; var sec = sections[i];
@@ -69,7 +69,7 @@
                     var inView = (rect.top + window.scrollY) <= top && (rect.bottom + window.scrollY) > top;
                     if (inView) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
                 }
-            }
+            };
             window.addEventListener('scroll', updateCurrent, {passive:true});
             window.addEventListener('resize', updateCurrent);
             updateCurrent();
@@ -77,8 +77,8 @@
             var mapBtns = document.querySelectorAll('.map-links a[aria-pressed]');
             mapBtns.forEach(function(b){
                 b.addEventListener('click', function(){
-                    try { b.setAttribute('aria-pressed','true'); } catch(e){}
-                    setTimeout(function(){ try { b.setAttribute('aria-pressed','false'); } catch(e){} }, 1200);
+                    try { b.setAttribute('aria-pressed','true'); } catch(e){ void 0; }
+                    setTimeout(function(){ try { b.setAttribute('aria-pressed','false'); } catch(e){ void 0; } }, 1200);
                 });
             });
 
@@ -99,7 +99,7 @@
             var closeBtn = modal ? modal.querySelector('.modal-close') : null;
 
             var removeFocusTrap = null;
-            function openModal(e){
+            const openModal = function(e){
                 if (e && e.preventDefault) e.preventDefault();
                 var opener = (e && e.currentTarget) ? e.currentTarget : (e && e.target) ? e.target : null;
                 if (e && e.dataset && e.dataset.contactMessage) opener = e;
@@ -111,12 +111,12 @@
                         msgNode.value = opener.dataset.contactMessage;
                         msgNode.focus();
                     } else {
-                        var first = form.querySelector('[name="first_name"]'); if (first) first.focus();
+                        let firstField = form.querySelector('[name="first_name"]'); if (firstField) firstField.focus();
                     }
-                } catch(e) { try { var first = form.querySelector('[name="first_name"]'); if (first) first.focus(); } catch(e) {} }
+                } catch(e) { try { let firstField = form.querySelector('[name="first_name"]'); if (firstField) firstField.focus(); } catch(e) { void 0; } }
                 removeFocusTrap = trapFocus(modal);
-            }
-            function closeModal(){ if (!modal) return; modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; if (typeof removeFocusTrap === 'function') { removeFocusTrap(); removeFocusTrap = null; } }
+            };
+            const closeModal = function(){ if (!modal) return; modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; if (typeof removeFocusTrap === 'function') { removeFocusTrap(); removeFocusTrap = null; } };
 
             if (footerLink) footerLink.addEventListener('click', openModal);
             var extraOpeners = document.querySelectorAll('.open-contact');
@@ -137,18 +137,18 @@
 
             if (form) form.setAttribute('action', '/contact.php');
 
-            function trapFocus(modalEl) {
+            const trapFocus = function(modalEl) {
                 var focusableSelectors = 'a[href], area[href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
                 var focusable = Array.from(modalEl.querySelectorAll(focusableSelectors)).filter(function(el){ return el.offsetParent !== null; });
                 if (!focusable.length) return function(){};
                 var first = focusable[0]; var last = focusable[focusable.length - 1];
-                function keyHandler(e) {
+                const keyHandler = function(e) {
                     if (e.key === 'Tab') {
                         if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
                         else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
                     }
                     if (e.key === 'Escape') { closeModal(); }
-                }
+                };
                 document.addEventListener('keydown', keyHandler);
                 return function remove() { document.removeEventListener('keydown', keyHandler); };
             }
@@ -176,7 +176,7 @@
                 var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
                 var todayKey = daysMap[new Date().getDay()];
                 for (var d in hoursData) {
-                    if (!hoursData.hasOwnProperty(d)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(hoursData, d)) continue;
                     var isToday = (d.toLowerCase() === todayKey);
                     var cls = isToday ? 'hours-today' : '';
                     var badge = isToday ? ' <span class="today-badge">Today</span>' : '';
@@ -213,7 +213,7 @@
                 var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
                 var todayKey = daysMap[new Date().getDay()];
                 for (var d in hoursData) {
-                    if (!hoursData.hasOwnProperty(d)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(hoursData, d)) continue;
                     var isToday = (d.toLowerCase() === todayKey);
                     var cls = isToday ? 'today' : '';
                     doc.write('<div class="'+cls+'"><div style="text-transform:capitalize">'+d.replace(/_/g,' ')+(isToday? ' <strong>Today</strong>':'')+'</div><div>'+hoursData[d]+'</div></div>');
@@ -229,7 +229,7 @@
 
         function formatHoursPlain() {
             var out = '';
-            for (var d in hoursData) { if (!hoursData.hasOwnProperty(d)) continue; out += d.replace(/_/g,' ') + ': ' + hoursData[d] + '\n'; }
+                for (var d in hoursData) { if (!Object.prototype.hasOwnProperty.call(hoursData, d)) continue; out += d.replace(/_/g,' ') + ': ' + hoursData[d] + '\n'; }
             return out || 'No hours available';
         }
 
@@ -240,12 +240,12 @@
                 if (closeBtn) closeBtn.addEventListener('click', closeModal);
             }
             modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.style.overflow='hidden';
-            try { if (closeBtn) closeBtn.focus(); } catch(e){}
+            try { if (closeBtn) closeBtn.focus(); } catch(e){ void 0; }
         }
 
         function closeModal() {
             if (modal) { modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; }
-            if (popupWin && !popupWin.closed) { try { popupWin.close(); } catch(e){} popupWin = null; }
+            if (popupWin && !popupWin.closed) { try { popupWin.close(); } catch(e){ void 0; } popupWin = null; }
         }
 
         hoursLink.addEventListener('click', function(e){ e.preventDefault(); openModal(); });

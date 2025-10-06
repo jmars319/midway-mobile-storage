@@ -435,8 +435,10 @@ const FormHandler = {
             }
         }
         else if (fieldType === 'tel' && value) {
-            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-            if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+            // normalize: keep leading + and digits only
+            const normalized = (value || '').replace(/[^\d+]/g, '');
+            const phoneRegex = /^\+?[1-9]\d{0,15}$/;
+            if (!phoneRegex.test(normalized)) {
                 isValid = false;
                 errorMessage = 'Please enter a valid phone number';
             }
@@ -567,7 +569,7 @@ const FormHandler = {
 
         setTimeout(() => {
             // remove focus then remove message
-            try { message.blur(); } catch (e) {}
+            try { message.blur(); } catch (e) { void 0; }
             message.remove();
         }, 5000);
     },
@@ -583,7 +585,7 @@ const FormHandler = {
         message.focus({ preventScroll: true });
 
         setTimeout(() => {
-            try { message.blur(); } catch (e) {}
+            try { message.blur(); } catch (e) { void 0; }
             message.remove();
         }, 5000);
     }
@@ -773,7 +775,7 @@ const Stepper = {
 
     _changeValue(input, dir) {
         const stepAttr = input.getAttribute('step');
-        const step = stepAttr ? parseFloat(stepAttr) : 1;
+        let step = stepAttr ? parseFloat(stepAttr) : 1;
         if (isNaN(step) || step <= 0) {
             // fallback
             step = 1;
