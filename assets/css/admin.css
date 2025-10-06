@@ -116,6 +116,13 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 /* remove tooltip helper class; tooltips have been removed from the UI in favor of inline help text */
 .admin .tooltip { display:none !important }
 
+/* animate details open/close: use max-height trick for smoother transitions */
+.admin .image-section { transition: box-shadow .18s ease, transform .18s ease; }
+.admin .image-section summary { transition: background .12s ease; }
+.admin .image-section[open] { box-shadow: 0 6px 18px rgba(2,6,23,0.06); transform: translateY(-2px); }
+.admin .image-section .image-section-body { max-height: 0; overflow: hidden; transition: max-height .28s cubic-bezier(.2,.9,.22,1), opacity .18s ease; opacity: 0; }
+.admin .image-section[open] .image-section-body { max-height: 1200px; opacity: 1; }
+
 /* utility: visually hidden (screen-reader only) */
 .sr-only { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
 

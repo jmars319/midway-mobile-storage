@@ -215,28 +215,57 @@
     });
   }
 
-  if (uploadForm) {
-    uploadForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      const fd = new FormData(uploadForm);
-      fetch('upload-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(j=>{
-        if (j && j.success) {
-          uploadResult.textContent = 'Uploaded: ' + j.filename;
-          try {
-            const sec = sectionSelect.value;
-            const upType = fd.get('type');
-            if (upType === sec) {
-              const imgInput = schemaFields.querySelector('input[data-field-type="image"]');
-              if (imgInput) { imgInput.value = j.filename; }
-            }
-            refreshImageList();
-          } catch(e){}
-        } else {
-          uploadResult.textContent = 'Upload failed: ' + (j.message || 'unknown');
+  // Attach AJAX upload handlers to any per-type image upload forms created in the image sections.
+  function attachImageSectionUploadHandlers(){
+    const forms = document.querySelectorAll('.image-section form');
+    if (!forms || !forms.length) return;
+    forms.forEach(form => {
+      // avoid double-binding
+      if (form.__ajax_bound) return; form.__ajax_bound = true;
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const btn = form.querySelector('button[type="submit"]');
+        const status = document.createElement('div'); status.className = 'small mt-05';
+        btn && btn.setAttribute('disabled','disabled');
+        if (btn) { btn.dataset.orig = btn.textContent; btn.textContent = 'Uploading...'; }
+        // insert status after the form
+        form.parentNode.insertBefore(status, form.nextSibling);
+        const fd = new FormData(form);
+        // include csrf token if not present
+        if (!fd.get('csrf_token')) {
+          const token = (document.querySelector('input[name="csrf_token"]') || {}).value || window.__csrfToken || '';
+          if (token) fd.append('csrf_token', token);
         }
-      }).catch(err=>{ uploadResult.textContent = 'Upload error: '+err.message; });
+        fetch('upload-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(j=>{
+          if (j && j.success) {
+            status.textContent = 'Uploaded: ' + (j.filename || j.message || '');
+            try {
+              // update preview in this section if present
+              const sect = form.closest('.image-section');
+              if (sect) {
+                const img = sect.querySelector('img');
+                if (img) {
+                  // prefer thumbnail from response, fallback to url
+                  const src = j.thumbnail ? j.thumbnail : (j.url ? j.url : ('../uploads/images/' + j.filename));
+                  img.src = src + (src.indexOf('?') === -1 ? ('?v=' + Date.now()) : ('&v=' + Date.now()));
+                }
+              }
+              // refresh the image listing area
+              refreshImageList();
+            } catch(e){ console.error(e); }
+          } else {
+            status.textContent = 'Upload failed: ' + (j && j.message ? j.message : 'unknown');
+          }
+        }).catch(err=>{ status.textContent = 'Upload error: ' + err.message; }).finally(()=>{
+          btn && btn.removeAttribute('disabled');
+          if (btn && btn.dataset && btn.dataset.orig) btn.textContent = btn.dataset.orig;
+        });
+      });
     });
   }
+
+  // run once at init and also after any dynamic changes
+  attachImageSectionUploadHandlers();
 
   function refreshImageList() {
     const list = document.getElementById('image-list');
