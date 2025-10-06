@@ -40,15 +40,4 @@
       {"key": "body", "type": "textarea", "label": "Body HTML/Text"}
     ]
   }
-
-  ,"units": {
-    "label": "Units",
-    "fields": [
-      {"key": "title", "type": "text", "label": "Unit Title"},
-      {"key": "size", "type": "text", "label": "Size (e.g. 5x5)"},
-      {"key": "description", "type": "textarea", "label": "Description"},
-      {"key": "price", "type": "text", "label": "Price (numeric)"}
-    ]
-  }
-
 }

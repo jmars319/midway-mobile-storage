@@ -181,7 +181,7 @@
   // Keep separate management areas out of the Site Content Editor dropdown.
   // Exclude keys that have dedicated admin sections such as 'images' and 'menu'.
   const allKeys = [...Object.keys(schemas), ...Object.keys(siteContent)];
-  const filtered = allKeys.filter(k => k !== 'images' && k !== 'menu');
+  const filtered = allKeys.filter(k => k !== 'images' && k !== 'menu' && k !== 'units');
     const keys = new Set(filtered);
     keys.forEach(k=> sectionSelect.appendChild(makeOption(k, (schemas[k] && schemas[k].label) ? schemas[k].label + ' ('+k+')' : k)));
   }
