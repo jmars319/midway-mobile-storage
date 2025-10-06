@@ -233,6 +233,16 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+/* Public utility helpers to replace inline styles */
+.pt-3rem { padding-top: 3rem !important; }
+.pb-2rem { padding-bottom: 2rem !important; }
+.p-3rem-1rem { padding: 3rem 1rem !important; }
+.center-card { max-width:720px; margin:0 auto; text-align:center; }
+.mt-1 { margin-top:1rem !important; }
+.mt-15 { margin-top:1.5rem !important; }
+.flex-center { display:flex !important; gap:1rem !important; justify-content:center !important; }
+.text-center { text-align:center !important; }
+
 h1, h2, h3, h4, h5, h6 {
     margin: 0;
     font-family: var(--font-family-headings);

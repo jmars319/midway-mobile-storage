@@ -47,7 +47,7 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
         ?>
         <a href="/" class="logo">
           <?php if ($logoUrl): ?>
-            <img src="<?php echo htmlspecialchars($logoUrl); ?>" alt="<?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>" style="height:40px; width:auto; display:inline-block; vertical-align:middle">
+            <img src="<?php echo htmlspecialchars($logoUrl); ?>" alt="<?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>" class="site-logo-img">
           <?php else: ?>
             Midway Mobile Storage
           <?php endif; ?>
@@ -56,11 +56,11 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
     </div>
   </header>
 
-  <main class="container" style="padding:3rem 1rem">
-    <section class="card" style="max-width:720px;margin:0 auto;text-align:center;">
+  <main class="container p-3rem-1rem">
+    <section class="card center-card">
       <h1>Order Online — Coming Soon</h1>
-  <p class="muted" style="margin-top:1rem">We're working to add online ordering. Sign up for updates or check back soon.</p>
-      <div style="margin-top:1.5rem;display:flex;gap:1rem;justify-content:center">
+  <p class="muted mt-1">We're working to add online ordering. Sign up for updates or check back soon.</p>
+    <div class="mt-15 flex-center">
         <a href="/" class="btn btn-ghost">Back to Home</a>
         <a href="/contact.php" class="btn btn-primary">Contact Us</a>
       </div>
@@ -68,7 +68,7 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
   </main>
 
   <footer class="footer">
-    <div class="container" style="padding:2rem 0;text-align:center;" class="muted-text">&copy; <?php echo date('Y'); ?> Midway Mobile Storage</div>
+  <div class="container pb-2rem text-center muted-text">&copy; <?php echo date('Y'); ?> Midway Mobile Storage</div>
   </footer>
 </body>
 </html>

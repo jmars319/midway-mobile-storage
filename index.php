@@ -125,14 +125,16 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             $heroBtn1Link = getContent($content, 'hero.btn_link', '#units');
             $heroBtn2 = getContent($content, 'hero.btn2_text', 'Reserve a Unit');
             $heroBtn2Link = getContent($content, 'hero.btn2_link', '#reservation');
-            $heroStyle = '';
+            $heroBackgroundStyleTag = '';
             if ($heroImage) {
                 // prefer full URL when provided
                 $imgUrl = preg_match('#^https?://#i', $heroImage) ? $heroImage : 'uploads/images/'.ltrim($heroImage, '/');
-                $heroStyle = "style=\"background-image: url('" . htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') . "'); background-size: cover; background-position: center;\"";
+                // emit a small style block to avoid inline style attributes on the section element
+                $heroBackgroundStyleTag = '<style>.hero{background-image: url("' . htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') . '"); background-size: cover; background-position: center;}</style>';
             }
         ?>
-        <section class="hero" <?php echo $heroStyle; ?> aria-label="Hero">
+        <?php echo $heroBackgroundStyleTag; ?>
+        <section class="hero" aria-label="Hero">
             <div class="container">
                 <h1 class="hero-title"><?php echo htmlspecialchars($heroTitle); ?></h1>
                 <?php if ($heroSubtitle): ?><p class="hero-subtitle"><?php echo htmlspecialchars($heroSubtitle); ?></p><?php endif; ?>
