@@ -456,7 +456,7 @@ textarea.form-input { min-height: 70px; resize:vertical; }
     background: var(--logo-badge-bg, var(--surface-color)); /* subtle brand-tinted background */
     box-shadow: 0 6px 20px rgba(16,24,40,0.08);
 }
-.site-logo-img { height: 44px; width: auto; display: inline-block; vertical-align: middle; image-rendering: -webkit-optimize-contrast; }
+.site-logo-img { height: 56px; width: auto; display: inline-block; vertical-align: middle; image-rendering: -webkit-optimize-contrast; }
 
 /* Preserve the original logo colors: do not apply color-inverting filters or forced tints. */
 .logo img, .site-logo-img { filter: none !important; mix-blend-mode: normal !important; }
@@ -476,7 +476,7 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 .header-compact .navbar { padding: calc(var(--spacing-sm) - 2px) 0; gap: calc(var(--spacing-sm) - 2px); }
 .logo--small { font-size: var(--font-size-lg); }
 .logo--small .logo-badge { padding: 4px 8px; }
-.logo--small .site-logo-img { height: 32px; }
+.logo--small .site-logo-img { height: 40px; }
 
 /* Small adjustments for very narrow viewports when the compact header is used */
 @media (max-width: 480px) {
