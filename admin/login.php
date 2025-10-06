@@ -25,7 +25,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
     <title>Admin Login</title>
     <?php require_once __DIR__ . '/partials/head.php'; ?>
     <link rel="stylesheet" href="/assets/css/styles.css">
-    <link rel="stylesheet" href="/assets/css/admin.css">
     <!-- Favicons are included via admin/partials/head.php -->
     <style>
         * {

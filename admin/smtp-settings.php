@@ -19,7 +19,6 @@ if (file_exists(CONTENT_FILE)) {
     <meta charset="utf-8">
     <title>Admin - SMTP Settings</title>
   <link rel="stylesheet" href="/assets/css/styles.css">
-  <link rel="stylesheet" href="/assets/css/admin.css">
     <style>
       body{font-family:Arial,Helvetica,sans-serif;padding:20px}
       .small{font-size:0.9rem}
@@ -28,7 +27,6 @@ if (file_exists(CONTENT_FILE)) {
   </head>
   <body class="admin">
     <div class="page-wrap">
-      <div class="admin-card">
         <div class="admin-card-header">
           <h1 class="admin-card-title">SMTP Settings</h1>
           <div><a href="index.php" class="btn btn-ghost">Back to dashboard</a></div>

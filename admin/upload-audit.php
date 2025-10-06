@@ -76,7 +76,6 @@ header('Content-Type: text/html; charset=utf-8');
     <meta charset="utf-8">
     <title>Admin - Upload Audit</title>
   <link rel="stylesheet" href="/assets/css/styles.css">
-  <link rel="stylesheet" href="/assets/css/admin.css">
     <style>
       /* rely on admin.css tokens and utilities */
       body{font-family:Arial,Helvetica,sans-serif;padding:20px}
@@ -90,7 +89,6 @@ header('Content-Type: text/html; charset=utf-8');
   </head>
   <body>
     <a href="index.php" class="btn btn-ghost">◀ Back to Admin</a>
-    <h1>Upload Audit Log</h1>
     <p class="small">This shows append-only entries written to <code>data/upload-audit.log</code>. Newest first.</p>
 
     <div class="top-actions">

@@ -68,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <meta charset="utf-8">
         <title>Change Admin Password</title>
         <link rel="stylesheet" href="/assets/css/styles.css">
-        <link rel="stylesheet" href="/assets/css/admin.css">
     </head>
     <body class="admin">
     <div class="container container-narrow pad-2rem">

@@ -374,7 +374,6 @@ header('Content-Type: text/html; charset=utf-8');
     </style>
   </head>
   <body class="admin">
-  <link rel="stylesheet" href="/assets/css/admin.css">
   <style>
   /* Toasts/Modal now use admin.css tokens */
   #toast-container { position: fixed; right: 1rem; top: 1rem; z-index: 9999; display:flex; flex-direction:column; gap:.5rem; }
