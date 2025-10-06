@@ -18,7 +18,8 @@ require_once __DIR__ . '/config.php';
 // No auth required for public quote submissions
 header('Content-Type: text/html; charset=utf-8');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+// Be defensive: some CLI/CI runs may not populate all expected SERVER keys
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     header('Location: ../index.php#storage-quote');
     exit;
 }
@@ -38,7 +39,10 @@ $surface_type = trim($_POST['surface_type'] ?? '');
 $access_restrictions = trim($_POST['access_restrictions'] ?? '');
 $purpose = trim($_POST['storage_purpose'] ?? '');
 $items_description = trim($_POST['items_description'] ?? '');
-$services = is_array($_POST['services']) ? $_POST['services'] : (isset($_POST['services']) ? [$_POST['services']] : []);
+$services = [];
+if (isset($_POST['services'])) {
+    $services = is_array($_POST['services']) ? $_POST['services'] : [$_POST['services']];
+}
 $budget = trim($_POST['budget_range'] ?? '');
 $special = trim($_POST['special_requests'] ?? '');
 $how_heard = trim($_POST['how_heard'] ?? '');
