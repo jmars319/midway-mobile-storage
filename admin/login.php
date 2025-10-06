@@ -129,6 +129,18 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                         <p>Website Management Panel</p>
                 </div>
         
+        <?php if (isset($_GET['pw_changed'])): ?>
+        <div class="alert success">
+            ✅ Password changed — please log in with your new password.
+        </div>
+        <?php endif; ?>
+
+        <?php if (isset($_GET['timeout'])): ?>
+        <div class="alert">
+            ⏱️ Your session expired. Please log in again.
+        </div>
+        <?php endif; ?>
+
         <?php if (isset($_GET['error'])): ?>
         <div class="alert">
             ❌ Invalid username or password

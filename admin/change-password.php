@@ -16,14 +16,15 @@
 
 require_once __DIR__ . '/config.php';
 
-// ensure user is authenticated
-checkAuth();
+// ensure user is authenticated (uses session version checks)
+require_admin();
+ensure_csrf_token();
 
 $error = '';
 $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
-    if (!verify_csrf_token($token)) {
+    if (!verify_csrf($token)) {
         $error = 'Invalid CSRF token';
     } else {
         $current = $_POST['current_password'] ?? '';
@@ -32,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // verify current against ADMIN_PASSWORD_HASH
         $ok = false;
-        if (!empty(ADMIN_PASSWORD_HASH) && password_verify($current, ADMIN_PASSWORD_HASH)) {
+        $storedHash = get_admin_hash();
+        if (!empty($storedHash) && password_verify($current, $storedHash)) {
             $ok = true;
         }
 
@@ -43,35 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($new !== $confirm) {
             $error = 'New passwords do not match';
         } else {
-            // generate new hash and update admin/config.php by replacing the constant
+            // generate new hash and store it in admin/auth.json (preferred)
             $hash = password_hash($new, PASSWORD_DEFAULT);
-            $cfgFile = __DIR__ . '/config.php';
-            $orig = @file_get_contents($cfgFile);
-            if ($orig === false) {
-                $error = 'Failed to read config file. Check permissions.';
+            if (set_admin_hash_and_bump_version($hash)) {
+                // force logout so the new credentials take effect
+                do_logout();
+                header('Location: login.php?pw_changed=1');
+                exit;
             } else {
-                $replacement = "define('ADMIN_PASSWORD_HASH', '" . addslashes($hash) . "');";
-                $newContent = preg_replace("/define\(\s*'ADMIN_PASSWORD_HASH'\s*,\s*'[^']*'\s*\);/", $replacement, $orig, 1, $count);
-                if ($newContent === null) {
-                    $error = 'Failed to update config content';
-                } elseif ($count === 0) {
-                    // no match - append replacement after ADMIN_USERNAME define
-                    $newContent = preg_replace("/(define\(\s*'ADMIN_USERNAME'[^;]+;)/", "$1\n" . $replacement, $orig, 1, $c2);
-                }
-
-                if (empty($error)) {
-                    // write atomically
-                    $tmp = $cfgFile . '.tmp';
-                    if (file_put_contents($tmp, $newContent, LOCK_EX) !== false && @rename($tmp, $cfgFile)) {
-                        $success = 'Password updated successfully';
-                        // update runtime constant (best-effort) by defining if possible
-                        // note: constants cannot be redefined; user will need to re-login for new hash to take effect
-                    } else {
-                        @unlink($tmp);
-                        error_log('change-password.php: failed to write config file ' . $cfgFile);
-                        $error = 'Failed to write config file. Check permissions.';
-                    }
-                }
+                $error = 'Failed to save new password. Check filesystem permissions.';
             }
         }
     }
@@ -119,5 +101,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </form>
             </div>
         </div>
+                <script>
+                    (function(){
+                        var form = document.querySelector('form');
+                        var newInput = document.querySelector('input[name="new_password"]');
+                        var strengthEl = document.createElement('div');
+                        strengthEl.className = 'small muted';
+                        strengthEl.style.marginTop = '.25rem';
+                        newInput.parentNode.appendChild(strengthEl);
+
+                        function scorePassword(pw) {
+                            var score = 0;
+                            if (!pw) return score;
+                            if (pw.length >= 8) score += 1;
+                            if (/[A-Z]/.test(pw)) score += 1;
+                            if (/[0-9]/.test(pw)) score += 1;
+                            if (/[^A-Za-z0-9]/.test(pw)) score += 1;
+                            return score;
+                        }
+
+                        newInput.addEventListener('input', function(){
+                            var s = scorePassword(this.value);
+                            var text = ['Very weak','Weak','Okay','Strong','Very strong'][s];
+                            strengthEl.textContent = 'Strength: ' + text;
+                        });
+
+                        form.addEventListener('submit', function(e){
+                            var s = scorePassword(newInput.value);
+                            if (s < 2) {
+                                if (!confirm('The new password appears weak. Are you sure you want to use it?')) { e.preventDefault(); return; }
+                            }
+                        });
+                    })();
+                </script>
     </body>
 </html>
