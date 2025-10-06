@@ -12,3 +12,7 @@ node_modules/
 /.idea/
 /.vscode/
 .DS_Store
+
+# Ignore runtime pid files and optimized image artifacts
+.dev_php.pid
+uploads/images/*optimized*.png
