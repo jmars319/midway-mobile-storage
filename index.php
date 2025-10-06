@@ -88,7 +88,14 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             ?>
             <a href="/" class="logo">
                 <?php if ($logoUrl): ?>
-                    <img src="<?php echo htmlspecialchars($logoUrl); ?>" alt="<?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>" style="height:40px; width:auto; display:inline-block; vertical-align:middle">
+                    <?php
+                      // prefer optimized responsive variants when available
+                      $base = dirname($logoUrl) . '/' . pathinfo($logoUrl, PATHINFO_FILENAME);
+                      $logo48 = 'uploads/images/' . ($content['images']['logo'] ? preg_replace('/\.png$/i','-48.png', $content['images']['logo']) : 'logo-48.png');
+                      $logo96 = 'uploads/images/' . ($content['images']['logo'] ? preg_replace('/\.png$/i','-96.png', $content['images']['logo']) : 'logo-96.png');
+                      $logo192 = 'uploads/images/' . ($content['images']['logo'] ? preg_replace('/\.png$/i','-192.png', $content['images']['logo']) : 'logo-192.png');
+                    ?>
+                    <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="<?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>" style="height:40px; width:auto; display:inline-block; vertical-align:middle">
                 <?php else: ?>
                     <?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>
                 <?php endif; ?>

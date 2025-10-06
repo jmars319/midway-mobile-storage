@@ -410,7 +410,7 @@ header('Content-Type: text/html; charset=utf-8');
             <div style="display:flex;align-items:center;gap:12px">
               <a href="../" class="logo" style="display:inline-block">
                 <?php if ($adminLogo): ?>
-                  <img src="<?php echo htmlspecialchars($adminLogo); ?>" alt="<?php echo htmlspecialchars($siteContent['business_info']['name'] ?? 'Site'); ?>" style="height:40px; width:auto; vertical-align:middle">
+                  <img src="/uploads/images/logo-48.png" srcset="/uploads/images/logo-48.png 1x, /uploads/images/logo-96.png 2x, /uploads/images/logo-192.png 4x" alt="<?php echo htmlspecialchars($siteContent['business_info']['name'] ?? 'Site'); ?>" style="height:40px; width:auto; vertical-align:middle">
                 <?php else: ?>
                   <strong><?php echo htmlspecialchars($siteContent['business_info']['name'] ?? 'Admin'); ?></strong>
                 <?php endif; ?>
