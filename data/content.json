@@ -6,8 +6,27 @@
         "name": "Midway Mobile Storage",
         "address": "212 Fred Sink Rd, Winston-Salem, NC 27107",
         "phone": "336-764-4208",
-        "email": ""
+            "email": "",
+            "map_embed": ""
     },
+        "hero": {
+            "title": "Midway Mobile Storage",
+            "subtitle": "Flexible unit sizes, affordable pricing, and reliable service.",
+            "image": "",
+            "btn_text": "View Units",
+            "btn_link": "#units",
+            "btn2_text": "Reserve a Unit",
+            "btn2_link": "#reservation"
+        },
+        "about": {
+            "heading": "About Midway Mobile Storage",
+            "body": "Midway Mobile Storage provides secure, convenient mobile storage solutions for residents and businesses in the Midway area. We offer flexible unit sizes, month-to-month rentals, and friendly local service."
+        },
+        "units": [
+            {"title":"Small Unit","size":"5x5","description":"Ideal for boxes and small furniture.","price":"25"},
+            {"title":"Medium Unit","size":"10x10","description":"Fits contents of a one-bedroom apartment.","price":"60"},
+            {"title":"Large Unit","size":"10x20","description":"Great for larger moves or business storage.","price":"110"}
+        ],
     "last_updated": "2025-10-06 02:24:57",
     "hours": {
         "monday": "10:00 AM - 3:00 PM",
