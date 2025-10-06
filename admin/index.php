@@ -420,6 +420,7 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="topbar">
                   <a href="../" class="btn btn-ghost" target="_blank">View site</a>
                   <a href="image-preview.php" class="btn btn-ghost" style="margin-left:.25rem">Images</a>
+                  <a href="email-scheduler.php" class="btn btn-ghost" style="margin-left:.25rem">Email Scheduler</a>
                 </div>
               </div>
             </div>
