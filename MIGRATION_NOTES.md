@@ -1,3 +1,78 @@
+MIGRATION NOTES
+================
+
+Date: 2025-10-06
+
+Summary
+-------
+This repository's commit history was rewritten on 2025-10-06 to correct the commit author/committer identity for existing commits. All commits previously authored or committed as
+
+    Jason Marshall <jason_marshall@MacBookAir.attlocal.net>
+
+have been updated to:
+
+    Jason Marshall <97139706+jmars319@users.noreply.github.com>
+
+Why
+---
+- Ensure proper attribution of past work and align repository history with the desired GitHub Account email.
+
+What was done
+--------------
+- A mirror backup of the repository was created before any changes:
+
+    /Users/jason_marshall/Documents/Website Projects/Current/midway-mobile-storage-backup-20251006.git
+
+- Because `git-filter-repo` was not available on the system, `git filter-branch` (fallback) was used to rewrite history and update author/committer name and email for commits that used the old email.
+- After the rewrite, filter-branch backup refs were removed, a garbage collection was run, and the rewritten branches and tags were force-pushed to `origin`.
+
+New author identity
+-------------------
+- Name: Jason Marshall
+- Email: 97139706+jmars319@users.noreply.github.com
+
+Local verification
+------------------
+- After the rewrite, the repository's commit author summary shows the adjusted identity for the rewritten commits.
+
+Important notes & risks
+-----------------------
+- Rewriting history changes commit SHAs. Any clones, forks, CI caches, or other clones of this repository will diverge and must be updated. Collaborators who have local clones must take action described below.
+- Force-pushing was performed to update the remote to match the rewritten history.
+- Keep the mirror backup (path above) until you are confident everything is correct. It contains the pre-rewrite repository state.
+
+What contributors should do (recommended)
+----------------------------------------
+If you have a local clone of this repository, follow one of these approaches depending on your preference:
+
+1) Re-clone (recommended, simplest):
+
+    git clone https://github.com/jmars319/midway-mobile-storage.git
+
+2) Reset existing clone to the rewritten remote (destructive to local uncommitted work):
+
+    git fetch origin
+    git reset --hard origin/main
+
+3) If you have local branches or commits you want to keep, rebase them onto the rewritten main:
+
+    git fetch origin
+    git checkout your-branch
+    git rebase origin/main
+
+If you are unsure, re-cloning is the least error-prone.
+
+Notes about tooling
+-------------------
+- For more complex history operations in the future, consider installing and using `git-filter-repo` (https://github.com/newren/git-filter-repo/) — it is safer and faster than `git filter-branch`.
+
+Contact
+-------
+If you want me to revert this rewrite, run further rewrites, or add/remove other historical metadata, tell me what to do and I can prepare a safe plan (I made a pre-rewrite mirror backup already).
+
+Commit created with this change:
+
+- docs(migration): add migration notes for history rewrite — assign commits to Jason Marshall
 Migration notes — reservations → quotes
 
 Summary
