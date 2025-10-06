@@ -123,10 +123,17 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 	z-index: 60;
 	max-width: min(88vw, 360px);
 		/* prefer overflow-wrap to avoid odd single-letter breaks in some browsers */
-		overflow-wrap: anywhere;
-		word-break: normal;
-		line-height: 1.35;
-		text-align: left;
+		overflow-wrap: anywhere !important;
+		word-break: normal !important;
+		line-height: 1.35 !important;
+		text-align: left !important;
+		/* Explicitly force horizontal layout in case a higher-level rule set vertical writing-mode */
+		writing-mode: horizontal-tb !important;
+		text-orientation: mixed !important;
+		white-space: normal !important;
+		overflow-wrap: break-word !important;
+		/* ensure any inherited transform that rotated text is reset (we keep the translateX centering) */
+		transform: translateX(-50%) !important;
 		box-shadow: 0 6px 18px rgba(2,6,23,0.12);
 	border: 1px solid rgba(0,0,0,0.06);
 }
