@@ -244,6 +244,17 @@ body.admin { overflow-x: hidden; }
 .smtp-label { flex:1; min-width:220px; display:block }
 .smtp-test { min-width:240px; display:flex; gap:.4rem; align-items:center }
 .smtp-test-input { width:260px }
+.admin .smtp-form .btn { border-radius:8px; padding:.6rem .85rem; }
+
+/* Make buttons on the SMTP settings page more visible and accessible */
+.admin .smtp-form .btn-ghost { border: 1px solid rgba(15,23,42,0.08); background: transparent; }
+.admin .smtp-form .btn { transition: box-shadow .15s ease, transform .08s ease, border-color .12s ease; }
+.admin .smtp-form .btn:active { transform: translateY(1px); }
+.admin .smtp-form .btn:focus-visible { outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 55%, black 45%); }
+.admin .smtp-form .btn.btn-primary { border: 1px solid rgba(0,0,0,0.06); }
+
+/* Ensure disabled test button is clearly dimmed but still visible */
+.admin .smtp-form #smtp-test[disabled] { opacity: .6; cursor: not-allowed; box-shadow: none; }
 .smtp-result { margin-top:.6rem }
 
 /* NOTE: menu-admin-wrap rules are defined earlier; no-op placeholder removed */
