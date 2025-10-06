@@ -80,7 +80,7 @@ header('Content-Type: text/html; charset=utf-8');
   </head>
   <body>
     <a href="index.php" class="btn btn-ghost">◀ Back to Admin</a>
-    <p class="small">This shows append-only entries written to <code>data/upload-audit.log</code>. Newest first.</p>
+  <p class="small">This shows a chronological list of image uploads recorded by the site. Newest entries appear first.</p>
 
     <div class="top-actions">
       <form method="get" class="search-form">
@@ -111,7 +111,7 @@ header('Content-Type: text/html; charset=utf-8');
             <th>Time</th>
             <th>Admin</th>
             <th>Original</th>
-            <th>Stored</th>
+            <th>Saved filename</th>
             <th>Type</th>
             <th>MIME</th>
             <th>Size</th>

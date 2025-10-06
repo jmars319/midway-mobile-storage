@@ -626,7 +626,7 @@ header('Content-Type: text/html; charset=utf-8');
 
   <hr class="spaced-hr">
     <h2>Site Content Editor</h2>
-    <p class="small">Edit named content sections and save. Changes are stored in <code><?php echo htmlspecialchars(CONTENT_FILE); ?></code>.</p>
+  <p class="small">Edit named content sections and save. Changes are saved to the site's content store — no manual file edits are required.</p>
 
     <div id="content-editor" class="content-editor-wrap">
       <label for="section-select">Section</label>

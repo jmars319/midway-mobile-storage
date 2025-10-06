@@ -14,9 +14,9 @@ echo password_hash('YourSecurePasswordHere', PASSWORD_DEFAULT) . PHP_EOL;
 
 Copy the output and replace the `ADMIN_PASSWORD_HASH` constant in `admin/config.php`.
 
-- Ensure the web server/PHP process can write to these paths:
-  - `data/content.json`
-  - `uploads/images/`
+ - Make sure the web server can save site content and images. Specifically:
+   - The site stores editable content (like text and hours) in a content file on the server.
+   - Uploaded images are saved on the server so they can be used on the site.
 
 - Reservation audit: recent reservation audit entries are stored in `data/reservation-audit.json`. A full viewer is available at `/admin/reservation-audit.php` that supports download and clearing of audit entries.
 
