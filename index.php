@@ -658,9 +658,12 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 }
             }
 
-            var backdrop = document.getElementById('contact-modal-backdrop');
-            var closeBtn = modal.querySelector('.modal-close');
+            // contact modal elements (safely resolve; modal may be absent on some pages)
+            var modal = document.getElementById('contact-modal');
+            var footerLink = document.getElementById('footer-contact-link');
             var form = document.getElementById('footer-contact-form');
+            var backdrop = modal ? (modal.querySelector('.modal-backdrop') || document.getElementById('contact-modal-backdrop')) : document.getElementById('contact-modal-backdrop');
+            var closeBtn = modal ? modal.querySelector('.modal-close') : null;
 
     var removeFocusTrap = null;
     function openModal(e){
@@ -683,12 +686,12 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
     }
     function closeModal(){ modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; if (typeof removeFocusTrap === 'function') { removeFocusTrap(); removeFocusTrap = null; } }
 
-    footerLink.addEventListener('click', openModal);
+    if (footerLink) footerLink.addEventListener('click', openModal);
     // Also attach to any elements that should open the contact modal (e.g., Learn More button)
     var extraOpeners = document.querySelectorAll('.open-contact');
     extraOpeners.forEach(function(el){ if (el !== footerLink) el.addEventListener('click', openModal); });
-        backdrop.addEventListener('click', closeModal);
-        closeBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
         // When the FormHandler shows success message, close the modal automatically
         var observer = new MutationObserver(function(m){
