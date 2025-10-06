@@ -53,16 +53,7 @@ header('Content-Type: text/html; charset=utf-8');
     <meta charset="utf-8">
     <title>Admin - Reservation Audit</title>
   <link rel="stylesheet" href="/assets/css/styles.css">
-    <style>
-      /* rely on admin.css tokens and utilities */
-      body{font-family:Arial,Helvetica,sans-serif;padding:20px}
-      table{width:100%;border-collapse:collapse}
-      th,td{padding:6px;border:1px solid var(--admin-border);text-align:left;font-size:0.9rem}
-      th{background: color-mix(in srgb, var(--card-bg) 88%, black 6%)}
-      .small{font-size:0.85rem;color:var(--muted)}
-      .top-actions{margin-bottom:1rem;display:flex;gap:.5rem;align-items:center}
-      .mono{font-family:monospace;font-size:0.85rem}
-    </style>
+  <!-- Page helpers moved to /assets/css/admin.css -->
   </head>
   <body>
     <a href="index.php" class="btn btn-ghost">◀ Back to Admin</a>

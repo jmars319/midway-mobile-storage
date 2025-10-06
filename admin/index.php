@@ -363,28 +363,9 @@ header('Content-Type: text/html; charset=utf-8');
     <?php require_once __DIR__ . '/partials/head.php'; ?>
   <title>Admin - Job Applications</title>
     <link rel="stylesheet" href="/assets/css/styles.css">
-    <style>
-      /* use admin.css tokens where possible */
-      body{font-family:Arial,Helvetica,sans-serif;padding:20px}
-      table{width:100%;border-collapse:collapse}
-      th,td{padding:8px;border:1px solid var(--admin-border);text-align:left}
-      th{background: color-mix(in srgb, var(--card-bg) 88%, black 6%)}
-      .small{font-size:0.9rem;color:var(--muted)}
-      .top-actions{margin-bottom:1rem}
-    </style>
   </head>
   <body class="admin">
-  <style>
-  /* Toasts/Modal now use admin.css tokens */
-  #toast-container { position: fixed; right: 1rem; top: 1rem; z-index: 9999; display:flex; flex-direction:column; gap:.5rem; }
-  .toast { background: var(--admin-text); color:var(--card-bg); padding:.6rem .8rem; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95 }
-  .toast.success { background: var(--admin-success) }
-  .toast.error { background: var(--admin-danger) }
-  /* Modal */
-  #modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:10000 }
-  #modal { background:var(--card-bg); padding:1rem 1.25rem; border-radius:8px; max-width:480px; width:90%; box-shadow:0 10px 30px rgba(0,0,0,.12) }
-  #modal .actions { margin-top:1rem; display:flex; gap:.5rem; justify-content:flex-end }
-  </style>
+  <!-- page-level helpers are now in /assets/css/admin.css -->
 
     <div id="toast-container"></div>
     <div id="modal-backdrop" class="modal-backdrop">

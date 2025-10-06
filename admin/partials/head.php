@@ -1,5 +1,7 @@
 <?php
-// Shared admin head partial: fonts and common meta
+// Shared admin head partial: fonts, favicons, manifest and shared admin stylesheet
+//  - This file centralizes head items for all admin pages. Do not add another
+//    <link rel="stylesheet" href="/assets/css/admin.css"> elsewhere; update this partial instead.
 ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

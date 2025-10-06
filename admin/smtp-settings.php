@@ -19,11 +19,7 @@ if (file_exists(CONTENT_FILE)) {
     <meta charset="utf-8">
     <title>Admin - SMTP Settings</title>
   <link rel="stylesheet" href="/assets/css/styles.css">
-    <style>
-      body{font-family:Arial,Helvetica,sans-serif;padding:20px}
-      .small{font-size:0.9rem}
-      .card{padding:1rem;border-radius:8px}
-    </style>
+  <!-- Page helpers moved to /assets/css/admin.css -->
   </head>
   <body class="admin">
     <div class="page-wrap">
