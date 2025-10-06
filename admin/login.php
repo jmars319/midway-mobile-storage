@@ -26,12 +26,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
     <?php require_once __DIR__ . '/partials/head.php'; ?>
     <link rel="stylesheet" href="/assets/css/styles.css">
     <link rel="stylesheet" href="/assets/css/admin.css">
-    <!-- Favicons -->
-    <link rel="icon" type="image/x-icon" href="/uploads/images/favicon-set/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/uploads/images/favicon-set/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/uploads/images/favicon-set/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/uploads/images/favicon-set/favicon-180x180.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <!-- Favicons are included via admin/partials/head.php -->
     <style>
         * {
             margin: 0;
@@ -40,7 +35,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: var(--font-family-base);
             background: linear-gradient(135deg, var(--admin-grad-1), var(--admin-grad-2));
             min-height: 100vh;
             display: flex;
