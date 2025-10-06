@@ -149,11 +149,12 @@
     grid.appendChild(thumb);
   });
   }).catch(()=>{ grid.innerHTML = '<i>Failed to load</i>'; });
-    const ok = document.getElementById('modal-ok'); const cancel = document.getElementById('modal-cancel');
-    const cleanup = function(){ backdrop.style.display='none'; ok.removeEventListener('click', onOk); cancel.removeEventListener('click', onCancel); };
+    const ok = document.getElementById('modal-ok'); const cancel = document.getElementById('modal-cancel'); const closeBtn = document.getElementById('modal-close');
+    const cleanup = function(){ backdrop.style.display='none'; ok && ok.removeEventListener('click', onOk); cancel && cancel.removeEventListener('click', onCancel); if (closeBtn) closeBtn.removeEventListener('click', onClose); };
     const onOk = function(){ cleanup(); };
     const onCancel = function(){ cleanup(); };
-      ok.addEventListener('click', onOk); cancel.addEventListener('click', onCancel);
+    const onClose = function(){ cleanup(); };
+      ok && ok.addEventListener('click', onOk); cancel && cancel.addEventListener('click', onCancel); if (closeBtn) closeBtn.addEventListener('click', onClose);
   }
 
   function renderSection(sec){
