@@ -145,11 +145,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
             'timestamp' => (function_exists('eastern_now') ? eastern_now('c') : date('c'))
         ]);
 
+        require_once __DIR__ . '/partials/uploads.php';
         echo json_encode([
             'success' => true,
             'message' => 'SVG uploaded and sanitized successfully!',
             'filename' => $filename,
-            'url' => '../uploads/images/' . $relativePath,
+            'url' => admin_image_src($relativePath),
             'thumbnail' => null,
         ]);
         exit;
@@ -256,8 +257,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
         'success' => true,
         'message' => 'Image uploaded successfully!',
         'filename' => $filename,
-        'url' => '../uploads/images/' . $relativePath,
-        'thumbnail' => file_exists($thumbPath) ? ('../uploads/images/' . ($typeFolder !== 'general' ? $typeFolder . '/' : '') . 'thumbs/' . $filename) : null,
+        'url' => admin_image_src($relativePath),
+        'thumbnail' => file_exists($thumbPath) ? admin_image_src(($typeFolder !== 'general' ? $typeFolder . '/' : '') . 'thumbs/' . $filename) : null,
     ]);
 } else {
     http_response_code(400);

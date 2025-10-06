@@ -206,7 +206,7 @@
                 doc.open();
                 doc.write('<!doctype html><html><head><meta charset="utf-8"><title>Hours</title>');
                 doc.write('<meta name="viewport" content="width=device-width,initial-scale=1">');
-                doc.write('<style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:1rem;color:#0f172a}h1{font-size:1.25rem;margin:0 0 .5rem} .hours-list div{display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px dashed #e6eef8} .today{background:rgba(245,158,11,0.06);padding:.35rem;border-radius:6px;font-weight:700}</style>');
+                doc.write('<style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:1rem;color:var(--admin-modal-text)}h1{font-size:1.25rem;margin:0 0 .5rem} .hours-list div{display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px dashed #e6eef8} .today{background:rgba(245,158,11,0.06);padding:.35rem;border-radius:6px;font-weight:700}</style>');
                 doc.write('</head><body>');
                 doc.write('<h1>Hours</h1>');
                 doc.write('<div class="hours-list">');

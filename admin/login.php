@@ -36,7 +36,10 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                             $c = file_exists($cfile) ? json_decode(file_get_contents($cfile), true) : [];
                             $logo = $c['images']['logo'] ?? '';
                             $logoUrl = '';
-                            if ($logo) { $logoUrl = preg_match('#^https?://#i', $logo) ? $logo : '../uploads/images/'.ltrim($logo, '/'); }
+                            if ($logo) {
+                                require_once __DIR__ . '/partials/uploads.php';
+                                $logoUrl = preg_match('#^https?://#i', $logo) ? $logo : admin_image_src($logo);
+                            }
                         ?>
                         <?php if ($logoUrl): ?>
                             <?php
@@ -46,9 +49,10 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                                     $logo48 = $logo96 = $logo192 = $logoVal;
                                     $logo48_webp = $logo96_webp = $logo192_webp = $logoVal;
                                 } else {
-                                    $logo48 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-48.png', $logoVal) : 'logo-48.png');
-                                    $logo96 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-96.png', $logoVal) : 'logo-96.png');
-                                    $logo192 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i', '-192.png', $logoVal) : 'logo-192.png');
+                                    require_once __DIR__ . '/partials/uploads.php';
+                                    $logo48 = admin_image_src($logoVal ? preg_replace('/\.png$/i', '-48.png', $logoVal) : 'logo-48.png');
+                                    $logo96 = admin_image_src($logoVal ? preg_replace('/\.png$/i', '-96.png', $logoVal) : 'logo-96.png');
+                                    $logo192 = admin_image_src($logoVal ? preg_replace('/\.png$/i', '-192.png', $logoVal) : 'logo-192.png');
                                     $logo48_webp = preg_replace('/\.png$/i', '.webp', $logo48);
                                     $logo96_webp = preg_replace('/\.png$/i', '.webp', $logo96);
                                     $logo192_webp = preg_replace('/\.png$/i', '.webp', $logo192);

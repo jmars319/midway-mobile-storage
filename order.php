@@ -43,7 +43,9 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
         <?php
           $logoFile = $content['images']['logo'] ?? '';
           $logoUrl = '';
-          if ($logoFile) { $logoUrl = preg_match('#^https?://#i', $logoFile) ? $logoFile : 'uploads/images/'.ltrim($logoFile, '/'); }
+          if ($logoFile) {
+            $logoUrl = preg_match('#^https?://#i', $logoFile) ? $logoFile : 'uploads/images/'.ltrim($logoFile, '/');
+          }
         ?>
         <a href="/" class="logo">
           <?php if ($logoUrl): ?>

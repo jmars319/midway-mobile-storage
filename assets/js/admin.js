@@ -131,7 +131,14 @@
   // authenticated; the server-side endpoint enforces auth and CSRF
   // where appropriate. The picker only displays filenames — the
   // chosen value is written into the text input for later saving.
-    fetch('list-images.php').then(r=>r.json()).then(j=>{
+  // Determine if this picker should be constrained to hero images.
+  // Use multiple heuristics: input name contains 'hero' OR the currently
+  // selected section in the editor is the 'hero' section.
+  const inputLooksLikeHero = (targetInput && targetInput.name && /hero/i.test(targetInput.name));
+  const sectionLooksLikeHero = (typeof sectionSelect !== 'undefined' && sectionSelect && sectionSelect.value && /hero/i.test(sectionSelect.value));
+  const isHero = inputLooksLikeHero || sectionLooksLikeHero;
+  const listUrl = 'list-images.php' + (isHero ? '?context=hero' : '');
+  fetch(listUrl).then(r=>r.json()).then(j=>{
       if (!j || !Array.isArray(j.files)) { grid.innerHTML = '<i>No images</i>'; return; }
     const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
     j.files.forEach(f=>{
@@ -140,7 +147,7 @@
     const ext = (f.split('.').pop() || '').toLowerCase();
     if (!ext || allowedExt.indexOf(ext) === -1) return;
     const thumb = document.createElement('div'); thumb.style.width='120px'; thumb.style.cursor='pointer'; thumb.style.textAlign='center';
-    const img = document.createElement('img'); img.src = '../uploads/images/'+f; img.style.width='100%'; img.style.height='80px'; img.style.objectFit='cover';
+  const img = document.createElement('img'); img.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; img.style.width='100%'; img.style.height='80px'; img.style.objectFit='cover';
     // fallback placeholder (SVG data URI) in case image fails to load
     img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
     const lab = document.createElement('div'); lab.textContent = f; lab.style.fontSize='0.8rem'; lab.style.overflow='hidden'; lab.style.textOverflow='ellipsis'; lab.style.whiteSpace='nowrap';
@@ -265,7 +272,7 @@
               if (sect) {
                 const img = sect.querySelector('img');
                 if (img) {
-                  const src = j.thumbnail ? j.thumbnail : (j.url ? j.url : ('../uploads/images/' + j.filename));
+                  const src = j.thumbnail ? j.thumbnail : (j.url ? j.url : ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + j.filename));
                   img.src = src + (src.indexOf('?') === -1 ? ('?v=' + Date.now()) : ('&v=' + Date.now()));
                 }
                 // auto-close the section after success
@@ -307,7 +314,7 @@
         if (!ext || allowedExt.indexOf(ext) === -1) return;
         const row = document.createElement('div');
         row.style.display='flex'; row.style.alignItems='center'; row.style.gap='1rem'; row.style.marginBottom='.5rem';
-        const img = document.createElement('img'); img.src = '../uploads/images/'+f; img.style.height='48px'; img.style.objectFit='cover';
+  const img = document.createElement('img'); img.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; img.style.height='48px'; img.style.objectFit='cover';
         img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
         const name = document.createElement('div'); name.textContent = f; name.style.flex='1';
   const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.addEventListener('click', async ()=>{
@@ -342,7 +349,7 @@
           const ext = (f.split('.').pop() || '').toLowerCase();
           if (['png','jpg','jpeg','gif','webp','svg','ico'].indexOf(ext) === -1) return;
           const el = document.createElement('div'); el.style.display='inline-block'; el.style.marginRight='.5rem'; el.style.textAlign='center'; el.style.width='80px';
-          const img = document.createElement('img'); img.src = '../uploads/images/'+f; img.style.width='80px'; img.style.height='60px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
+          const img = document.createElement('img'); img.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; img.style.width='80px'; img.style.height='60px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
           img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="8" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
           const caption = document.createElement('div'); caption.textContent = f; caption.style.fontSize='0.72rem'; caption.style.overflow='hidden'; caption.style.textOverflow='ellipsis'; caption.style.whiteSpace='nowrap';
           el.appendChild(img); el.appendChild(caption);
@@ -618,8 +625,8 @@
           const imgIn = makeInput(it.image||'', 'filename.jpg or https://...'); imgIn.title = 'Image filename within uploads/images or a full URL'; imgIn.setAttribute('data-field-type','image');
           const pick = document.createElement('button'); pick.type='button'; pick.textContent='Pick'; pick.className='btn btn-ghost'; pick.addEventListener('click', ()=> openImagePicker(imgIn));
           const imgRow = document.createElement('div'); imgRow.style.display='flex'; imgRow.style.gap='.4rem'; imgRow.appendChild(imgIn); imgRow.appendChild(pick);
-          const preview = document.createElement('img'); preview.style.width='100%'; preview.style.height='80px'; preview.style.objectFit='cover'; preview.style.marginTop='.4rem'; if (imgIn.value) preview.src = '../uploads/images/' + imgIn.value;
-          imgIn.addEventListener('input', ()=>{ menuData[sidx].items[idx].image = imgIn.value; if (imgIn.value) preview.src = '../uploads/images/' + imgIn.value; else preview.removeAttribute('src'); renderPreview(); });
+          const preview = document.createElement('img'); preview.style.width='100%'; preview.style.height='80px'; preview.style.objectFit='cover'; preview.style.marginTop='.4rem'; if (imgIn.value) preview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + imgIn.value;
+          imgIn.addEventListener('input', ()=>{ menuData[sidx].items[idx].image = imgIn.value; if (imgIn.value) preview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + imgIn.value; else preview.removeAttribute('src'); renderPreview(); });
           // Also update preview when textual fields change
           titleIn.addEventListener('input', renderPreview); shortIn.addEventListener('input', renderPreview); if (priceIn) priceIn.addEventListener('input', renderPreview); descIn.addEventListener('input', renderPreview);
 
@@ -675,7 +682,7 @@
         }
         (section.items || []).forEach(it=>{
           const pi = document.createElement('div'); pi.className='preview-item';
-          if (it.image) { const im = document.createElement('img'); im.src = '../uploads/images/'+it.image; pi.appendChild(im); }
+          if (it.image) { const im = document.createElement('img'); im.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/')+it.image; pi.appendChild(im); }
           const meta = document.createElement('div'); meta.className='preview-meta';
           const t = document.createElement('div'); t.textContent = it.title || ''; t.style.fontWeight='700';
           const s = document.createElement('div'); s.className='small'; s.textContent = it.short || '';

@@ -48,6 +48,8 @@
     --surface-dark: #0b1220; /* used for modals and dark footer */
     --text-on-dark: #e6eef8;
     --border-muted: #cccccc;
+    /* Admin-specific modal text color: keep modal content dark even in dark mode */
+    --admin-modal-text: #0f172a;
     
     /* Border & Divider Colors */
     --border-color: #e2e8f0;
@@ -1149,6 +1151,8 @@ a.btn.btn-primary:focus {
         --text-muted: #64748b;
         --border-color: #334155;
         --divider-color: #475569;
+        /* Admin modal token: make modal text light in dark mode */
+        --admin-modal-text: #f1f5f9;
     }
     
     .hero { background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 65%, var(--surface-dark) 35%)); }

@@ -322,6 +322,68 @@ body.admin { overflow-x: hidden; }
 #modal-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid rgba(0,0,0,0.04); }
 #modal-title { margin:0; font-size:1rem }
 #modal-close { background:transparent; border:none; font-size:1.05rem; cursor:pointer }
+
+#modal-title { color: var(--text-primary); }
+#modal-close { color: var(--text-primary); opacity: 0.95; }
+#modal-close:hover, #modal-close:focus { color: var(--primary-color); opacity: 1; outline: none; }
+
+/* Make ghost/cancel buttons inside modal actions clearly readable and match brand */
+.admin #modal .actions .btn-ghost { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); border-color: rgba(15,23,42,0.06); }
+.admin #modal .actions .btn-ghost:hover, .admin #modal .actions .btn-ghost:focus { background: color-mix(in srgb, var(--primary-color) 6%, var(--card-bg) 94%); color: var(--primary-color); -webkit-text-fill-color: var(--primary-color); }
+
+/* Force modal content to use the brand text color so labels and content are
+	readable even when the page default is an inverse (light) color. Keep
+	button colors intact by setting a specific rule for ghost buttons below. */
+#modal { color: var(--text-primary); }
+#modal .modal-body { color: var(--text-primary); }
+
+/* Dark mode: ensure admin modal surface is darker so light text remains readable */
+@media (prefers-color-scheme: dark) {
+	/* Apply the same darker surface and text rules to all admin modal variants */
+	.admin #modal,
+	.admin .modal,
+	.admin .app-modal-dialog {
+		/* darken the card background slightly in dark mode to provide contrast */
+		background: color-mix(in srgb, var(--card-bg) 82%, black 18%);
+		box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+		border: 1px solid rgba(255,255,255,0.04);
+	}
+
+	/* Ensure modal text and cancel/ghost button labels use the admin modal text token */
+	.admin #modal .modal-body,
+	.admin .modal .modal-body,
+	.admin .app-modal-dialog,
+	.admin #modal #modal-title,
+	.admin #modal #modal-close,
+	.admin #modal #modal-cancel,
+	.admin #modal .actions .btn-ghost,
+	.admin .modal .actions .btn-ghost,
+	.admin .app-modal-dialog .app-modal-body {
+		color: var(--admin-modal-text);
+		-webkit-text-fill-color: var(--admin-modal-text);
+	}
+
+	/* Modal actions background/separator adjustments */
+	.admin #modal .actions,
+	.admin .modal .actions,
+	.admin .app-modal-dialog .app-modal-body {
+		background: color-mix(in srgb, var(--card-bg) 90%, black 10%);
+		border-top: 1px solid rgba(255,255,255,0.03);
+	}
+}
+/* Ensure text inside modal inherits the dark color; leave controls that set
+	their own colors (like .btn-primary) untouched. */
+#modal .modal-body * { color: inherit; }
+.admin #modal .actions .btn-ghost { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); }
+
+/* Explicit target for the modal Cancel button used in the image picker */
+.admin #modal #modal-cancel { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); border-color: rgba(15,23,42,0.06); }
+
+/* Ensure any child text inside modal ghost buttons follows the filled color */
+.admin #modal .actions .btn-ghost, .admin #modal .actions .btn-ghost * { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); }
+
+.admin .modal-ensure-dark-text, .admin #modal, .admin #modal #modal-title, .admin #modal #modal-close, .admin #modal #modal-body { color: var(--admin-modal-text); }
+.admin #modal :not(button):not(.btn) { color: var(--admin-modal-text); }
 .modal-body { padding:1rem 1.25rem; color:var(--admin-text) }
 .modal .actions { padding: .75rem 1.25rem; display:flex; justify-content:flex-end; gap:.5rem; border-top:1px solid rgba(0,0,0,0.04); background:var(--card-bg) }
 

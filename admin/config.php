@@ -17,6 +17,21 @@ define('CONTENT_FILE', '../data/content.json');
 // Upload directory
 define('UPLOAD_DIR', '../uploads/images/');
 
+/**
+ * Return the public URL prefix for admin pages to reference uploaded images.
+ * This keeps admin pages using a single canonical prefix and avoids mixing
+ * absolute vs relative paths across templates and JS.
+ */
+function admin_uploads_base() {
+    // relative to the admin/ folder (used in admin templates)
+    return '../uploads/images/';
+}
+
+function admin_upload_url($relativePath) {
+    $rel = ltrim((string)$relativePath, '/');
+    return admin_uploads_base() . $rel;
+}
+
 // Notification email for quote submissions (change as needed)
 define('QUOTE_NOTIFICATION_EMAIL', 'thundergrillmidway@gmail.com');
 

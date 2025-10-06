@@ -384,27 +384,29 @@ header('Content-Type: text/html; charset=utf-8');
               // render site logo in admin header if available
               $adminLogo = '';
               if (!empty($siteContent['images']['logo'])) {
+                require_once __DIR__ . '/partials/uploads.php';
                 $lf = $siteContent['images']['logo'];
-                if (preg_match('#^https?://#i', $lf)) $adminLogo = $lf; else $adminLogo = '../uploads/images/' . ltrim($lf, '/');
+                if (preg_match('#^https?://#i', $lf)) $adminLogo = $lf; else $adminLogo = admin_image_src($lf);
               }
             ?>
             <div class="header-brand">
               <a href="../" class="logo logo-inline">
                 <?php if ($adminLogo): ?>
-                  <?php
-                    $logoVal = $siteContent['images']['logo'] ?? '';
-                    if (preg_match('#^https?://#i', $logoVal)) {
-                      $logo48 = $logo96 = $logo192 = $logoVal;
-                      $logo48_webp = $logo96_webp = $logo192_webp = $logoVal;
-                    } else {
-                      $logo48 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i','-48.png', $logoVal) : 'logo-48.png');
-                      $logo96 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i','-96.png', $logoVal) : 'logo-96.png');
-                      $logo192 = '/uploads/images/' . ($logoVal ? preg_replace('/\.png$/i','-192.png', $logoVal) : 'logo-192.png');
-                      $logo48_webp = preg_replace('/\.png$/i', '.webp', $logo48);
-                      $logo96_webp = preg_replace('/\.png$/i', '.webp', $logo96);
-                      $logo192_webp = preg_replace('/\.png$/i', '.webp', $logo192);
-                    }
-                  ?>
+                      <?php
+                        require_once __DIR__ . '/partials/uploads.php';
+                        $logoVal = $siteContent['images']['logo'] ?? '';
+                        if (preg_match('#^https?://#i', $logoVal)) {
+                          $logo48 = $logo96 = $logo192 = $logoVal;
+                          $logo48_webp = $logo96_webp = $logo192_webp = $logoVal;
+                        } else {
+                          $logo48 = admin_image_src($logoVal ? preg_replace('/\.png$/i','-48.png', $logoVal) : 'logo-48.png');
+                          $logo96 = admin_image_src($logoVal ? preg_replace('/\.png$/i','-96.png', $logoVal) : 'logo-96.png');
+                          $logo192 = admin_image_src($logoVal ? preg_replace('/\.png$/i','-192.png', $logoVal) : 'logo-192.png');
+                          $logo48_webp = preg_replace('/\.png$/i', '.webp', $logo48);
+                          $logo96_webp = preg_replace('/\.png$/i', '.webp', $logo96);
+                          $logo192_webp = preg_replace('/\.png$/i', '.webp', $logo192);
+                        }
+                      ?>
                   <picture>
                     <source type="image/webp" srcset="<?php echo htmlspecialchars($logo48_webp); ?> 1x, <?php echo htmlspecialchars($logo96_webp); ?> 2x, <?php echo htmlspecialchars($logo192_webp); ?> 4x">
                     <img src="<?php echo htmlspecialchars($logo48); ?>" srcset="<?php echo htmlspecialchars($logo48); ?> 1x, <?php echo htmlspecialchars($logo96); ?> 2x, <?php echo htmlspecialchars($logo192); ?> 4x" alt="<?php echo htmlspecialchars($siteContent['business_info']['name'] ?? 'Site'); ?>" class="logo-img">
@@ -723,7 +725,7 @@ header('Content-Type: text/html; charset=utf-8');
           <div class="image-section-body">
             <?php // show current image preview when available ?>
             <?php $current = $siteContent['images'][$tkey] ?? ''; if ($current): ?>
-              <?php $url = preg_match('#^https?://#i', $current) ? $current : ('../uploads/images/' . ltrim($current, '/')); ?>
+              <?php $url = preg_match('#^https?://#i', $current) ? $current : admin_upload_url($current); ?>
               <div class="mb-05">
                 <div class="small">Current:</div>
                 <img src="<?php echo htmlspecialchars($url); ?>" alt="<?php echo htmlspecialchars($tlabel); ?>" style="max-width:280px;max-height:140px;object-fit:contain;border:1px solid #eee;padding:4px;" />
