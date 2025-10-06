@@ -93,7 +93,7 @@ header('Content-Type: text/html; charset=utf-8');
     <p class="small">This shows append-only entries written to <code>data/upload-audit.log</code>. Newest first.</p>
 
     <div class="top-actions">
-      <form method="get" style="display:flex;gap:.5rem;align-items:center">
+      <form method="get" class="search-form">
         <input type="text" name="q" placeholder="Search admin, filename, type, ip..." value="<?php echo htmlspecialchars($search); ?>">
         <label class="small">Per page:
           <select name="per_page">
@@ -105,7 +105,7 @@ header('Content-Type: text/html; charset=utf-8');
         <button type="submit" class="btn">Filter</button>
       </form>
 
-      <div style="margin-left:auto">
+      <div class="ml-auto">
         <a class="btn btn-ghost" href="upload-audit.php?download=csv">Download CSV</a>
         <a class="btn btn-ghost" href="upload-audit.php?download=json">Download JSON</a>
       </div>
@@ -147,7 +147,7 @@ header('Content-Type: text/html; charset=utf-8');
       </table>
 
       <?php if ($total_pages > 1): ?>
-        <div style="margin-top:.75rem">
+        <div class="mt-15">
           <?php if ($page > 1): ?>
             <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page-1])); ?>">&laquo; Prev</a>
           <?php endif; ?>

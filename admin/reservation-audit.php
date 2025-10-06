@@ -70,7 +70,7 @@ header('Content-Type: text/html; charset=utf-8');
     <p class="small">Append-only audit entries written to <code>data/reservation-audit.json</code>. Newest first.</p>
 
     <div class="top-actions">
-      <div style="margin-left:auto">
+      <div class="ml-auto">
         <a class="btn btn-ghost" href="reservation-audit.php?download=csv">Download CSV</a>
         <a class="btn btn-ghost" href="reservation-audit.php?download=json">Download JSON</a>
       </div>
@@ -99,7 +99,7 @@ header('Content-Type: text/html; charset=utf-8');
       </table>
     <?php endif; ?>
 
-    <form method="post" style="margin-top:1rem" data-confirm="Clear reservation audit? This will remove all entries. Continue?">
+    <form method="post" class="mt-1" data-confirm="Clear reservation audit? This will remove all entries. Continue?">
       <?php echo csrf_input_field(); ?>
       <input type="hidden" name="action" value="clear_reservation_audit">
       <button type="submit" class="btn btn-ghost">Clear audit</button>

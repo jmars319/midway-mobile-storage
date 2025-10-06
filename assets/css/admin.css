@@ -246,6 +246,15 @@ body.admin { overflow-x: hidden; }
 .smtp-test-input { width:260px }
 .smtp-result { margin-top:.6rem }
 
+/* helpers to replace common inline styles found in admin templates */
+.mt-05 { margin-top: .5rem !important; }
+.mt-1 { margin-top: 1rem !important; }
+.mt-15 { margin-top: 1.5rem !important; }
+.ml-auto { margin-left: auto !important; }
+.text-center { text-align: center !important; }
+.pad-3rem { padding: 3rem 1rem !important; }
+.card-center { max-width: 720px; margin: 0 auto; text-align: center; }
+
 /* modal improvements */
 .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000 }
 #modal { background:white; padding:0; border-radius:10px; max-width:520px; width:92%; box-shadow:0 12px 36px rgba(2,6,23,0.18); overflow:hidden }

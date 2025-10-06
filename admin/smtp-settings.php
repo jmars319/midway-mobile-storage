@@ -35,7 +35,7 @@ if (file_exists(CONTENT_FILE)) {
 
         <p class="small">Configure SMTP credentials used to send notification emails. Passwords are stored in <code>admin/auth.json</code> (untracked).</p>
         <?php if (!file_exists(__DIR__ . '/../vendor/autoload.php')): ?>
-          <div class="small" style="margin-top:.5rem"><span class="muted">Note:</span> <span class="muted-text">PHPMailer (Composer dependencies) not detected. The SMTP test button will be disabled until you install dependencies (see README).</span></div>
+          <div class="small mt-05"><span class="muted">Note:</span> <span class="muted-text">PHPMailer (Composer dependencies) not detected. The SMTP test button will be disabled until you install dependencies (see README).</span></div>
         <?php endif; ?>
 
         <section class="card card-spaced">
