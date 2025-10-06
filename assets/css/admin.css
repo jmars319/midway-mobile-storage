@@ -122,8 +122,12 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 	display: none;
 	z-index: 60;
 	max-width: min(88vw, 360px);
-	word-break: break-word;
-	box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+		/* prefer overflow-wrap to avoid odd single-letter breaks in some browsers */
+		overflow-wrap: anywhere;
+		word-break: normal;
+		line-height: 1.35;
+		text-align: left;
+		box-shadow: 0 6px 18px rgba(2,6,23,0.12);
 	border: 1px solid rgba(0,0,0,0.06);
 }
 .admin .tooltip:hover::after, .admin .tooltip:focus::after { display:block }
