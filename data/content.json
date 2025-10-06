@@ -1,5 +1,12 @@
 {
     "images": {
         "logo": "logo.png"
-    }
+    },
+    "business_info": {
+        "name": "Midway Mobile Storage",
+        "address": "212 Fred Sink Rd, Winston-Salem, NC 27107",
+        "phone": "336-764-4208",
+        "email": ""
+    },
+    "last_updated": "2025-10-06 01:44:39"
 }

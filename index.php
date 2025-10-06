@@ -194,8 +194,6 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             </div>
         </div>
     </section>
-         RESERVATION SECTION (moved after Menu)
-         ============================================== -->
     <section class="section" id="reservation">
         <div class="container">
             <div class="section-header">

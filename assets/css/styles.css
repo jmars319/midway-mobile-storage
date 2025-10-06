@@ -254,7 +254,10 @@ body {
 .map-links .btn { display:inline-flex; align-items:center; gap:.45rem }
 /* Ensure map action buttons are readable despite global .btn color overrides */
 .map-links .btn { color: var(--text-primary) !important; background: var(--surface-color); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
-.map-links .btn.btn-outline { color: var(--primary-color) !important; background: transparent; border: 2px solid var(--primary-color); }
+/* Ensure outline variant inside map action row renders dark text (override global .btn rules) */
+.map-links .btn.btn-outline { color: var(--primary-color) !important; -webkit-text-fill-color: var(--primary-color) !important; background: transparent !important; border: 2px solid var(--primary-color) !important; }
+/* Also ensure any child elements (icons/labels) inherit the forced color */
+.map-links .btn.btn-outline, .map-links .btn.btn-outline > * { color: var(--primary-color) !important; -webkit-text-fill-color: var(--primary-color) !important; }
 
 h1, h2, h3, h4, h5, h6 {
     margin: 0;
@@ -1080,7 +1083,9 @@ a.btn.btn-primary:focus {
 /* Button visual styles for map action row */
 .map-links .btn { box-shadow: var(--shadow-sm); padding: 0.6rem 0.9rem; font-size: 0.95rem; }
 .map-links .btn.btn-primary { background: var(--primary-color) !important; color: var(--card-bg) !important; border: none !important; }
-.map-links .btn.btn-outline { background: transparent !important; color: var(--primary-color) !important; border: 2px solid var(--primary-color) !important; }
+/* Force readable, high-contrast text for the outline button in the map action row */
+.map-links .btn.btn-outline { background: transparent !important; color: var(--primary-color) !important; -webkit-text-fill-color: var(--primary-color) !important; border: 2px solid var(--primary-color) !important; }
+.map-links .btn.btn-outline, .map-links .btn.btn-outline > * { color: var(--primary-color) !important; -webkit-text-fill-color: var(--primary-color) !important; }
 
 /* Mobile-friendly stacking and spacing */
 @media (max-width: 768px) {
