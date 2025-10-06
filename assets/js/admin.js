@@ -134,14 +134,21 @@
   // chosen value is written into the text input for later saving.
   fetch('list-images.php').then(r=>r.json()).then(j=>{
       if (!j || !Array.isArray(j.files)) { grid.innerHTML = '<i>No images</i>'; return; }
-        j.files.forEach(f=>{
-        const thumb = document.createElement('div'); thumb.style.width='120px'; thumb.style.cursor='pointer'; thumb.style.textAlign='center';
-        const img = document.createElement('img'); img.src = '../uploads/images/'+f; img.style.width='100%'; img.style.height='80px'; img.style.objectFit='cover';
-        const lab = document.createElement('div'); lab.textContent = f; lab.style.fontSize='0.8rem'; lab.style.overflow='hidden'; lab.style.textOverflow='ellipsis'; lab.style.whiteSpace='nowrap';
-        thumb.appendChild(img); thumb.appendChild(lab);
+    const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
+    j.files.forEach(f=>{
+    // defensive client-side filter: skip hidden files and non-image extensions
+    if (!f || f.charAt(0) === '.') return;
+    const ext = (f.split('.').pop() || '').toLowerCase();
+    if (!ext || allowedExt.indexOf(ext) === -1) return;
+    const thumb = document.createElement('div'); thumb.style.width='120px'; thumb.style.cursor='pointer'; thumb.style.textAlign='center';
+    const img = document.createElement('img'); img.src = '../uploads/images/'+f; img.style.width='100%'; img.style.height='80px'; img.style.objectFit='cover';
+    // fallback placeholder (SVG data URI) in case image fails to load
+    img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
+    const lab = document.createElement('div'); lab.textContent = f; lab.style.fontSize='0.8rem'; lab.style.overflow='hidden'; lab.style.textOverflow='ellipsis'; lab.style.whiteSpace='nowrap';
+    thumb.appendChild(img); thumb.appendChild(lab);
   thumb.addEventListener('click', ()=>{ targetInput.value = f; targetInput.dispatchEvent(new Event('input', { bubbles: true })); backdrop.style.display='none'; });
-        grid.appendChild(thumb);
-      });
+    grid.appendChild(thumb);
+  });
     }).catch(()=>{ grid.innerHTML = '<i>Failed to load</i>'; });
     const ok = document.getElementById('modal-ok'); const cancel = document.getElementById('modal-cancel');
     function cleanup(){ backdrop.style.display='none'; ok.removeEventListener('click',onOk); cancel.removeEventListener('click',onCancel); }
@@ -237,10 +244,16 @@
     fetch('list-images.php').then(r=>r.json()).then(j=>{
       if (!j || !Array.isArray(j.files)) { list.innerHTML = '<i>No images</i>'; return; }
       list.innerHTML = '';
+      const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
       j.files.forEach(f=>{
+        // skip hidden files and non-image types (defensive in case server side changes)
+        if (!f || f.charAt(0) === '.') return;
+        const ext = (f.split('.').pop() || '').toLowerCase();
+        if (!ext || allowedExt.indexOf(ext) === -1) return;
         const row = document.createElement('div');
         row.style.display='flex'; row.style.alignItems='center'; row.style.gap='1rem'; row.style.marginBottom='.5rem';
         const img = document.createElement('img'); img.src = '../uploads/images/'+f; img.style.height='48px'; img.style.objectFit='cover';
+        img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
         const name = document.createElement('div'); name.textContent = f; name.style.flex='1';
   const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.addEventListener('click', async ()=>{
           if (!await showConfirm('Delete '+f+'?')) return;
