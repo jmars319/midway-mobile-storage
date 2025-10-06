@@ -330,5 +330,30 @@ body.admin { overflow-x: hidden; }
 
 /* Center the login card on the login page only */
 .admin.login-page { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:2rem; }
-.admin.login-page .login-container { margin:0; }
+
+/* subtle entrance animation for the login card */
+.admin.login-page .login-container {
+	margin: 0;
+	opacity: 0;
+	transform: translateY(10px) scale(.996);
+	will-change: transform, opacity;
+	animation: adminLoginEnter .44s cubic-bezier(.2, .9, .28, 1) .06s both;
+}
+
+@keyframes adminLoginEnter {
+	from { opacity: 0; transform: translateY(10px) scale(.996); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	.admin.login-page .login-container { animation: none; transition: none; opacity: 1; transform: none; }
+}
+
+/* Tighter spacing on very small screens so the card doesn't feel cramped */
+@media (max-width:420px) {
+	.admin.login-page { padding: 1rem; }
+	.admin.login-page .login-container { padding: 1.25rem; border-radius:10px; max-width: calc(100% - 2rem); }
+	.admin .admin-logo { height:56px; }
+}
 
