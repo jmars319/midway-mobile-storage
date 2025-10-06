@@ -261,41 +261,50 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
          ============================================== -->
     <section class="section" id="about">
         <div class="container">
-            <div class="grid grid-2">
+            <?php
+                // About content: left column is descriptive content, right column shows an embedded map
+                $bizAddress = $content['business_info']['address'] ?? '';
+                $bizName = htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage');
+                // allow an explicit embed URL in content.json (content.business_info.map_embed)
+                $explicitEmbed = $content['business_info']['map_embed'] ?? '';
+            ?>
+            <div class="about-grid">
                 <div>
-                    <h2 class="section-title text-left">About Midway Mobile Storage</h2>
-                    <p class="mb-4">
-                        Midway Mobile Storage provides secure, convenient mobile storage solutions for residents and businesses in the Midway area.
-                    <!-- ==============================================
-                                                    // NOTE: this template's content is stored in $content (not $siteContent)
-                                                    $bizAddress = $content['business_info']['address'] ?? '';
-                          $mapLinksHtml = '';
-                          if ($bizAddress) {
-                              $q = rawurlencode($bizAddress);
-                              // set a sane default zoom for the embedded map (15 = neighborhood level)
-                              $zoom = 15;
-                              $mapSrc = "https://www.google.com/maps?q={$q}&z={$zoom}&output=embed";
-                              echo '<iframe class="about-map" src="' . htmlspecialchars($mapSrc) . '" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map showing our location"></iframe>';
-                              $gmUrl = 'https://www.google.com/maps?q=' . $q;
-                              $dirUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $q;
-                              // Use business name when available to make aria-labels descriptive
-                              $bizName = htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage');
-                              $pinSvg = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>';
-                              $dirSvg = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 0-.9-3.8L12 18l3.8-8.1c-.9.4-1.9.6-2.8.6C8.7 10.5 6 7.8 6 4.5 6 3.7 6.1 3 6.2 2.2 7.9 3 9.7 3.5 11.5 3.5c6 0 9.5 3.6 9.5 8z"/></svg>';
-                              $mapLinksHtml = '<div class="map-links"><a class="btn btn-secondary" href="' . htmlspecialchars($gmUrl) . '" target="_blank" rel="noopener noreferrer" title="Open ' . $bizName . ' in Google Maps" aria-label="Open ' . $bizName . ' in Google Maps" aria-pressed="false">' . $pinSvg . '<span class="label">Open map</span></a><a class="btn btn-outline" href="' . htmlspecialchars($dirUrl) . '" target="_blank" rel="noopener noreferrer" title="Get directions to ' . $bizName . '" aria-label="Get directions to ' . $bizName . '" aria-pressed="false">' . $dirSvg . '<span class="label">Directions</span></a></div>';
-                          } else {
-                              echo '<img src="assets/images/about-image.jpg" alt="About Midway Mobile Storage" class="responsive-image">';
-                              $pinSvg = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>';
-                              $dirSvg = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 0-.9-3.8L12 18l3.8-8.1c-.9.4-1.9.6-2.8.6C8.7 10.5 6 7.8 6 4.5 6 3.7 6.1 3 6.2 2.2 7.9 3 9.7 3.5 11.5 3.5c6 0 9.5 3.6 9.5 8z"/></svg>';
-                              $bizName = htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage');
-                              $mapLinksHtml = '<div class="map-links"><a class="btn btn-secondary" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" title="Open ' . $bizName . ' in Google Maps" aria-label="Open ' . $bizName . ' in Google Maps" aria-pressed="false">' . $pinSvg . '<span class="label">Open map</span></a><a class="btn btn-outline" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" title="Get directions to ' . $bizName . '" aria-label="Get directions to ' . $bizName . '" aria-pressed="false">' . $dirSvg . '<span class="label">Directions</span></a></div>';
-                          }
-                        ?>
-                    </div>
+                    <h2 class="section-title">About Midway Mobile Storage</h2>
+                    <p class="mb-4">Midway Mobile Storage provides secure, convenient mobile storage solutions for residents and businesses in the Midway area.</p>
+                    <p>We offer flexible unit sizes, month-to-month rentals, and friendly local service. If you'd like to see our location or get directions, use the map to the right or click "Open map" below.</p>
                     <?php
-                        // Render the map action buttons below the map container so they don't overlap the iframe
-                        echo $mapLinksHtml ?? '';
+                        // Prepare map links (open map and directions)
+                        if ($bizAddress) {
+                            $q = rawurlencode($bizAddress);
+                            $gmUrl = 'https://www.google.com/maps?q=' . $q;
+                            $dirUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $q;
+                        } else {
+                            $gmUrl = 'https://www.google.com/maps';
+                            $dirUrl = 'https://www.google.com/maps';
+                        }
+                        $pinSvg = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>';
+                        $dirSvg = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 0-.9-3.8L12 18l3.8-8.1c-.9.4-1.9.6-2.8.6C8.7 10.5 6 7.8 6 4.5 6 3.7 6.1 3 6.2 2.2 7.9 3 9.7 3.5 11.5 3.5c6 0 9.5 3.6 9.5 8z"/></svg>';
+                        $mapLinksHtml = '<div class="map-links" style="margin-top:.75rem"><a class="btn btn-secondary" href="' . htmlspecialchars($gmUrl) . '" target="_blank" rel="noopener noreferrer" title="Open ' . $bizName . ' in Google Maps" aria-label="Open ' . $bizName . ' in Google Maps" aria-pressed="false">' . $pinSvg . '<span class="label">Open map</span></a> <a class="btn btn-outline" href="' . htmlspecialchars($dirUrl) . '" target="_blank" rel="noopener noreferrer" title="Get directions to ' . $bizName . '" aria-label="Get directions to ' . $bizName . '" aria-pressed="false">' . $dirSvg . '<span class="label">Directions</span></a></div>';
                     ?>
+                    <?php echo $mapLinksHtml; ?>
+                </div>
+                <div>
+                    <?php
+                        // Map embed: prefer explicit embed URL in content.json, otherwise construct from address
+                        if ($explicitEmbed) {
+                            $embedSrc = $explicitEmbed;
+                        } elseif ($bizAddress) {
+                            $q = rawurlencode($bizAddress);
+                            $zoom = 15;
+                            $embedSrc = "https://www.google.com/maps?q={$q}&z={$zoom}&output=embed";
+                        } else {
+                            // fallback: show google maps home
+                            $embedSrc = 'https://www.google.com/maps';
+                        }
+                    ?>
+                    <div class="map-frame">
+                        <iframe class="about-map" src="<?php echo htmlspecialchars($embedSrc); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map showing our location"></iframe>
                     </div>
                 </div>
             </div>
