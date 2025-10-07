@@ -1,0 +1,109 @@
+/* Modal, toasts, app-modal and small utilities */
+/* Toasts/Modal minor tweaks to match admin look */
+#toast-container .toast { border-radius:8px; font-weight:600; box-shadow:0 8px 18px rgba(2,6,23,0.12); }
+#modal { border-radius:12px; }
+
+/* App modal specific styles (replaces inline styles for #app-modal dialog) */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000 }
+.app-modal-dialog { background:var(--card-bg, #fff); max-width:720px; width:95%; margin:auto; padding:1rem; border-radius:6px; box-shadow:0 10px 30px rgba(0,0,0,.4) }
+.app-modal-close { float:right }
+.app-modal-body { clear:both; max-height:60vh; overflow:auto }
+.app-modal-table { width:100%; border-collapse:collapse }
+.app-modal-table th { text-align:left; padding:.25rem .5rem }
+.app-modal-table td { padding:.25rem .5rem }
+
+/* helper for small muted footers */
+.muted-footer { font-size: 0.875rem }
+
+#modal { background:white; padding:0; border-radius:10px; max-width:520px; width:92%; box-shadow:0 12px 36px rgba(2,6,23,0.18); overflow:hidden }
+#modal-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid rgba(0,0,0,0.04); }
+#modal-title { margin:0; font-size:1rem }
+#modal-close { background:transparent; border:none; font-size:1.05rem; cursor:pointer }
+
+#modal-title { color: var(--text-primary); }
+#modal-close { color: var(--text-primary); opacity: 0.95; }
+#modal-close:hover, #modal-close:focus { color: var(--primary-color); opacity: 1; outline: none; }
+
+/* Make ghost/cancel buttons inside modal actions clearly readable and match brand */
+.admin #modal .actions .btn-ghost { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); border-color: rgba(15,23,42,0.06); }
+.admin #modal .actions .btn-ghost:hover, .admin #modal .actions .btn-ghost:focus { background: color-mix(in srgb, var(--primary-color) 6%, var(--card-bg) 94%); color: var(--primary-color); -webkit-text-fill-color: var(--primary-color); }
+
+/* Force modal content to use the brand text color so labels and content are
+	readable even when the page default is an inverse (light) color. Keep
+	button colors intact by setting a specific rule for ghost buttons below. */
+#modal { color: var(--text-primary); }
+#modal .modal-body { color: var(--text-primary); }
+
+/* Dark mode: ensure admin modal surface is darker so light text remains readable */
+@media (prefers-color-scheme: dark) {
+	/* Apply the same darker surface and text rules to all admin modal variants */
+	.admin #modal,
+	.admin .modal,
+	.admin .app-modal-dialog {
+		/* darken the card background slightly in dark mode to provide contrast */
+		background: color-mix(in srgb, var(--card-bg) 82%, black 18%);
+		box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+		border: 1px solid rgba(255,255,255,0.04);
+	}
+
+	/* Ensure modal text and cancel/ghost button labels use the admin modal text token */
+	.admin #modal .modal-body,
+	.admin .modal .modal-body,
+	.admin .app-modal-dialog,
+	.admin #modal #modal-title,
+	.admin #modal #modal-close,
+	.admin #modal #modal-cancel,
+	.admin #modal .actions .btn-ghost,
+	.admin .modal .actions .btn-ghost,
+	.admin .app-modal-dialog .app-modal-body {
+		color: var(--admin-modal-text);
+		-webkit-text-fill-color: var(--admin-modal-text);
+	}
+
+	/* Modal actions background/separator adjustments */
+	.admin #modal .actions,
+	.admin .modal .actions,
+	.admin .app-modal-dialog .app-modal-body {
+		background: color-mix(in srgb, var(--card-bg) 90%, black 10%);
+		border-top: 1px solid rgba(255,255,255,0.03);
+	}
+}
+/* Ensure text inside modal inherits the dark color; leave controls that set
+	their own colors (like .btn-primary) untouched. */
+#modal .modal-body * { color: inherit; }
+.admin #modal .actions .btn-ghost { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); }
+
+/* Explicit target for the modal Cancel button used in the image picker */
+.admin #modal #modal-cancel { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); border-color: rgba(15,23,42,0.06); }
+
+/* Ensure any child text inside modal ghost buttons follows the filled color */
+.admin #modal .actions .btn-ghost, .admin #modal .actions .btn-ghost * { color: var(--admin-modal-text); -webkit-text-fill-color: var(--admin-modal-text); }
+
+.admin .modal-ensure-dark-text, .admin #modal, .admin #modal #modal-title, .admin #modal #modal-close, .admin #modal #modal-body { color: var(--admin-modal-text); }
+.admin #modal :not(button):not(.btn) { color: var(--admin-modal-text); }
+.modal-body { padding:1rem 1.25rem; color:var(--admin-text) }
+.modal .actions { padding: .75rem 1.25rem; display:flex; justify-content:flex-end; gap:.5rem; border-top:1px solid rgba(0,0,0,0.04); background:var(--card-bg) }
+
+/* Utility classes used by admin JS */
+.muted { color: var(--muted) !important; }
+.muted-text { color: var(--text-muted, #94a3b8) !important; }
+.section-wrap { border: 1px solid var(--admin-border); padding: .6rem; margin-bottom: .8rem; border-radius:6px; background: var(--card-bg); }
+.menu-item-row { display: grid; grid-template-columns: 1fr 200px; gap: .5rem; margin-top:.5rem; border-top: 1px dashed var(--admin-border); padding-top:.5rem; }
+.preview-area { border: 1px solid var(--admin-border); border-radius:8px; padding:.6rem; background: var(--card-bg); min-height:240px; overflow:auto }
+.toast { background: var(--surface-dark); color: var(--text-on-dark); padding:.6rem .8rem; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,.2); opacity:.95 }
+.toast.success { background: var(--admin-success); color: var(--card-bg); }
+.toast.error { background: var(--admin-danger); color: var(--card-bg); }
+
+
+/* Responsive */
+@media (max-width:900px){ .content-editor{ flex-direction:column; } }
+
+/* Centralized page-level helpers moved from per-page inline <style> blocks */
+.admin table { width:100%; border-collapse:collapse }
+.admin table th, .admin table td { padding:8px; border:1px solid var(--admin-border); text-align:left }
+.admin table th { background: color-mix(in srgb, var(--card-bg) 88%, black 6%) }
+.admin .small{ font-size:0.9rem; color:var(--muted) }
+.admin .top-actions{ margin-bottom:1rem }
+
+/* Toast container used by multiple admin pages */
+#toast-container { position: fixed; right: 1rem; top: 1rem; z-index: 9999; display:flex; flex-direction:column; gap:.5rem; }

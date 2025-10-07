@@ -1,10 +1,15 @@
-/* ********************************************************************************
- * Admin panel styles
- * -----------------------------------------------------------------------------
- * Styles used only by the admin interface (login, dashboard, editors). They
- * are kept in a separate file to avoid shipping admin-only styles to public
- * pages and to make it easier to reason about the admin UI look-and-feel.
- ********************************************************************************/
+/* WARNING: This file is an import wrapper. The admin CSS has been split into
+ * multiple modular files to make maintenance and targeted edits safer.
+ * Files are loaded in a specific order to preserve cascade and specificity.
+ * If you need to change styling, edit the specific modular files under
+ * assets/css/admin.*.css and avoid re-adding large blocks here.
+ */
+
+@import url("./admin.base.css");
+@import url("./admin.menu.css");
+@import url("./admin.modal.css");
+
+/* End of wrapper */
 /* Admin panel styles — inspired by the admin login page */
 :root{
 	/* admin palette (mapped to site tokens where appropriate) */
