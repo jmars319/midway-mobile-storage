@@ -197,3 +197,14 @@ body.admin { overflow-x: hidden; }
 #image-list { margin-top:.5rem; display:flex; flex-direction:column; gap:.35rem }
 #image-list > div { display:flex; gap:.5rem; align-items:center; padding:.4rem; border-radius:8px; background: var(--card-bg); border:1px solid var(--admin-divider-weak) }
 #image-list img { border-radius:6px; border:1px solid var(--admin-border); height:48px; width:64px; object-fit:cover }
+
+/* Header / logo helpers */
+.header-brand { display:flex; align-items:center; gap:12px }
+.logo-inline { display:inline-block }
+.logo-img { height:40px; width:auto; vertical-align:middle }
+
+/* Admin login/logo variant used on the login page */
+.admin .admin-logo { display:block; margin:0 auto .5rem; height:72px; width:auto; max-width:80% }
+@media (max-width:420px) {
+	.admin .admin-logo { height:56px; }
+}
