@@ -303,29 +303,66 @@
   function refreshImageList() {
     const list = document.getElementById('image-list');
     if (!list) return;
-    fetch('list-images.php').then(r=>r.json()).then(j=>{
+    // show a loading state so the user sees progress in the modal
+    list.innerHTML = '<div class="muted">Loading images&hellip;</div>';
+    // Determine active tab or container to scope images. If an element with
+    // id 'images-tab' (or data-active-tab) exists, use its data-type to filter.
+    const activeTab = document.querySelector('[data-active-tab]');
+    const activeType = activeTab ? (activeTab.getAttribute('data-type') || '').toLowerCase() : '';
+
+    fetch('list-images.php').then(async (r) => {
+      // detect non-OK or non-JSON responses and surface helpful debug info
+      if (!r.ok) throw new Error('Server returned ' + r.status + ' ' + r.statusText);
+      const ct = (r.headers.get('content-type') || '').toLowerCase();
+      const text = await r.text();
+      let j;
+      if (ct.indexOf('application/json') !== -1) {
+        try { j = JSON.parse(text); }
+        catch (e) { throw new Error('Invalid JSON response'); }
+      } else {
+        // try to parse as JSON anyway, otherwise include a snippet of the response
+        try { j = JSON.parse(text); }
+        catch (e) { throw new Error('Unexpected response (not JSON): ' + (text || '').slice(0,200)); }
+      }
+      return j;
+    }).then(j=>{
       if (!j || !Array.isArray(j.files)) { list.innerHTML = '<i>No images</i>'; return; }
       list.innerHTML = '';
       const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
-      j.files.forEach(f=>{
-        // skip hidden files and non-image types (defensive in case server side changes)
-        if (!f || f.charAt(0) === '.') return;
-        const ext = (f.split('.').pop() || '').toLowerCase();
-        if (!ext || allowedExt.indexOf(ext) === -1) return;
+      j.files.forEach(entry=>{
+        // entry can be either a string path (legacy) or an object { relative, url }
+        let rel = null;
+        let url = null;
+        if (!entry) return;
+        if (typeof entry === 'string') { rel = entry; url = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + entry; }
+        else if (typeof entry === 'object') { rel = entry.relative || ''; url = entry.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + (entry.relative || '')); }
+        rel = (rel || '').trim(); if (!rel) return;
+        // skip hidden files and non-image types
+        if (rel.charAt(0) === '.') return;
+        const ext = (rel.split('.').pop() || '').toLowerCase(); if (!ext || allowedExt.indexOf(ext) === -1) return;
+
+        // If an activeType is set, only show images that match the type.
+        // Matching rules: first path segment equals type OR filename contains the type keyword.
+        if (activeType) {
+          const firstSeg = (rel.split('/')[0] || '').toLowerCase();
+          const basename = (rel.split('/').pop() || '').toLowerCase();
+          if (firstSeg !== activeType && basename.indexOf(activeType) === -1) return;
+        }
+
         const row = document.createElement('div');
         row.style.display='flex'; row.style.alignItems='center'; row.style.gap='1rem'; row.style.marginBottom='.5rem';
-  const img = document.createElement('img'); img.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; img.style.height='48px'; img.style.objectFit='cover';
+        const img = document.createElement('img'); img.src = url; img.style.height='48px'; img.style.objectFit='cover';
         img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
-        const name = document.createElement('div'); name.textContent = f; name.style.flex='1';
-  const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.addEventListener('click', async ()=>{
-          if (!await showConfirm('Delete '+f+'?')) return;
-          const fd = new FormData(); fd.append('filename', f); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
+        const name = document.createElement('div'); name.textContent = rel; name.style.flex='1';
+        const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{
+          if (!await showConfirm('Delete '+rel+'?')) return;
+          const fd = new FormData(); fd.append('filename', rel); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
           fetch('delete-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(res=>{
             if (res && res.success) { refreshImageList(); showToast('Moved to trash','success'); }
-            else showToast('Delete failed','error');
-          });
+            else showToast('Delete failed: '+(res && res.message ? res.message : 'unknown'),'error');
+          }).catch(()=>{ showToast('Delete failed','error'); });
         });
-  const restoreBtn = document.createElement('button'); restoreBtn.type='button'; restoreBtn.textContent='Trash'; restoreBtn.disabled=true; restoreBtn.title='In images list';
+        const restoreBtn = document.createElement('button'); restoreBtn.type='button'; restoreBtn.textContent='Trash'; restoreBtn.disabled=true; restoreBtn.title='In images list';
         row.appendChild(img); row.appendChild(name); row.appendChild(del); row.appendChild(restoreBtn);
         list.appendChild(row);
       });
@@ -338,30 +375,98 @@
     if (!containers || !containers.length) return;
     fetch('list-images.php').then(r=>r.json()).then(j=>{
       if (!j || !Array.isArray(j.files)) { containers.forEach(c=> c.innerHTML = '<i>No images</i>'); return; }
-      containers.forEach(c=>{
-        const type = c.getAttribute('data-type');
+        // Normalize file entries to objects { relative, url }
+        const files = j.files.map(function(entry){
+          if (!entry) return null;
+          if (typeof entry === 'string') {
+            return { relative: entry, url: (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + entry };
+          }
+          if (typeof entry === 'object' && entry.relative) {
+            return { relative: entry.relative, url: entry.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + entry.relative) };
+          }
+          return null;
+        }).filter(Boolean);
+        containers.forEach(c=>{
+        const type = (c.getAttribute('data-type') || '').toLowerCase();
         c.innerHTML = '';
-        // Simple heuristic: show images whose filename contains the type key when available, else show first 6 images
-        const matches = j.files.filter(fn => fn && fn.toLowerCase().indexOf(type) !== -1);
-        const toShow = (matches.length ? matches.slice(0,12) : j.files.slice(0,12));
-        toShow.forEach(f=>{
-          if (!f || f.charAt(0) === '.') return;
-          const ext = (f.split('.').pop() || '').toLowerCase();
-          if (['png','jpg','jpeg','gif','webp','svg','ico'].indexOf(ext) === -1) return;
-          const el = document.createElement('div'); el.style.display='inline-block'; el.style.marginRight='.5rem'; el.style.textAlign='center'; el.style.width='80px';
-          const img = document.createElement('img'); img.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; img.style.width='80px'; img.style.height='60px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
-          img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="8" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
-          const caption = document.createElement('div'); caption.textContent = f; caption.style.fontSize='0.72rem'; caption.style.overflow='hidden'; caption.style.textOverflow='ellipsis'; caption.style.whiteSpace='nowrap';
-          el.appendChild(img); el.appendChild(caption);
-            el.addEventListener('click', ()=>{ // clicking inserts filename into nearest image picker if present
-            const sect = c.closest('.image-section');
-            if (!sect) return;
-            // we can't set file inputs programmatically; instead, if there's an image text field in the schema, set it. Otherwise no-op.
-            const imgText = sect.querySelector('input[data-field-type="image"]');
-            if (imgText) { imgText.value = f; imgText.dispatchEvent(new Event('input',{bubbles:true})); showToast('Selected '+f,'default'); }
+        // For gallery section, show all gallery images and provide a Delete control
+        // Only consider files that match this container's data-type
+        const matches = files.filter(fn => fn && fn.relative && (function(){
+          const rel = fn.relative.toLowerCase();
+          const first = rel.split('/')[0] || '';
+          const base = rel.split('/').pop() || '';
+          return first === type || base.indexOf(type) !== -1;
+        })());
+        if (type === 'gallery') {
+          // Folder-first gallery matching: prefer files located under the 'gallery/' folder
+          const folderMatches = files.filter(entry => {
+            if (!entry || !entry.relative) return false;
+            const rel = entry.relative.toLowerCase();
+            // first path segment equals 'gallery'
+            const first = rel.split('/')[0] || '';
+            return first === 'gallery';
           });
-          c.appendChild(el);
-        });
+          if (folderMatches.length) {
+            matches.length = 0;
+            folderMatches.forEach(m => matches.push(m));
+          } else {
+            // fallback to broader matching: basename starts with 'gallery-' or substring match
+            const broad = files.filter(entry => {
+              if (!entry || !entry.relative) return false;
+              const rel = entry.relative.toLowerCase();
+              const base = rel.split('/').pop() || '';
+              if (base.startsWith('gallery-')) return true;
+              if (rel.indexOf('gallery') !== -1) return true;
+              return false;
+            });
+            matches.length = 0;
+            broad.forEach(m => matches.push(m));
+          }
+        
+          // show full list of matches (no limit)
+          matches.forEach(entry => {
+            if (!entry || !entry.relative) return;
+            const rel = entry.relative;
+            const url = entry.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + rel);
+            const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='.5rem'; row.style.marginBottom='.4rem';
+            const img = document.createElement('img'); img.src = url; img.style.width='96px'; img.style.height='64px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
+            img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="64"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
+            const meta = document.createElement('div'); meta.style.flex='1'; meta.style.minWidth='120px'; meta.style.overflow='hidden';
+            const name = document.createElement('div'); name.textContent = rel; name.style.fontSize='.8rem'; name.style.overflow='hidden'; name.style.textOverflow='ellipsis'; name.style.whiteSpace='nowrap';
+            meta.appendChild(name);
+            const del = document.createElement('button'); del.type='button'; del.className='btn btn-danger-muted'; del.textContent='Delete'; del.addEventListener('click', async (ev)=>{
+              ev.preventDefault(); ev.stopPropagation(); if (!await showConfirm('Delete '+rel+'?')) return;
+              const fd = new FormData(); fd.append('filename', rel); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
+              fetch('delete-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(res=>{
+                if (res && res.success) { showToast('Moved to trash','success'); refreshPerSectionLists(); refreshImageList(); }
+                else showToast('Delete failed: '+(res && res.message ? res.message : 'unknown'),'error');
+              }).catch(()=>{ showToast('Delete failed','error'); });
+            });
+            row.appendChild(img); row.appendChild(meta); row.appendChild(del);
+            c.appendChild(row);
+          });
+        } else {
+          // Simple heuristic: show images whose filename contains the type key when available, else show first 12 images
+          const toShow = (matches.length ? matches.slice(0,12) : j.files.slice(0,12));
+          toShow.forEach(f=>{
+            let rel = null, url = null;
+            if (typeof f === 'string') { rel = f; url = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; }
+            else if (typeof f === 'object') { rel = f.relative || ''; url = f.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + (f.relative || '')); }
+            if (!rel) return;
+            const ext = (rel.split('.').pop() || '').toLowerCase(); if (['png','jpg','jpeg','gif','webp','svg','ico'].indexOf(ext) === -1) return;
+            const el = document.createElement('div'); el.style.display='inline-block'; el.style.marginRight='.5rem'; el.style.textAlign='center'; el.style.width='80px';
+            const img = document.createElement('img'); img.src = url; img.style.width='80px'; img.style.height='60px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
+            img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="8" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
+            const caption = document.createElement('div'); caption.textContent = rel; caption.style.fontSize='0.72rem'; caption.style.overflow='hidden'; caption.style.textOverflow='ellipsis'; caption.style.whiteSpace='nowrap';
+            el.appendChild(img); el.appendChild(caption);
+            el.addEventListener('click', ()=>{
+              const sect = c.closest('.image-section'); if (!sect) return;
+              const imgText = sect.querySelector('input[data-field-type="image"]');
+              if (imgText) { imgText.value = rel; imgText.dispatchEvent(new Event('input',{bubbles:true})); showToast('Selected '+rel,'default'); }
+            });
+            c.appendChild(el);
+          });
+        }
       });
     }).catch(()=>{ containers.forEach(c=> c.innerHTML = '<i>Failed to load</i>'); });
   }
@@ -406,13 +511,198 @@
     container.parentNode.insertBefore(t, container.nextSibling);
   }
 
-  // initial image list area
-  const uploadFormElem = uploadForm;
-  if (uploadFormElem && uploadFormElem.parentNode) {
-    const imageArea = document.createElement('div'); imageArea.id='image-list'; imageArea.style.marginTop='.5rem';
-    uploadFormElem.parentNode.insertBefore(imageArea, uploadFormElem.nextSibling);
-    ensureTrashToggle();
-    refreshImageList();
+  // Note: global #image-list removed from template to avoid duplicate listings.
+  // Per-section `.section-image-list` elements are used instead. We no longer
+  // auto-create a global image list container here.
+  // However, keep an optional hidden global list and wire a toggle button
+  // in the admin template (#show-all-images-btn) to reveal it on demand.
+  let imageArea = document.getElementById('image-list');
+  if (!imageArea) {
+    imageArea = document.createElement('div'); imageArea.id = 'image-list'; imageArea.style.marginTop = '.5rem'; imageArea.style.display = 'none';
+    // insert at end of upload-wrap
+    const wrap = document.querySelector('.upload-wrap'); if (wrap) wrap.appendChild(imageArea);
+  }
+  let showAllMode = false;
+  const showAllBtn = document.getElementById('show-all-images-btn');
+  if (showAllBtn) {
+    // helper to count total images (used to show a badge on the button)
+    async function refreshImageCount(){
+      try {
+        const r = await fetch('list-images.php'); const j = await r.json();
+        const count = Array.isArray(j.files) ? j.files.length : 0;
+        showAllBtn.textContent = showAllMode ? 'Hide all images ('+count+')' : 'Show all images ('+count+')';
+      } catch(e) { /* ignore */ }
+    }
+    // create images modal container if missing
+    let modalBackdrop = document.getElementById('images-modal-backdrop');
+    if (!modalBackdrop) {
+      modalBackdrop = document.createElement('div');
+      modalBackdrop.id = 'images-modal-backdrop';
+      // Apply essential backdrop layout styles inline as a robust fallback
+      // in case the minified CSS bundle doesn't include the #images-modal-backdrop rules.
+      modalBackdrop.style.position = 'fixed';
+      modalBackdrop.style.inset = '0';
+      modalBackdrop.style.background = 'rgba(0,0,0,0.45)';
+      modalBackdrop.style.display = 'none';
+      modalBackdrop.style.alignItems = 'center';
+      modalBackdrop.style.justifyContent = 'center';
+      modalBackdrop.style.zIndex = '9999';
+
+  const modal = document.createElement('div'); modal.id = 'images-modal';
+  modal.innerHTML = '<div class="modal-header"><strong>All images</strong><button class="close-btn" aria-label="Close images modal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div id="images-modal-body"></div>';
+  // Apply essential modal styles inline so it is constrained and scrollable
+  modal.style.background = 'var(--card-bg, #fff)';
+  modal.style.borderRadius = '10px';
+  modal.style.maxWidth = '1000px';
+  modal.style.width = 'calc(100% - 48px)';
+  modal.style.maxHeight = '80vh';
+  modal.style.overflow = 'auto';
+  modal.style.boxShadow = '0 12px 40px rgba(2,6,23,0.35)';
+  modal.style.padding = '1rem';
+  modal.style.boxSizing = 'border-box';
+  modal.style.position = 'relative';
+      modalBackdrop.appendChild(modal);
+      document.body.appendChild(modalBackdrop);
+      const closeBtn = modalBackdrop.querySelector('.close-btn');
+      if (closeBtn) {
+        // ensure close button is visible and clickable regardless of CSS
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.top = '8px';
+        closeBtn.style.right = '8px';
+        // make it visually prominent and tappable
+        closeBtn.style.background = 'color-mix(in srgb, var(--card-bg, #fff) 92%, black 8%)';
+        closeBtn.style.color = 'var(--text-primary, #0b1220)';
+        closeBtn.style.padding = '6px 10px';
+        closeBtn.style.borderRadius = '8px';
+        closeBtn.style.border = '1px solid rgba(0,0,0,0.06)';
+        closeBtn.style.fontSize = '1.15rem';
+        closeBtn.style.lineHeight = '1';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.display = 'inline-flex';
+        closeBtn.style.alignItems = 'center';
+        closeBtn.style.justifyContent = 'center';
+        closeBtn.style.boxShadow = '0 6px 18px rgba(2,6,23,0.12)';
+        closeBtn.setAttribute('aria-label', 'Close images modal');
+        closeBtn.addEventListener('click', ()=>{ modalBackdrop.style.display='none'; showAllMode = false; refreshImageCount(); });
+        // subtle hover/focus styles (inline for robustness)
+        closeBtn.addEventListener('mouseenter', ()=>{ closeBtn.style.transform = 'translateY(-1px)'; closeBtn.style.boxShadow = '0 10px 26px rgba(2,6,23,0.14)'; });
+        closeBtn.addEventListener('mouseleave', ()=>{ closeBtn.style.transform = ''; closeBtn.style.boxShadow = '0 6px 18px rgba(2,6,23,0.12)'; });
+        closeBtn.addEventListener('focus', ()=>{ closeBtn.style.outline = '3px solid color-mix(in srgb, var(--primary-color, #2563eb) 12%, var(--card-bg, #fff) 88%)'; });
+        closeBtn.addEventListener('blur', ()=>{ closeBtn.style.outline = 'none'; });
+      }
+      // bind Escape to close modal once
+      if (!modalBackdrop.__keyBound) {
+        modalBackdrop.__keyBound = true;
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modalBackdrop.style.display === 'flex') {
+            modalBackdrop.style.display = 'none';
+            showAllMode = false;
+            try { refreshImageCount(); } catch (err) { void 0; }
+          }
+        });
+      }
+    }
+
+    showAllBtn.addEventListener('click', async function(){
+      showAllMode = !showAllMode;
+      if (showAllMode) {
+        // show modal with image list
+        modalBackdrop.style.display = 'flex';
+          // move imageArea content into modal body for display and ensure it's visible
+          const body = document.getElementById('images-modal-body'); body.innerHTML = '';
+          // append first so refreshImageList populates an attached node
+          body.appendChild(imageArea);
+          // remove any inline 'display:none' and use flex layout so CSS/JS rows show
+          imageArea.style.display = 'flex';
+          imageArea.style.flexDirection = 'column';
+          imageArea.classList.add('show');
+          await refreshImageList();
+      } else {
+        // hide modal and move imageArea back into the upload-wrap
+        modalBackdrop.style.display = 'none';
+        const wrap = document.querySelector('.upload-wrap'); if (wrap) wrap.appendChild(imageArea);
+        // hide the global image list when not in modal
+        imageArea.classList.remove('show');
+        imageArea.style.display = 'none';
+      }
+      await refreshImageCount();
+    });
+    // initial count display
+    refreshImageCount();
+  }
+  // Ensure trash toggle is present and refresh lists regardless of upload form presence
+  ensureTrashToggle();
+  // Wire up image-section <details> toggles to scope the global image list
+  function wireImageSectionToggles() {
+    const sections = document.querySelectorAll('.image-section');
+    if (!sections || !sections.length) return;
+  // only scope the global image list if a global container exists and showAllMode is false
+  const scopeEl = (showAllMode ? null : document.getElementById('image-list'));
+    sections.forEach(sec => {
+      // find the per-section container to infer data-type
+      const list = sec.querySelector('.section-image-list');
+      const type = (list && list.getAttribute('data-type')) ? list.getAttribute('data-type').toLowerCase() : '';
+      // toggle event fires when <details> open state changes
+      sec.addEventListener('toggle', () => {
+        if (scopeEl) {
+          if (sec.open) {
+            if (type) scopeEl.setAttribute('data-active-tab', type);
+          } else {
+            // if any other section is open, set that one; otherwise clear
+            const other = document.querySelector('.image-section[open] .section-image-list');
+            if (other) {
+              const othType = (other.getAttribute('data-type') || '').toLowerCase();
+              if (othType) scopeEl.setAttribute('data-active-tab', othType); else scopeEl.removeAttribute('data-active-tab');
+            } else {
+              scopeEl.removeAttribute('data-active-tab');
+            }
+          }
+  }
+  // refresh per-section lists; only refresh global list if it exists and showAllMode is false
+  try { if (scopeEl) refreshImageList(); refreshPerSectionLists(); } catch(e) { void 0; }
+      });
+    });
+    // initial pass: set attribute if any section already open
+    const initOpen = document.querySelector('.image-section[open] .section-image-list');
+    if (initOpen) {
+      const it = (initOpen.getAttribute('data-type') || '').toLowerCase(); if (it) scopeEl.setAttribute('data-active-tab', it);
+    }
+  }
+  wireImageSectionToggles();
+  // initial population
+  refreshImageList();
+  refreshPerSectionLists();
+  if (document.getElementById('gallery-full-list')) refreshGalleryFullList();
+
+  // Render a full gallery list (all files under gallery/) in the #gallery-full-list container
+  async function refreshGalleryFullList(){
+    const wrap = document.getElementById('gallery-full-list');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    try {
+      const r = await fetch('list-images.php');
+      const j = await r.json();
+      if (!j || !Array.isArray(j.files)) { wrap.innerHTML = '<i>No images</i>'; return; }
+      // Normalize entries to objects
+      const files = j.files.map(function(e){ if (!e) return null; if (typeof e === 'string') return { relative: e, url: (window.ADMIN_UPLOADS_BASE||'../uploads/images/')+e }; if (e.relative) return { relative: e.relative, url: e.url || ((window.ADMIN_UPLOADS_BASE||'../uploads/images/')+e.relative) }; return null; }).filter(Boolean);
+      const galleryFiles = files.filter(f => f.relative && f.relative.split('/')[0] === 'gallery');
+      if (!galleryFiles.length) { wrap.innerHTML = '<i>No gallery images found</i>'; return; }
+      galleryFiles.forEach(f => {
+        const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='.6rem'; row.style.marginBottom='.4rem';
+        const img = document.createElement('img'); img.src = f.url; img.style.width='120px'; img.style.height='80px'; img.style.objectFit='cover'; img.onerror = function(){ this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
+        const meta = document.createElement('div'); meta.style.flex='1'; meta.textContent = f.relative; meta.style.overflow='hidden'; meta.style.textOverflow='ellipsis'; meta.style.whiteSpace='nowrap';
+        const del = document.createElement('button'); del.type='button'; del.className='btn btn-danger-muted'; del.textContent='Delete'; del.addEventListener('click', async ()=>{
+          if (!await showConfirm('Delete '+f.relative+'?')) return;
+          const fd = new FormData(); fd.append('filename', f.relative); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
+          fetch('delete-image.php', { method:'POST', body: fd }).then(r=>r.json()).then(res=>{
+            if (res && res.success) { showToast('Moved to trash','success'); refreshPerSectionLists(); refreshImageList(); refreshGalleryFullList(); }
+            else showToast('Delete failed: '+(res && res.message ? res.message : 'unknown'),'error');
+          }).catch(()=>{ showToast('Delete failed','error'); });
+        });
+        row.appendChild(img); row.appendChild(meta); row.appendChild(del);
+        wrap.appendChild(row);
+      });
+    } catch (e) { wrap.innerHTML = '<i>Failed to load gallery list</i>'; }
   }
 
   // expose a couple helpers for debugging
@@ -488,7 +778,7 @@
         const row = document.createElement('div'); row.className = 'menu-item-row';
             const ta = document.createElement('textarea'); ta.style.flex='1'; ta.style.minHeight='48px'; ta.value = d || ''; ta.placeholder = 'Detail for section (shown in expanded view)';
             ta.addEventListener('input', ()=> { menuData[sidx].details[di] = ta.value; });
-            const rem = document.createElement('button'); rem.type='button'; rem.className='btn btn-ghost'; rem.textContent='Remove'; rem.addEventListener('click', async ()=>{ if (!await showConfirm('Remove this section detail?')) return; menuData[sidx].details.splice(di,1); render(); });
+            const rem = document.createElement('button'); rem.type='button'; rem.className='btn btn-danger-muted'; rem.textContent='Remove'; rem.addEventListener('click', async ()=>{ if (!await showConfirm('Remove this section detail?')) return; menuData[sidx].details.splice(di,1); render(); });
             row.appendChild(ta); row.appendChild(rem);
             detailsContainer.appendChild(row);
           });
@@ -496,8 +786,20 @@
           detailsContainer.appendChild(add);
         }
         renderDetailsAdmin();
-        left.appendChild(detailsContainer);
-        header.appendChild(left);
+  left.appendChild(detailsContainer);
+
+  // section-level image: single image used for the whole section (admin can pick/upload)
+  const secImgIn = makeInput(section.image||'', 'filename.jpg or https://...');
+  secImgIn.title = 'Section image filename within uploads/images or a full URL';
+  secImgIn.setAttribute('data-field-type','image');
+  const secPick = document.createElement('button'); secPick.type='button'; secPick.textContent='Pick'; secPick.className='btn btn-ghost'; secPick.addEventListener('click', ()=> openImagePicker(secImgIn));
+  const secImgRow = document.createElement('div'); secImgRow.style.display='flex'; secImgRow.style.gap='.4rem'; secImgRow.style.marginTop='.4rem'; secImgRow.appendChild(secImgIn); secImgRow.appendChild(secPick);
+  const secPreview = document.createElement('img'); secPreview.style.width='100%'; secPreview.style.height='80px'; secPreview.style.objectFit='cover'; secPreview.style.marginTop='.4rem'; if (secImgIn.value) secPreview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + secImgIn.value;
+  secImgIn.addEventListener('input', ()=>{ menuData[sidx].image = secImgIn.value; if (secImgIn.value) secPreview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + secImgIn.value; else secPreview.removeAttribute('src'); renderPreview(); });
+  left.appendChild(secImgRow);
+  left.appendChild(secPreview);
+
+  header.appendChild(left);
 
   const hdrControls = document.createElement('div'); hdrControls.style.display='flex'; hdrControls.style.gap='.4rem';
         // collapse/expand toggle using persisted expandedSections (localStorage)
@@ -524,7 +826,7 @@
   const addItemBtn = document.createElement('button'); addItemBtn.type='button'; addItemBtn.textContent='Add Item'; addItemBtn.className='btn btn-ghost'; addItemBtn.addEventListener('click', ()=>{ menuData[sidx].items.push({ title:'', short:'', description:'', image:'', price: '', quantities: [] }); render(); });
     const upS = document.createElement('button'); upS.type='button'; upS.textContent='↑'; upS.title='Move section up'; upS.className='btn btn-ghost'; upS.addEventListener('click', ()=>{ if (sidx<=0) return; [menuData[sidx-1], menuData[sidx]] = [menuData[sidx], menuData[sidx-1]]; render(); });
     const downS = document.createElement('button'); downS.type='button'; downS.textContent='↓'; downS.title='Move section down'; downS.className='btn btn-ghost'; downS.addEventListener('click', ()=>{ if (sidx>=menuData.length-1) return; [menuData[sidx+1], menuData[sidx]] = [menuData[sidx], menuData[sidx+1]]; render(); });
-    const delS = document.createElement('button'); delS.type='button'; delS.textContent='Delete'; delS.className='btn btn-danger'; delS.addEventListener('click', async ()=>{ if (!await showConfirm('Delete this section and its items?')) return; menuData.splice(sidx,1); render(); });
+  const delS = document.createElement('button'); delS.type='button'; delS.textContent='Delete'; delS.className='btn btn-danger-muted'; delS.addEventListener('click', async ()=>{ if (!await showConfirm('Delete this section and its items?')) return; menuData.splice(sidx,1); render(); });
         hdrControls.appendChild(toggleBtn); hdrControls.appendChild(addItemBtn); hdrControls.appendChild(upS); hdrControls.appendChild(downS); hdrControls.appendChild(delS);
         header.appendChild(hdrControls);
         secWrap.appendChild(header);
@@ -582,7 +884,7 @@
                 priceInput.type = 'number'; priceInput.step = '0.01'; priceInput.min = '0';
                 priceInput.addEventListener('input', ()=>{ menuData[sidx].items[idx].quantities[optIndex].price = priceInput.value; });
 
-                const removeBtn = document.createElement('button'); removeBtn.type='button'; removeBtn.className='btn btn-ghost'; removeBtn.textContent='Remove'; removeBtn.addEventListener('click', async ()=>{
+                const removeBtn = document.createElement('button'); removeBtn.type='button'; removeBtn.className='btn btn-danger-muted'; removeBtn.textContent='Remove'; removeBtn.addEventListener('click', async ()=>{
                   if (!await showConfirm('Remove this quantity option?')) return;
                   menuData[sidx].items[idx].quantities.splice(optIndex,1);
                   render();
@@ -633,7 +935,7 @@
           const itemControls = document.createElement('div'); itemControls.style.display='flex'; itemControls.style.gap='.4rem';
           const up = document.createElement('button'); up.type='button'; up.textContent='↑'; up.title='Move up'; up.className='btn btn-ghost'; up.addEventListener('click', ()=>{ if (idx<=0) return; [menuData[sidx].items[idx-1], menuData[sidx].items[idx]] = [menuData[sidx].items[idx], menuData[sidx].items[idx-1]]; render(); });
           const down = document.createElement('button'); down.type='button'; down.textContent='↓'; down.title='Move down'; down.className='btn btn-ghost'; down.addEventListener('click', ()=>{ if (idx>=menuData[sidx].items.length-1) return; [menuData[sidx].items[idx+1], menuData[sidx].items[idx]] = [menuData[sidx].items[idx], menuData[sidx].items[idx+1]]; render(); });
-          const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.className='btn btn-danger'; del.addEventListener('click', async ()=>{ if (!await showConfirm('Delete this item?')) return; menuData[sidx].items.splice(idx,1); render(); });
+          const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{ if (!await showConfirm('Delete this item?')) return; menuData[sidx].items.splice(idx,1); render(); });
           itemControls.appendChild(up); itemControls.appendChild(down); itemControls.appendChild(del);
           // ensure preview updates after delete
           del.addEventListener('click', ()=> setTimeout(renderPreview, 100));
@@ -680,9 +982,18 @@
           section.details.forEach(d=>{ const p = document.createElement('div'); p.textContent = d; secDetails.appendChild(p); });
           sec.appendChild(secDetails);
         }
+        // If the section has a single image, show it once at the section level
+        if (section.image) {
+          const simg = document.createElement('img');
+          simg.className = 'preview-section-image';
+          simg.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + section.image;
+          sec.appendChild(simg);
+        }
+
         (section.items || []).forEach(it=>{
           const pi = document.createElement('div'); pi.className='preview-item';
-          if (it.image) { const im = document.createElement('img'); im.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/')+it.image; pi.appendChild(im); }
+          // only show per-item images when the section does not have a section-level image
+          if (!section.image && it.image) { const im = document.createElement('img'); im.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/')+it.image; pi.appendChild(im); }
           const meta = document.createElement('div'); meta.className='preview-meta';
           const t = document.createElement('div'); t.textContent = it.title || ''; t.style.fontWeight='700';
           const s = document.createElement('div'); s.className='small'; s.textContent = it.short || '';
