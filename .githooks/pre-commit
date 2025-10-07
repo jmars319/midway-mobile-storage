@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Pre-commit hook: run the inline-style validation script and prevent commit on failure
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+HOOK_SCRIPT="$ROOT_DIR/scripts/validate-no-inline-styles.sh"
+
+if [ ! -x "$HOOK_SCRIPT" ]; then
+  echo "Making validation script executable: $HOOK_SCRIPT"
+  chmod +x "$HOOK_SCRIPT" || true
+fi
+
+echo "Running pre-commit inline-style validation..."
+"$HOOK_SCRIPT"
+
+echo "Pre-commit inline-style check passed."
+
+exit 0
