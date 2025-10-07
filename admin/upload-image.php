@@ -24,30 +24,54 @@ require_once 'config.php';
 checkAuth();
 
 header('Content-Type: application/json');
+// Start output buffering to prevent stray notices/warnings from corrupting JSON output
+if (!ob_get_level()) ob_start();
+
+/**
+ * Send a JSON response and exit. Clears any buffered output first so
+ * the response body contains only valid JSON.
+ */
+function json_exit($data, $status = 200) {
+    if (ob_get_length()) {
+        // clear any previously buffered output (warnings, stray HTML, etc.)
+        @ob_clean();
+    }
+    http_response_code($status);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     // Verify CSRF token
     $csrf = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (!verify_csrf_token($csrf)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
-        exit;
+    json_exit(['success' => false, 'message' => 'Invalid CSRF token'], 403);
     }
     $image = $_FILES['image'];
-    $imageType = preg_replace('/[^a-z0-9_\-]/i', '', ($_POST['type'] ?? 'general'));
+    $imageType = preg_replace('/[^a-z0-9_\-]/i', '', ($_POST['type'] ?? ''));
+
+    // If type not provided or not recognized, try to infer from the original filename
+    $origName = strtolower($image['name'] ?? '');
 
     // Map certain known image types to subfolders. Unknown types go into 'general'.
     $allowedTypes = ['hero','logo','gallery','general'];
-    $typeFolder = in_array(strtolower($imageType), $allowedTypes, true) ? strtolower($imageType) : 'general';
+    $imageTypeLower = strtolower((string)$imageType);
+    if (!in_array($imageTypeLower, $allowedTypes, true)) {
+        // infer based on filename hints
+        if (stripos($origName, 'hero') !== false) $imageTypeLower = 'hero';
+        elseif (stripos($origName, 'logo') !== false) $imageTypeLower = 'logo';
+        elseif (stripos($origName, 'gallery') !== false) $imageTypeLower = 'gallery';
+        else $imageTypeLower = 'general';
+    }
+    $typeFolder = $imageTypeLower;
     $baseUploadDir = rtrim(UPLOAD_DIR, '/') . '/';
     $targetDir = $baseUploadDir . ($typeFolder !== 'general' ? $typeFolder . '/' : '');
     if (!is_dir($targetDir)) @mkdir($targetDir, 0755, true);
 
     // Basic upload error check
     if (!isset($image['error']) || $image['error'] !== UPLOAD_ERR_OK) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'File upload error']);
-        exit;
+    json_exit(['success' => false, 'message' => 'File upload error'], 400);
     }
 
     // Validate size (client can be spoofed but check anyway)
@@ -56,9 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     $maxWidth = 5000;
     $maxHeight = 5000;
     if ($image['size'] > $maxSize) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'File too large. Maximum size is 5MB.']);
-        exit;
+    json_exit(['success' => false, 'message' => 'File too large. Maximum size is 5MB.'], 400);
     }
 
     // Use finfo to get MIME type reliably; getimagesize works for raster images
@@ -80,16 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     if ($isSvg) {
         // Enforce size limit
         if ($image['size'] > $maxSize) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'SVG file too large. Maximum size is 5MB.']);
-            exit;
+            json_exit(['success' => false, 'message' => 'SVG file too large. Maximum size is 5MB.'], 400);
         }
         // Basic sanitize and save SVG content (remove scripts, on* attributes, foreignObject, external refs)
         $svg = @file_get_contents($image['tmp_name']);
         if ($svg === false || stripos($svg, '<svg') === false) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Uploaded SVG appears invalid']);
-            exit;
+            json_exit(['success' => false, 'message' => 'Uploaded SVG appears invalid'], 400);
         }
         $svg = sanitizeSvg($svg);
         // try to extract viewBox or width/height to perform a rough dimension check
@@ -106,9 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
             }
         }
         if (!$dimsOk) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'SVG dimensions exceed the allowed maximum']);
-            exit;
+            json_exit(['success' => false, 'message' => 'SVG dimensions exceed the allowed maximum'], 400);
         }
 
     // map to svg extension and prepare final filename
@@ -122,9 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
 
         if (!is_dir($targetDir)) @mkdir($targetDir, 0755, true);
         if (file_put_contents($uploadPath, $svg) === false) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Failed to save sanitized SVG']);
-            exit;
+            json_exit(['success' => false, 'message' => 'Failed to save sanitized SVG'], 500);
         }
         @chmod($uploadPath, 0644);
 
@@ -146,30 +160,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
         ]);
 
         require_once __DIR__ . '/partials/uploads.php';
-        echo json_encode([
+        json_exit([
             'success' => true,
             'message' => 'SVG uploaded and sanitized successfully!',
             'filename' => $filename,
             'url' => admin_image_src($relativePath),
             'thumbnail' => null,
-        ]);
-        exit;
+        ], 200);
     }
 
     // For raster images continue: use getimagesize on tmp file to get MIME/type reliably
     $info = @getimagesize($image['tmp_name']);
     if ($info === false || !isset($info['mime']) || $mimeFromFinfo === false) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Uploaded file is not a valid image']);
-        exit;
+    json_exit(['success' => false, 'message' => 'Uploaded file is not a valid image'], 400);
     }
     $mime = $info['mime'];
     // cross-check finfo result when available
     if (!empty($mimeFromFinfo) && $mimeFromFinfo !== $mime) {
         // mismatch between getimagesize and finfo -> reject upload
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Uploaded file mime mismatch']);
-        exit;
+    json_exit(['success' => false, 'message' => 'Uploaded file mime mismatch'], 400);
     }
 
     // Allowed mime types and map to extension
@@ -180,9 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
         'image/webp' => 'webp',
     ];
     if (!isset($mimeMap[$mime])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Invalid image type. Only JPG, PNG, GIF and WebP are allowed.']);
-        exit;
+    json_exit(['success' => false, 'message' => 'Invalid image type. Only JPG, PNG, GIF and WebP are allowed.'], 400);
     }
 
     $extension = $mimeMap[$mime];
@@ -190,14 +197,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     $width = isset($info[0]) ? (int)$info[0] : 0;
     $height = isset($info[1]) ? (int)$info[1] : 0;
     if ($width <= 0 || $height <= 0) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Invalid image dimensions']);
-        exit;
+    json_exit(['success' => false, 'message' => 'Invalid image dimensions'], 400);
     }
     if ($width > $maxWidth || $height > $maxHeight) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Image dimensions too large. Maximum is '.$maxWidth.'x'.$maxHeight.' pixels.']);
-        exit;
+    json_exit(['success' => false, 'message' => 'Image dimensions too large. Maximum is '.$maxWidth.'x'.$maxHeight.' pixels.'], 400);
     }
     // generate a filesystem-safe filename that preserves a sanitized version of the original name
     $origBase = pathinfo($image['name'] ?? 'image', PATHINFO_FILENAME);
@@ -209,17 +212,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     // Ensure the target upload directory exists
     if (!is_dir($targetDir)) {
         if (!@mkdir($targetDir, 0755, true)) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Failed to create upload directory']);
-            exit;
+        json_exit(['success' => false, 'message' => 'Failed to create upload directory'], 500);
         }
     }
 
     // Move with strict permissions and ownership as possible
     if (!move_uploaded_file($image['tmp_name'], $uploadPath)) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Failed to move uploaded file']);
-        exit;
+    json_exit(['success' => false, 'message' => 'Failed to move uploaded file'], 500);
     }
 
     // ensure uploaded file has safe permissions
@@ -253,13 +252,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
     'timestamp' => (function_exists('eastern_now') ? eastern_now('c') : date('c'))
     ]);
 
-    echo json_encode([
+    json_exit([
         'success' => true,
         'message' => 'Image uploaded successfully!',
         'filename' => $filename,
         'url' => admin_image_src($relativePath),
         'thumbnail' => file_exists($thumbPath) ? admin_image_src(($typeFolder !== 'general' ? $typeFolder . '/' : '') . 'thumbs/' . $filename) : null,
-    ]);
+    ], 200);
 } else {
     http_response_code(400);
     echo json_encode([

@@ -283,6 +283,13 @@ body.admin { overflow-x: hidden; }
 /* Slightly smaller text for tooltips and helper text inside menu */
 .profile-wrap .tooltip, .pm-combo-menu .small { font-size: 0.85rem; }
 
+/* Defensive fallback: ensure profile/combined submenus are hidden by default
+	even if import order or modular CSS loading changes. The primary rules
+	live in assets/css/admin.menu.css, but keeping a wrapper-level fallback
+	avoids accidental visible menus when JS toggles classes only. */
+.pm-combo-menu { display: none !important; }
+.pm-combo-menu.open { display: block !important; }
+
 /* SMTP settings form layout helpers */
 .admin-card-header { display:flex; align-items:center; justify-content:space-between }
 .admin-card-title { margin:0 }

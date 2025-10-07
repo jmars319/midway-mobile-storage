@@ -14,13 +14,13 @@
             if (localStorage.getItem(dismissKey) === '1') return;
 
             text.textContent = 'Thank you! Your quote request has been received. We will contact you shortly with a custom estimate.';
-            wrap.style.display = 'block';
+            wrap.classList.add('show');
             try { outer.focus({preventScroll:true}); } catch(e) { /* no-op */ void 0; }
 
             var close = document.getElementById('storage-quote-confirm-close');
             if (close) {
                 close.addEventListener('click', function(){
-                    wrap.style.display = 'none';
+                    wrap.classList.remove('show');
                     try { localStorage.setItem(dismissKey, '1'); } catch(e){ void 0; }
                 });
             }
@@ -104,7 +104,7 @@
                 var opener = (e && e.currentTarget) ? e.currentTarget : (e && e.target) ? e.target : null;
                 if (e && e.dataset && e.dataset.contactMessage) opener = e;
                 if (!modal || !form) return;
-                modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.style.overflow='hidden';
+                modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.classList.add('scroll-lock');
                 try {
                     var msgNode = form.querySelector('[name="message"]');
                     if (opener && opener.dataset && opener.dataset.contactMessage && msgNode) {
@@ -116,7 +116,7 @@
                 } catch(e) { try { let firstField = form.querySelector('[name="first_name"]'); if (firstField) firstField.focus(); } catch(e) { void 0; } }
                 removeFocusTrap = trapFocus(modal);
             };
-            const closeModal = function(){ if (!modal) return; modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; if (typeof removeFocusTrap === 'function') { removeFocusTrap(); removeFocusTrap = null; } };
+            const closeModal = function(){ if (!modal) return; modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.classList.remove('scroll-lock'); if (typeof removeFocusTrap === 'function') { removeFocusTrap(); removeFocusTrap = null; } };
 
             if (footerLink) footerLink.addEventListener('click', openModal);
             var extraOpeners = document.querySelectorAll('.open-contact');
@@ -180,7 +180,7 @@
                     var isToday = (d.toLowerCase() === todayKey);
                     var cls = isToday ? 'hours-today' : '';
                     var badge = isToday ? ' <span class="today-badge">Today</span>' : '';
-                    html += '<div class="'+cls+'" style="display:flex;justify-content:space-between;padding:.25rem 0"><div style="text-transform:capitalize">'+d.replace(/_/g,' ') + badge +'</div><div>'+hoursData[d]+'</div></div>';
+                    html += '<div class="'+cls+' hours-row"><div class="text-capitalize">'+d.replace(/_/g,' ') + badge +'</div><div>'+hoursData[d]+'</div></div>';
                 }
                 html +=      '</div>'+
                         '</div>'+
@@ -216,7 +216,7 @@
                     if (!Object.prototype.hasOwnProperty.call(hoursData, d)) continue;
                     var isToday = (d.toLowerCase() === todayKey);
                     var cls = isToday ? 'today' : '';
-                    doc.write('<div class="'+cls+'"><div style="text-transform:capitalize">'+d.replace(/_/g,' ')+(isToday? ' <strong>Today</strong>':'')+'</div><div>'+hoursData[d]+'</div></div>');
+                    doc.write('<div class="'+cls+'"><div class="text-capitalize">'+d.replace(/_/g,' ')+(isToday? ' <strong>Today</strong>':'')+'</div><div>'+hoursData[d]+'</div></div>');
                 }
                 doc.write('</div>');
                 doc.write('</body></html>');
@@ -239,12 +239,12 @@
                 if (backdrop) backdrop.addEventListener('click', closeModal);
                 if (closeBtn) closeBtn.addEventListener('click', closeModal);
             }
-            modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.style.overflow='hidden';
+            modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.classList.add('scroll-lock');
             try { if (closeBtn) closeBtn.focus(); } catch(e){ void 0; }
         }
 
         function closeModal() {
-            if (modal) { modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.style.overflow=''; }
+            if (modal) { modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.classList.remove('scroll-lock'); }
             if (popupWin && !popupWin.closed) { try { popupWin.close(); } catch(e){ void 0; } popupWin = null; }
         }
 

@@ -14,8 +14,9 @@ define('ADMIN_PASSWORD_HASH', '$2y$12$hKkiRiF9ZZs82lxU.xYNGOFVKsB188cgTttg7NCLxJ
 // Content file path
 define('CONTENT_FILE', '../data/content.json');
 
-// Upload directory
-define('UPLOAD_DIR', '../uploads/images/');
+// Upload directory (filesystem path). Use __DIR__ so includes and different
+// CWDs still resolve to the same uploads directory inside the project.
+define('UPLOAD_DIR', __DIR__ . '/../uploads/images/');
 
 /**
  * Return the public URL prefix for admin pages to reference uploaded images.
@@ -23,8 +24,11 @@ define('UPLOAD_DIR', '../uploads/images/');
  * absolute vs relative paths across templates and JS.
  */
 function admin_uploads_base() {
-    // relative to the admin/ folder (used in admin templates)
-    return '../uploads/images/';
+    // Return an absolute URL path (from webroot) so templates always
+    // reference the same location regardless of the current PHP CWD.
+    // The public site uses '/uploads/images/<path>' so admin pages
+    // should use the same absolute prefix for previews and JS.
+    return '/uploads/images/';
 }
 
 function admin_upload_url($relativePath) {

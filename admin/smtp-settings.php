@@ -65,10 +65,10 @@ if (file_exists(CONTENT_FILE)) {
         if (!c){ c = document.createElement('div'); c.id='toast-container'; document.body.appendChild(c); }
         if (msg === 'save_ok') {
           var el = document.createElement('div'); el.className = 'toast success'; el.textContent = 'SMTP settings saved'; c.appendChild(el);
-          setTimeout(function(){ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(function(){ el.remove(); }, 350); }, 3000);
+          setTimeout(function(){ el.classList.add('fade-out'); setTimeout(function(){ el.remove(); }, 350); }, 3000);
         } else if (msg === 'save_failed') {
           var el = document.createElement('div'); el.className = 'toast error'; el.textContent = 'Failed to save SMTP settings'; c.appendChild(el);
-          setTimeout(function(){ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(function(){ el.remove(); }, 350); }, 6000);
+          setTimeout(function(){ el.classList.add('fade-out'); setTimeout(function(){ el.remove(); }, 350); }, 6000);
         }
       })();
 
@@ -91,7 +91,7 @@ if (file_exists(CONTENT_FILE)) {
             var out = document.getElementById('smtp-result');
             if (j && j.success) { out.innerHTML = '<div class="toast success">Test email sent successfully.</div>'; }
             else { out.innerHTML = '<div class="toast error">Test failed: ' + (j && j.message ? j.message : 'unknown') + '</div>'; }
-          }).catch(function(err){ document.getElementById('smtp-result').innerHTML = '<div class="toast error">Error: ' + err.message + '</div>'; }).finally(function(){ btn.textContent = 'Send Test Email'; btn.disabled = false; setTimeout(function(){ var el = document.getElementById('smtp-result'); if (el) el.innerHTML = ''; }, 5000); });
+          }).catch(function(err){ document.getElementById('smtp-result').innerHTML = '<div class="toast error">Error: ' + err.message + '</div>'; }).finally(function(){ btn.textContent = 'Send Test Email'; btn.disabled = false; setTimeout(function(){ var container = document.getElementById('smtp-result'); if (container) { var t = container.querySelector('.toast'); if (t) { t.classList.add('fade-out'); setTimeout(function(){ container.innerHTML = ''; }, 350); } else { container.innerHTML = ''; } } }, 5000); });
         });
       })();
     </script>

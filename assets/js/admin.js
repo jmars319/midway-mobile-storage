@@ -19,8 +19,8 @@
     const c = document.getElementById('toast-container');
     if (!c) return;
     const el = document.createElement('div'); el.className='toast '+(type==='success'? 'success': type==='error' ? 'error':''); el.textContent=msg;
-    c.appendChild(el);
-    setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),350) }, timeout);
+  c.appendChild(el);
+  setTimeout(()=>{ el.classList.add('fade-out'); setTimeout(()=>el.remove(),350) }, timeout);
   }
   function showConfirm(message){
     return new Promise((resolve)=>{
@@ -33,23 +33,23 @@
       // compose modal body
       body.innerHTML = '';
       const p = document.createElement('div'); p.textContent = message; body.appendChild(p);
-      // remember previous focus so we can restore it
-      const previouslyFocused = document.activeElement;
-      backdrop.style.display = 'flex';
+  // remember previous focus so we can restore it
+  const previouslyFocused = document.activeElement;
+  backdrop.classList.add('open');
 
       // focus first focusable element in the modal
       const focusable = backdrop.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
       if (focusable && focusable.length) focusable[0].focus();
 
-      function cleanup(){
-        backdrop.style.display='none';
-        ok.removeEventListener('click', onOk);
-        cancel.removeEventListener('click', onCancel);
-        if (closeBtn) closeBtn.removeEventListener('click', onClose);
-        document.removeEventListener('keydown', onKey);
-        // restore previous focus
+  function cleanup(){
+    backdrop.classList.remove('open');
+    ok.removeEventListener('click', onOk);
+    cancel.removeEventListener('click', onCancel);
+    if (closeBtn) closeBtn.removeEventListener('click', onClose);
+    document.removeEventListener('keydown', onKey);
+    // restore previous focus
   try { if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus(); } catch (e) { void 0; }
-      }
+  }
       function onOk(){ cleanup(); resolve(true); }
       function onCancel(){ cleanup(); resolve(false); }
       function onClose(){ cleanup(); resolve(false); }
@@ -97,23 +97,23 @@
   function makeOption(val, label){ const o = document.createElement('option'); o.value=val; o.textContent=label||val; return o; }
 
   function renderField(field, value){
-    const wrap = document.createElement('div'); wrap.style.marginBottom='.6rem';
-    const label = document.createElement('label'); label.style.display='block'; label.style.fontWeight='600'; label.textContent = field.label || field.key;
+  const wrap = document.createElement('div'); wrap.className = 'field-wrap';
+  const label = document.createElement('label'); label.className = 'field-label'; label.textContent = field.label || field.key;
     wrap.appendChild(label);
     let input;
-    if (field.type === 'textarea'){
-      input = document.createElement('textarea'); input.style.width='100%'; input.style.minHeight='80px';
+      if (field.type === 'textarea') {
+        input = document.createElement('textarea'); input.className = 'field-textarea field-textarea-lg';
       input.name = field.key;
       input.value = Array.isArray(value) ? value.join('\n') : (value || '');
     } else if (field.type === 'image'){
-      const row = document.createElement('div'); row.style.display='flex'; row.style.gap='0.5rem';
-      input = document.createElement('input'); input.type='text'; input.name = field.key; input.style.flex='1'; input.value = value || '';
+  const row = document.createElement('div'); row.className = 'field-row';
+  input = document.createElement('input'); input.type='text'; input.name = field.key; input.className = 'field-input-flex'; input.value = value || '';
       input.setAttribute('data-field-type','image');
       const pick = document.createElement('button'); pick.type='button'; pick.textContent='Pick'; pick.addEventListener('click', ()=> openImagePicker(input));
       row.appendChild(input); row.appendChild(pick); wrap.appendChild(row);
       return wrap;
     } else {
-      input = document.createElement('input'); input.type='text'; input.name = field.key; input.style.width='100%'; input.value = value || '';
+  input = document.createElement('input'); input.type='text'; input.name = field.key; input.className = 'field-input'; input.value = value || '';
     }
     wrap.appendChild(input);
     return wrap;
@@ -123,9 +123,9 @@
     const backdrop = document.getElementById('modal-backdrop');
     const body = document.getElementById('modal-body');
     if (!backdrop || !body) return;
-    body.innerHTML = '<div style="max-height:320px;overflow:auto;display:flex;flex-wrap:wrap;gap:.5rem"></div>';
+    body.innerHTML = '<div class="picker-grid"></div>';
     const grid = body.firstChild;
-  backdrop.style.display='flex';
+  backdrop.classList.add('open');
   // NOTE: list-images.php returns a JSON list of filenames in
   // uploads/images. This UI trusts that the admin session is
   // authenticated; the server-side endpoint enforces auth and CSRF
@@ -141,23 +141,23 @@
   fetch(listUrl).then(r=>r.json()).then(j=>{
       if (!j || !Array.isArray(j.files)) { grid.innerHTML = '<i>No images</i>'; return; }
     const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
-    j.files.forEach(f=>{
+  j.files.forEach(f=>{
     // defensive client-side filter: skip hidden files and non-image extensions
     if (!f || f.charAt(0) === '.') return;
     const ext = (f.split('.').pop() || '').toLowerCase();
     if (!ext || allowedExt.indexOf(ext) === -1) return;
-    const thumb = document.createElement('div'); thumb.style.width='120px'; thumb.style.cursor='pointer'; thumb.style.textAlign='center';
-  const img = document.createElement('img'); img.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; img.style.width='100%'; img.style.height='80px'; img.style.objectFit='cover';
+    const thumb = document.createElement('div'); thumb.className = 'thumb';
+  const img = document.createElement('img'); img.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + f; img.className = 'img-120x80';
     // fallback placeholder (SVG data URI) in case image fails to load
     img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
-    const lab = document.createElement('div'); lab.textContent = f; lab.style.fontSize='0.8rem'; lab.style.overflow='hidden'; lab.style.textOverflow='ellipsis'; lab.style.whiteSpace='nowrap';
-    thumb.appendChild(img); thumb.appendChild(lab);
-  thumb.addEventListener('click', ()=>{ targetInput.value = f; targetInput.dispatchEvent(new Event('input', { bubbles: true })); backdrop.style.display='none'; });
+  const lab = document.createElement('div'); lab.textContent = f; lab.className = 'thumb-label';
+  thumb.appendChild(img); thumb.appendChild(lab);
+  thumb.addEventListener('click', ()=>{ targetInput.value = f; targetInput.dispatchEvent(new Event('input', { bubbles: true })); backdrop.classList.remove('open'); });
     grid.appendChild(thumb);
   });
   }).catch(()=>{ grid.innerHTML = '<i>Failed to load</i>'; });
-    const ok = document.getElementById('modal-ok'); const cancel = document.getElementById('modal-cancel'); const closeBtn = document.getElementById('modal-close');
-    const cleanup = function(){ backdrop.style.display='none'; ok && ok.removeEventListener('click', onOk); cancel && cancel.removeEventListener('click', onCancel); if (closeBtn) closeBtn.removeEventListener('click', onClose); };
+  const ok = document.getElementById('modal-ok'); const cancel = document.getElementById('modal-cancel'); const closeBtn = document.getElementById('modal-close');
+  const cleanup = function(){ backdrop.classList.remove('open'); ok && ok.removeEventListener('click', onOk); cancel && cancel.removeEventListener('click', onCancel); if (closeBtn) closeBtn.removeEventListener('click', onClose); };
     const onOk = function(){ cleanup(); };
     const onCancel = function(){ cleanup(); };
     const onClose = function(){ cleanup(); };
@@ -170,7 +170,7 @@
     const schema = schemas[sec];
     const data = siteContent[sec] || {};
     if (!schema) {
-      const ta = document.createElement('textarea'); ta.style.width='100%'; ta.style.height='200px'; ta.value = JSON.stringify(data, null, 2);
+      const ta = document.createElement('textarea'); ta.className = 'field-textarea field-textarea-lg'; ta.value = JSON.stringify(data, null, 2);
       const hint = document.createElement('div'); hint.textContent = 'No schema for this section — edit raw JSON below.';
       schemaFields.appendChild(hint); schemaFields.appendChild(ta);
       return;
@@ -253,13 +253,13 @@
           const token = (document.querySelector('input[name="csrf_token"]') || {}).value || window.__csrfToken || '';
           if (token) fd.append('csrf_token', token);
         }
-        const progressBar = document.createElement('div'); progressBar.className = 'image-upload-progress'; progressBar.innerHTML = '<div class="bar"><div class="fill" style="width:0%"></div></div>';
+  const progressBar = document.createElement('div'); progressBar.className = 'image-upload-progress'; progressBar.innerHTML = '<div class="bar"><div class="fill"></div></div>';
         form.parentNode.insertBefore(progressBar, form.nextSibling);
 
         xhr.upload.addEventListener('progress', function(e){
           if (e.lengthComputable) {
             const pct = Math.round((e.loaded / e.total) * 100);
-            const fill = progressBar.querySelector('.fill'); if (fill) fill.style.width = pct + '%';
+            const fill = progressBar.querySelector('.fill'); if (fill) fill.style.setProperty('--w', pct + '%');
             status.textContent = 'Uploading: ' + pct + '%';
           }
         });
@@ -349,11 +349,10 @@
           if (firstSeg !== activeType && basename.indexOf(activeType) === -1) return;
         }
 
-        const row = document.createElement('div');
-        row.style.display='flex'; row.style.alignItems='center'; row.style.gap='1rem'; row.style.marginBottom='.5rem';
-        const img = document.createElement('img'); img.src = url; img.style.height='48px'; img.style.objectFit='cover';
+  const row = document.createElement('div'); row.className = 'flex-row';
+  const img = document.createElement('img'); img.src = url; img.className = 'img-48';
         img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
-        const name = document.createElement('div'); name.textContent = rel; name.style.flex='1';
+  const name = document.createElement('div'); name.textContent = rel; name.className = 'flex-1 text-ellipsis';
         const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{
           if (!await showConfirm('Delete '+rel+'?')) return;
           const fd = new FormData(); fd.append('filename', rel); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
@@ -363,7 +362,7 @@
           }).catch(()=>{ showToast('Delete failed','error'); });
         });
         const restoreBtn = document.createElement('button'); restoreBtn.type='button'; restoreBtn.textContent='Trash'; restoreBtn.disabled=true; restoreBtn.title='In images list';
-        row.appendChild(img); row.appendChild(name); row.appendChild(del); row.appendChild(restoreBtn);
+  row.appendChild(img); row.appendChild(name); row.appendChild(del); row.appendChild(restoreBtn);
         list.appendChild(row);
       });
     }).catch(()=>{ list.innerHTML = '<i>Failed to list images</i>'; });
@@ -428,11 +427,11 @@
             if (!entry || !entry.relative) return;
             const rel = entry.relative;
             const url = entry.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + rel);
-            const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='.5rem'; row.style.marginBottom='.4rem';
-            const img = document.createElement('img'); img.src = url; img.style.width='96px'; img.style.height='64px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
+            const row = document.createElement('div'); row.className = 'flex-row-sm';
+            const img = document.createElement('img'); img.src = url; img.className = 'img-96x64';
             img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="64"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
-            const meta = document.createElement('div'); meta.style.flex='1'; meta.style.minWidth='120px'; meta.style.overflow='hidden';
-            const name = document.createElement('div'); name.textContent = rel; name.style.fontSize='.8rem'; name.style.overflow='hidden'; name.style.textOverflow='ellipsis'; name.style.whiteSpace='nowrap';
+            const meta = document.createElement('div'); meta.className = 'image-meta';
+            const name = document.createElement('div'); name.textContent = rel; name.className = 'meta-name';
             meta.appendChild(name);
             const del = document.createElement('button'); del.type='button'; del.className='btn btn-danger-muted'; del.textContent='Delete'; del.addEventListener('click', async (ev)=>{
               ev.preventDefault(); ev.stopPropagation(); if (!await showConfirm('Delete '+rel+'?')) return;
@@ -454,10 +453,10 @@
             else if (typeof f === 'object') { rel = f.relative || ''; url = f.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + (f.relative || '')); }
             if (!rel) return;
             const ext = (rel.split('.').pop() || '').toLowerCase(); if (['png','jpg','jpeg','gif','webp','svg','ico'].indexOf(ext) === -1) return;
-            const el = document.createElement('div'); el.style.display='inline-block'; el.style.marginRight='.5rem'; el.style.textAlign='center'; el.style.width='80px';
-            const img = document.createElement('img'); img.src = url; img.style.width='80px'; img.style.height='60px'; img.style.objectFit='cover'; img.style.border='1px solid rgba(0,0,0,0.04)'; img.style.borderRadius='6px';
+            const el = document.createElement('div'); el.className = 'el-inline';
+            const img = document.createElement('img'); img.src = url; img.className = 'img-80x60';
             img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="8" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
-            const caption = document.createElement('div'); caption.textContent = rel; caption.style.fontSize='0.72rem'; caption.style.overflow='hidden'; caption.style.textOverflow='ellipsis'; caption.style.whiteSpace='nowrap';
+            const caption = document.createElement('div'); caption.textContent = rel; caption.className = 'caption-small text-ellipsis';
             el.appendChild(img); el.appendChild(caption);
             el.addEventListener('click', ()=>{
               const sect = c.closest('.image-section'); if (!sect) return;
@@ -481,10 +480,9 @@
       if (!j || !Array.isArray(j.items)) { list.innerHTML = '<i>No trash</i>'; return; }
       list.innerHTML = '';
       j.items.forEach(it=>{
-        const row = document.createElement('div');
-        row.style.display='flex'; row.style.alignItems='center'; row.style.gap='1rem'; row.style.marginBottom='.5rem';
-        const img = document.createElement('img'); img.src = '../uploads/trash/'+it.trash_name; img.style.height='48px'; img.style.objectFit='cover';
-        const name = document.createElement('div'); name.textContent = it.meta && it.meta.original ? it.meta.original : it.trash_name; name.style.flex='1';
+  const row = document.createElement('div'); row.className = 'flex-row';
+  const img = document.createElement('img'); img.src = '../uploads/trash/'+it.trash_name; img.className = 'img-48';
+  const name = document.createElement('div'); name.textContent = it.meta && it.meta.original ? it.meta.original : it.trash_name; name.className = 'flex-1 text-ellipsis';
   const restore = document.createElement('button'); restore.type='button'; restore.textContent='Restore'; restore.addEventListener('click', async ()=>{
           if (!await showConfirm('Restore '+name.textContent+'?')) return;
           const fd = new FormData(); fd.append('trash_name', it.trash_name); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
@@ -504,7 +502,7 @@
     const container = document.getElementById('schema-form-wrap') || document.body;
     if (!container) return;
     if (document.getElementById('img-toggle')) return;
-    const t = document.createElement('div'); t.id='img-toggle'; t.style.marginTop='.5rem'; t.style.display='flex'; t.style.gap='.5rem';
+  const t = document.createElement('div'); t.id='img-toggle'; t.className = 'flex-row-sm';
   const showImgs = document.createElement('button'); showImgs.type='button'; showImgs.className='btn btn-ghost'; showImgs.textContent='Images'; showImgs.addEventListener('click', ()=>{ refreshImageList(); });
   const showTrash = document.createElement('button'); showTrash.type='button'; showTrash.className='btn btn-ghost'; showTrash.textContent='Trash'; showTrash.addEventListener('click', ()=>{ refreshTrashList(); });
     t.appendChild(showImgs); t.appendChild(showTrash);
@@ -518,7 +516,7 @@
   // in the admin template (#show-all-images-btn) to reveal it on demand.
   let imageArea = document.getElementById('image-list');
   if (!imageArea) {
-    imageArea = document.createElement('div'); imageArea.id = 'image-list'; imageArea.style.marginTop = '.5rem'; imageArea.style.display = 'none';
+    imageArea = document.createElement('div'); imageArea.id = 'image-list';
     // insert at end of upload-wrap
     const wrap = document.querySelector('.upload-wrap'); if (wrap) wrap.appendChild(imageArea);
   }
@@ -538,25 +536,12 @@
     if (!modalBackdrop) {
       modalBackdrop = document.createElement('div');
       modalBackdrop.id = 'images-modal-backdrop';
-      // Apply essential backdrop layout styles inline as a robust fallback
-      // in case the minified CSS bundle doesn't include the #images-modal-backdrop rules.
-      modalBackdrop.style.position = 'fixed';
-      modalBackdrop.style.inset = '0';
-      modalBackdrop.style.background = 'rgba(0,0,0,0.45)';
-      modalBackdrop.style.display = 'none';
-      modalBackdrop.style.alignItems = 'center';
-      modalBackdrop.style.justifyContent = 'center';
-      modalBackdrop.style.zIndex = '9999';
+  // rely on CSS for backdrop/modal layout; fallback classes are provided in CSS
 
   const modal = document.createElement('div'); modal.id = 'images-modal';
   modal.innerHTML = '<div class="modal-header"><strong>All images</strong><button class="close-btn" aria-label="Close images modal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div id="images-modal-body"></div>';
-  // Apply essential modal styles inline so it is constrained and scrollable
-  modal.style.background = 'var(--card-bg, #fff)';
-  modal.style.borderRadius = '10px';
-  modal.style.maxWidth = '1000px';
-  modal.style.width = 'calc(100% - 48px)';
-  modal.style.maxHeight = '80vh';
-  modal.style.overflow = 'auto';
+  // Rely on CSS for modal layout (styles are defined in admin.modal.css)
+  modal.classList.add('images-modal-content');
       // modal styles moved to CSS; append modal/backdrop to the document
       modalBackdrop.appendChild(modal);
       document.body.appendChild(modalBackdrop);
@@ -659,9 +644,9 @@
       const galleryFiles = files.filter(f => f.relative && f.relative.split('/')[0] === 'gallery');
       if (!galleryFiles.length) { wrap.innerHTML = '<i>No gallery images found</i>'; return; }
       galleryFiles.forEach(f => {
-        const row = document.createElement('div'); row.style.display='flex'; row.style.alignItems='center'; row.style.gap='.6rem'; row.style.marginBottom='.4rem';
-        const img = document.createElement('img'); img.src = f.url; img.style.width='120px'; img.style.height='80px'; img.style.objectFit='cover'; img.onerror = function(){ this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
-        const meta = document.createElement('div'); meta.style.flex='1'; meta.textContent = f.relative; meta.style.overflow='hidden'; meta.style.textOverflow='ellipsis'; meta.style.whiteSpace='nowrap';
+  const row = document.createElement('div'); row.className = 'flex-row-sm';
+  const img = document.createElement('img'); img.src = f.url; img.className = 'img-120x80'; img.onerror = function(){ this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
+  const meta = document.createElement('div'); meta.className = 'image-meta'; meta.textContent = f.relative;
         const del = document.createElement('button'); del.type='button'; del.className='btn btn-danger-muted'; del.textContent='Delete'; del.addEventListener('click', async ()=>{
           if (!await showConfirm('Delete '+f.relative+'?')) return;
           const fd = new FormData(); fd.append('filename', f.relative); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
@@ -706,8 +691,8 @@
       ];
     }
 
-    function makeInput(value, placeholder){ const i = document.createElement('input'); i.type='text'; i.value = value || ''; i.placeholder = placeholder || ''; i.style.width='100%'; return i; }
-    function makeTextarea(value, placeholder){ const t = document.createElement('textarea'); t.value = value || ''; t.placeholder = placeholder || ''; t.style.width='100%'; t.style.minHeight='60px'; return t; }
+  function makeInput(value, placeholder){ const i = document.createElement('input'); i.type='text'; i.value = value || ''; i.placeholder = placeholder || ''; i.className = 'field-input'; return i; }
+  function makeTextarea(value, placeholder){ const t = document.createElement('textarea'); t.value = value || ''; t.placeholder = placeholder || ''; t.className = 'field-textarea min-h-60'; return t; }
 
     // persist expanded sections in localStorage. Default: none expanded (all collapsed).
     const STORAGE_KEY = 'admin.menu.expandedSections';
@@ -731,7 +716,7 @@
         }
     const secWrap = document.createElement('div'); secWrap.className = 'section-wrap';
   const header = document.createElement('div'); header.className = 'menu-section-header';
-  const left = document.createElement('div'); left.style.flex='1';
+  const left = document.createElement('div'); left.className = 'flex-1';
   const titleIn = makeInput(section.title||'', 'Section title'); titleIn.addEventListener('input', ()=> menuData[sidx].title = titleIn.value);
   left.appendChild(titleIn);
         // section-level details: support multiple detail lines (array)
@@ -741,13 +726,13 @@
         }
         if (!Array.isArray(section.details)) section.details = [];
 
-  const detailsContainer = document.createElement('div'); detailsContainer.className = 'section-details-admin'; detailsContainer.style.marginTop = '.4rem';
+  const detailsContainer = document.createElement('div'); detailsContainer.className = 'section-details-admin';
 
         function renderDetailsAdmin() {
           detailsContainer.innerHTML = '';
       section.details.forEach((d, di) => {
         const row = document.createElement('div'); row.className = 'menu-item-row';
-            const ta = document.createElement('textarea'); ta.style.flex='1'; ta.style.minHeight='48px'; ta.value = d || ''; ta.placeholder = 'Detail for section (shown in expanded view)';
+            const ta = document.createElement('textarea'); ta.className = 'field-textarea min-h-48'; ta.value = d || ''; ta.placeholder = 'Detail for section (shown in expanded view)';
             ta.addEventListener('input', ()=> { menuData[sidx].details[di] = ta.value; });
             const rem = document.createElement('button'); rem.type='button'; rem.className='btn btn-danger-muted'; rem.textContent='Remove'; rem.addEventListener('click', async ()=>{ if (!await showConfirm('Remove this section detail?')) return; menuData[sidx].details.splice(di,1); render(); });
             row.appendChild(ta); row.appendChild(rem);
@@ -764,15 +749,15 @@
   secImgIn.title = 'Section image filename within uploads/images or a full URL';
   secImgIn.setAttribute('data-field-type','image');
   const secPick = document.createElement('button'); secPick.type='button'; secPick.textContent='Pick'; secPick.className='btn btn-ghost'; secPick.addEventListener('click', ()=> openImagePicker(secImgIn));
-  const secImgRow = document.createElement('div'); secImgRow.style.display='flex'; secImgRow.style.gap='.4rem'; secImgRow.style.marginTop='.4rem'; secImgRow.appendChild(secImgIn); secImgRow.appendChild(secPick);
-  const secPreview = document.createElement('img'); secPreview.style.width='100%'; secPreview.style.height='80px'; secPreview.style.objectFit='cover'; secPreview.style.marginTop='.4rem'; if (secImgIn.value) secPreview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + secImgIn.value;
+  const secImgRow = document.createElement('div'); secImgRow.className = 'flex-row-sm'; secImgRow.appendChild(secImgIn); secImgRow.appendChild(secPick);
+  const secPreview = document.createElement('img'); secPreview.className = 'preview-img'; if (secImgIn.value) secPreview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + secImgIn.value;
   secImgIn.addEventListener('input', ()=>{ menuData[sidx].image = secImgIn.value; if (secImgIn.value) secPreview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + secImgIn.value; else secPreview.removeAttribute('src'); renderPreview(); });
   left.appendChild(secImgRow);
   left.appendChild(secPreview);
 
   header.appendChild(left);
 
-  const hdrControls = document.createElement('div'); hdrControls.style.display='flex'; hdrControls.style.gap='.4rem';
+  const hdrControls = document.createElement('div'); hdrControls.className = 'flex-row-sm';
         // collapse/expand toggle using persisted expandedSections (localStorage)
         const sectionId = section.id || ('section-' + sidx);
   const toggleBtn = document.createElement('button'); toggleBtn.type='button'; toggleBtn.className='menu-toggle'; toggleBtn.title = 'Collapse / expand';
@@ -803,7 +788,7 @@
         secWrap.appendChild(header);
 
         // items list
-  const itemsWrap = document.createElement('div'); itemsWrap.className = 'menu-section-items'; itemsWrap.style.marginTop='.6rem';
+  const itemsWrap = document.createElement('div'); itemsWrap.className = 'menu-section-items';
         const items = Array.isArray(section.items) ? section.items : [];
         if (!items.length) {
           const hint = document.createElement('div'); hint.textContent = 'No items — use "Add Item"'; hint.className='small'; itemsWrap.appendChild(hint);
@@ -812,15 +797,15 @@
           const row = document.createElement('div'); row.className = 'menu-item-row';
           const leftCol = document.createElement('div');
             const titleIn = makeInput(it.title||'', 'e.g. Classic Cheeseburger'); titleIn.title = 'Item title shown on the menu'; titleIn.addEventListener('input', ()=> menuData[sidx].items[idx].title = titleIn.value);
-            const shortIn = makeInput(it.short||'', 'e.g. With lettuce, tomato & pickles'); shortIn.title = 'Short subtitle or note shown under the title'; shortIn.style.marginTop='.3rem'; shortIn.addEventListener('input', ()=> menuData[sidx].items[idx].short = shortIn.value);
-            const descIn = makeTextarea(it.description||'', 'Detailed description, ingredients, or notes'); descIn.title = 'Long description shown when the item is expanded'; descIn.style.marginTop='.3rem'; descIn.addEventListener('input', ()=> menuData[sidx].items[idx].description = descIn.value);
+            const shortIn = makeInput(it.short||'', 'e.g. With lettuce, tomato & pickles'); shortIn.title = 'Short subtitle or note shown under the title'; shortIn.classList.add('mt-03'); shortIn.addEventListener('input', ()=> menuData[sidx].items[idx].short = shortIn.value);
+            const descIn = makeTextarea(it.description||'', 'Detailed description, ingredients, or notes'); descIn.title = 'Long description shown when the item is expanded'; descIn.classList.add('mt-03'); descIn.addEventListener('input', ()=> menuData[sidx].items[idx].description = descIn.value);
             leftCol.appendChild(titleIn); leftCol.appendChild(shortIn); leftCol.appendChild(descIn);
 
             // price is optional for certain sections (e.g., legacy flavor lists)
             const allowPrice = true;
             let priceIn = null;
             if (allowPrice) {
-              priceIn = makeInput(it.price||'', 'e.g. 9.99'); priceIn.title = 'Price in dollars (no $). Example: 9.99'; priceIn.style.marginTop='.3rem'; priceIn.addEventListener('input', ()=> menuData[sidx].items[idx].price = priceIn.value);
+              priceIn = makeInput(it.price||'', 'e.g. 9.99'); priceIn.title = 'Price in dollars (no $). Example: 9.99'; priceIn.classList.add('mt-03'); priceIn.addEventListener('input', ()=> menuData[sidx].items[idx].price = priceIn.value);
               // insert price after short
               leftCol.insertBefore(priceIn, descIn);
             }
@@ -836,20 +821,20 @@
               }
               if (!Array.isArray(it.quantities)) it.quantities = [];
 
-              qtyContainer = document.createElement('div'); qtyContainer.className = 'qty-options'; qtyContainer.style.marginTop = '.3rem';
+              qtyContainer = document.createElement('div'); qtyContainer.className = 'qty-options mt-03';
 
               const createOptionRow = function(opt, optIndex) {
-                const row = document.createElement('div'); row.style.display='flex'; row.style.gap='.4rem'; row.style.alignItems='center'; row.style.marginTop='.3rem';
-                const labelInput = makeInput(opt.label || '', 'Label (e.g. 6 pc, 12 pc)'); labelInput.style.flex='1'; labelInput.addEventListener('input', ()=> { menuData[sidx].items[idx].quantities[optIndex].label = labelInput.value; });
+                const row = document.createElement('div'); row.className = 'flex-row-sm mt-03';
+                const labelInput = makeInput(opt.label || '', 'Label (e.g. 6 pc, 12 pc)'); labelInput.classList.add('field-input-flex'); labelInput.addEventListener('input', ()=> { menuData[sidx].items[idx].quantities[optIndex].label = labelInput.value; });
 
                 // value input: simple numeric/text input for unit size/quantity
                 let valueInput = makeInput(opt.value||'', 'e.g. 1, 5x5');
-                valueInput.style.width = '120px';
+                valueInput.classList.add('w-120');
                 valueInput.addEventListener('input', ()=> { menuData[sidx].items[idx].quantities[optIndex].value = valueInput.value; });
 
                 // price input for this quantity option
                 const priceInput = makeInput(opt.price || '', 'Price (e.g. 6.00)');
-                priceInput.style.width = '100px';
+                priceInput.classList.add('w-100');
                 priceInput.title = 'Price specific to this quantity option';
                 // ensure price input is numeric for units and pricing
                 priceInput.type = 'number'; priceInput.step = '0.01'; priceInput.min = '0';
@@ -862,10 +847,10 @@
                 });
 
                 row.appendChild(labelInput);
-                const valueWrap = document.createElement('div'); valueWrap.style.display='flex'; valueWrap.style.alignItems='center'; valueWrap.appendChild(valueInput);
+                const valueWrap = document.createElement('div'); valueWrap.className = 'flex-row-sm'; valueWrap.appendChild(valueInput);
                 row.appendChild(valueWrap);
                 // price next to the value
-                const priceWrap = document.createElement('div'); priceWrap.style.display='flex'; priceWrap.style.alignItems='center'; priceWrap.appendChild(priceInput);
+                const priceWrap = document.createElement('div'); priceWrap.className = 'flex-row-sm'; priceWrap.appendChild(priceInput);
                 row.appendChild(priceWrap);
                 row.appendChild(removeBtn);
                 return row;
@@ -894,16 +879,16 @@
               else { leftCol.insertBefore(qtyContainer, descIn); }
             }
 
-          const rightCol = document.createElement('div'); rightCol.style.display='flex'; rightCol.style.flexDirection='column'; rightCol.style.gap='.4rem';
+          const rightCol = document.createElement('div'); rightCol.className = 'flex-col';
           const imgIn = makeInput(it.image||'', 'filename.jpg or https://...'); imgIn.title = 'Image filename within uploads/images or a full URL'; imgIn.setAttribute('data-field-type','image');
           const pick = document.createElement('button'); pick.type='button'; pick.textContent='Pick'; pick.className='btn btn-ghost'; pick.addEventListener('click', ()=> openImagePicker(imgIn));
-          const imgRow = document.createElement('div'); imgRow.style.display='flex'; imgRow.style.gap='.4rem'; imgRow.appendChild(imgIn); imgRow.appendChild(pick);
-          const preview = document.createElement('img'); preview.style.width='100%'; preview.style.height='80px'; preview.style.objectFit='cover'; preview.style.marginTop='.4rem'; if (imgIn.value) preview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + imgIn.value;
+          const imgRow = document.createElement('div'); imgRow.className = 'flex-row-sm'; imgRow.appendChild(imgIn); imgRow.appendChild(pick);
+          const preview = document.createElement('img'); preview.className = 'preview-img'; if (imgIn.value) preview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + imgIn.value;
           imgIn.addEventListener('input', ()=>{ menuData[sidx].items[idx].image = imgIn.value; if (imgIn.value) preview.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + imgIn.value; else preview.removeAttribute('src'); renderPreview(); });
           // Also update preview when textual fields change
           titleIn.addEventListener('input', renderPreview); shortIn.addEventListener('input', renderPreview); if (priceIn) priceIn.addEventListener('input', renderPreview); descIn.addEventListener('input', renderPreview);
 
-          const itemControls = document.createElement('div'); itemControls.style.display='flex'; itemControls.style.gap='.4rem';
+          const itemControls = document.createElement('div'); itemControls.className = 'flex-row-sm';
           const up = document.createElement('button'); up.type='button'; up.textContent='↑'; up.title='Move up'; up.className='btn btn-ghost'; up.addEventListener('click', ()=>{ if (idx<=0) return; [menuData[sidx].items[idx-1], menuData[sidx].items[idx]] = [menuData[sidx].items[idx], menuData[sidx].items[idx-1]]; render(); });
           const down = document.createElement('button'); down.type='button'; down.textContent='↓'; down.title='Move down'; down.className='btn btn-ghost'; down.addEventListener('click', ()=>{ if (idx>=menuData[sidx].items.length-1) return; [menuData[sidx].items[idx+1], menuData[sidx].items[idx]] = [menuData[sidx].items[idx], menuData[sidx].items[idx+1]]; render(); });
           const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{ if (!await showConfirm('Delete this item?')) return; menuData[sidx].items.splice(idx,1); render(); });
@@ -928,7 +913,7 @@
         }
 
         secWrap.appendChild(itemsWrap);
-  const footer = document.createElement('div'); footer.style.display='flex'; footer.style.justifyContent='flex-end'; footer.style.marginTop='.6rem';
+  const footer = document.createElement('div'); footer.className = 'footer-row';
   const saveSec = document.createElement('button'); saveSec.type='button'; saveSec.textContent='Save Sections'; saveSec.className='btn btn-primary'; saveSec.addEventListener('click', async ()=>{ await saveMenu(); renderPreview(); });
         footer.appendChild(saveSec); secWrap.appendChild(footer);
 
@@ -949,7 +934,7 @@
         const itemsWrap = document.createElement('div');
         // section-level details shown once for the whole section
         if (Array.isArray(section.details) && section.details.length) {
-          const secDetails = document.createElement('div'); secDetails.className = 'preview-section-details'; secDetails.style.marginBottom = '.5rem';
+          const secDetails = document.createElement('div'); secDetails.className = 'preview-section-details';
           section.details.forEach(d=>{ const p = document.createElement('div'); p.textContent = d; secDetails.appendChild(p); });
           sec.appendChild(secDetails);
         }
@@ -966,7 +951,7 @@
           // only show per-item images when the section does not have a section-level image
           if (!section.image && it.image) { const im = document.createElement('img'); im.src = (window.ADMIN_UPLOADS_BASE || '../uploads/images/')+it.image; pi.appendChild(im); }
           const meta = document.createElement('div'); meta.className='preview-meta';
-          const t = document.createElement('div'); t.textContent = it.title || ''; t.style.fontWeight='700';
+          const t = document.createElement('div'); t.textContent = it.title || ''; t.className = 'preview-title';
           const s = document.createElement('div'); s.className='small'; s.textContent = it.short || '';
           const p = document.createElement('div'); p.className='preview-price'; p.textContent = it.price ? ('$'+it.price) : '';
           // show quantity(s) in preview for certain sections
@@ -985,7 +970,7 @@
           } else {
             q.textContent = (it.quantity !== undefined && it.quantity !== '') ? ('Qty: ' + it.quantity) : '';
           }
-          const d = document.createElement('div'); d.style.marginTop='.25rem'; d.innerHTML = it.description ? it.description.replace(/\n/g,'<br>') : '';
+          const d = document.createElement('div'); d.className = 'mt-03'; d.innerHTML = it.description ? it.description.replace(/\n/g,'<br>') : '';
           meta.appendChild(t); if (s.textContent) meta.appendChild(s); if (p.textContent) meta.appendChild(p); if (q.textContent) meta.appendChild(q); meta.appendChild(d);
           pi.appendChild(meta); itemsWrap.appendChild(pi);
         });
@@ -1066,10 +1051,10 @@
       menu.tabIndex = -1;
     }
 
-  const openMenu = function(){ if (!menu) return; menu.style.display='block'; profileBtn.setAttribute('aria-expanded','true'); menu.querySelectorAll('button,a').forEach(el=>el.tabIndex=0); menu.focus(); };
-  const closeMenu = function(){ if (!menu) return; menu.style.display='none'; profileBtn.setAttribute('aria-expanded','false'); profileBtn.focus(); };
+  const openMenu = function(){ if (!menu) return; menu.classList.add('show-block'); profileBtn.setAttribute('aria-expanded','true'); menu.querySelectorAll('button,a').forEach(el=>el.tabIndex=0); menu.focus(); };
+  const closeMenu = function(){ if (!menu) return; menu.classList.remove('show-block'); profileBtn.setAttribute('aria-expanded','false'); profileBtn.focus(); };
 
-    profileBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if (!menu) return; (menu.style.display === 'block') ? closeMenu() : openMenu(); });
+  profileBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if (!menu) return; (menu.classList.contains('show-block')) ? closeMenu() : openMenu(); });
     profileBtn.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); profileBtn.click(); } if (e.key === 'ArrowDown') { e.preventDefault(); openMenu(); }});
 
     // click outside to close (only when menu is open) to avoid stealing focus when it's closed
@@ -1077,10 +1062,10 @@
       const m = document.getElementById('profile-menu');
       if (!m) return;
       // only act when menu is visible/open
-      if (m.style.display !== 'block') return;
+      if (!m.classList.contains('show-block')) return;
       if (!profileBtn.contains(e.target) && !m.contains(e.target)) closeMenu();
     });
     // close on escape
-    document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') { const m = document.getElementById('profile-menu'); if (m && m.style.display === 'block') closeMenu(); }});
+    document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') { const m = document.getElementById('profile-menu'); if (m && m.classList.contains('show-block')) closeMenu(); }});
   }
 })();

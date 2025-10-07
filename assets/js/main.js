@@ -311,45 +311,33 @@ const AnimationManager = {
         // cosmetic but provide a tactile feel to the UI. We limit
         // the work inside event handlers to small style changes
         // to avoid layout thrashing.
+        // Use CSS hover rules for button hover transforms (avoid inline styles)
         document.querySelectorAll('.btn').forEach(button => {
-            button.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-2px) scale(1.02)';
-            });
-            
-            button.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) scale(1)';
-            });
-
             button.addEventListener('click', function(e) {
                 const ripple = document.createElement('span');
                 ripple.className = 'ripple';
-                
+
                 const rect = this.getBoundingClientRect();
                 const size = Math.max(rect.width, rect.height);
                 const x = e.clientX - rect.left - size / 2;
                 const y = e.clientY - rect.top - size / 2;
-                
-                ripple.style.width = ripple.style.height = size + 'px';
-                ripple.style.left = x + 'px';
-                ripple.style.top = y + 'px';
-                
+
+                // set CSS variables for size/position instead of width/height/left/top
+                ripple.style.setProperty('--ripple-size', size + 'px');
+                ripple.style.setProperty('--ripple-x', x + 'px');
+                ripple.style.setProperty('--ripple-y', y + 'px');
+
                 this.appendChild(ripple);
-                
+
                 setTimeout(() => {
                     ripple.remove();
                 }, 600);
             });
         });
 
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-8px) rotateX(2deg)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) rotateX(0deg)';
-            });
-        });
+        // Card hover transforms handled by CSS :hover rules to avoid inline styles
+        // ...existing code continues
+        // (no JS required for simple card hover effects)
     },
 
     setupParallaxEffects() {
@@ -360,10 +348,11 @@ const AnimationManager = {
         const updateParallax = Utils.throttle(() => {
             const scrolled = window.pageYOffset;
             
-            parallaxElements.forEach(element => {
+                parallaxElements.forEach(element => {
                 const speed = 0.5;
                 const yPos = -(scrolled * speed);
-                element.style.transform = `translateY(${yPos}px)`;
+                // use CSS variable for dynamic numeric transform
+                element.style.setProperty('--parallax-y', yPos + 'px');
             });
         }, 16);
 

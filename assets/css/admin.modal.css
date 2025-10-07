@@ -94,6 +94,41 @@
 .toast.success { background: var(--admin-success); color: var(--card-bg); }
 .toast.error { background: var(--admin-danger); color: var(--card-bg); }
 
+/* Button hover transform handled via CSS to avoid inline style writes */
+.btn { transition: transform .18s ease, box-shadow .18s ease; }
+.btn:hover, .btn:focus { transform: translateY(-2px) scale(1.02); }
+
+/* Card hover transform via CSS */
+.card { transition: transform .22s cubic-bezier(.2,.9,.22,1); }
+.card:hover { transform: translateY(-8px) rotateX(2deg); }
+
+/* Ripple effect using CSS variables set by JS */
+.ripple { position: absolute; pointer-events: none; border-radius: 50%; overflow: hidden; transform: translate3d(0,0,0); left: 0; top: 0; width: var(--ripple-size, 0); height: var(--ripple-size, 0); left: var(--ripple-x, 0); top: var(--ripple-y, 0); background: rgba(255,255,255,0.18); opacity: 0.9; animation: ripple-anim 600ms ease-out forwards; z-index: 2; }
+
+@keyframes ripple-anim { from { transform: scale(0); opacity: 0.9; } to { transform: scale(1.6); opacity: 0; } }
+
+/* Parallax: uses CSS variable --parallax-y set by JS */
+.hero { transform: translateY(var(--parallax-y, 0)); transition: transform .08s linear; }
+
+/* Small helper used by change-password strength indicator */
+.strength-helper { margin-top: .25rem; }
+
+/* Small utility margins and helpers used to replace inline styles */
+.ml-025 { margin-left: .25rem !important; }
+.ml-08 { margin-left: .8rem !important; }
+.mt-06 { margin-top: .6rem !important; }
+.min-w-140 { min-width: 140px !important; }
+
+/* Image preview helper used in admin index previews */
+.img-preview-small { max-width: 280px; max-height: 140px; object-fit: contain; border: 1px solid rgba(0,0,0,0.06); padding: .25rem; }
+
+/* Hours modal row helper and text-capitalize helper */
+.hours-row { display:flex; justify-content:space-between; padding:.25rem 0; }
+.text-capitalize { text-transform: capitalize; }
+
+/* Selector row used in the email scheduler supplier editor */
+.selector-row { display:flex; gap:.4rem; }
+
 
 /* Responsive */
 @media (max-width:900px){ .content-editor{ flex-direction:column; } }
@@ -120,3 +155,93 @@
 /* Ensure the global image list shows when .show is present */
 #image-list { transition: max-height .28s cubic-bezier(.2,.9,.22,1), opacity .22s ease; overflow: hidden; max-height: 0; opacity: 0; }
 #image-list.show { max-height: 1400px; opacity: 1; }
+
+/* Utility classes used by admin.js to avoid inline styles */
+.field-wrap { margin-bottom: .6rem; }
+.field-label { display:block; font-weight:600; }
+.field-textarea { width:100%; min-height:80px; }
+.field-input { width:100%; }
+.field-input-flex { flex:1; }
+.field-row { display:flex; gap:.5rem; }
+.flex-row { display:flex; align-items:center; gap:1rem; margin-bottom:.5rem; }
+.flex-row-sm { display:flex; align-items:center; gap:.6rem; margin-bottom:.4rem; }
+.mb-06 { margin-bottom:.6rem; }
+
+/* Picker grid / thumbnails */
+.picker-grid { max-height:320px; overflow:auto; display:flex; flex-wrap:wrap; gap:.5rem; }
+.thumb { width:120px; cursor:pointer; text-align:center; }
+.thumb img { width:100%; height:80px; object-fit:cover; }
+.thumb-label { font-size:.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.img-48 { height:48px; object-fit:cover; }
+.img-120x80 { width:120px; height:80px; object-fit:cover; }
+.img-96x64 { width:96px; height:64px; object-fit:cover; border:1px solid rgba(0,0,0,0.04); border-radius:6px; }
+.img-80x60 { width:80px; height:60px; object-fit:cover; border:1px solid rgba(0,0,0,0.04); border-radius:6px; }
+
+.el-inline { display:inline-block; margin-right:.5rem; text-align:center; width:80px; }
+.caption-small { font-size:0.72rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.image-meta { flex:1; min-width:120px; overflow:hidden; }
+.meta-name { font-size:.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Flex and spacing helpers */
+.flex-1 { flex: 1; }
+.mt-04 { margin-top: .4rem; }
+.mb-04 { margin-bottom: .4rem; }
+.mt-03 { margin-top: .3rem; }
+
+/* small min-height helpers used by JS */
+.min-h-48 { min-height: 48px; }
+
+/* 60px helper used by makeTextarea */
+.min-h-60 { min-height: 60px; }
+
+/* Small caption */
+.caption-small { font-size:0.72rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Show/block helper used by menus */
+.show-block { display: block !important; }
+
+/* Upload progress bar: use CSS variable --w for dynamic width instead of inline style */
+.image-upload-progress .bar { background: color-mix(in srgb, var(--card-bg) 92%, black 8%); border-radius:6px; overflow:hidden; height:10px; width:100%; }
+.image-upload-progress .fill { display:block; height:100%; background: linear-gradient(90deg, var(--primary-color, #2563eb), color-mix(in srgb, var(--primary-color, #2563eb) 40%, black 10%)); width: var(--w, 0%); transition: width .18s ease; }
+
+/* small image preview helpers */
+.img-48 { height:48px; object-fit:cover; }
+.preview-img { width:100%; height:80px; object-fit:cover; margin-top:.4rem; }
+
+/* profile menu helper: default hidden; .show-block toggles visibility */
+#profile-menu { display:none; }
+#profile-menu.show-block { display:block; }
+
+/* Modal backdrop open state for generic modal (#modal-backdrop) */
+#modal-backdrop { display:none; align-items:center; justify-content:center; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9999; }
+#modal-backdrop.open { display:flex; }
+
+/* Toast fade-out helper */
+.toast.fade-out { opacity: 0; transition: opacity .3s; }
+
+/* ensure the global image-list has the expected spacing */
+#image-list { margin-top: .5rem; }
+
+/* Additional helpers used during JS cleanup */
+.flex-col { display: flex; flex-direction: column; gap: .4rem; }
+.img-card { border: 1px solid rgba(0,0,0,0.04); border-radius: 6px; }
+.text-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.w-120 { width: 120px; }
+.w-100 { width: 100px; }
+.footer-row { display:flex; justify-content:flex-end; margin-top:.6rem; }
+.field-textarea-lg { min-height: 200px; }
+.menu-section-items { margin-top: .6rem; }
+.preview-section-details { margin-bottom: .5rem; }
+
+/* Display helper utilities used by JS (show/hide variants) */
+.show-inline-block { display: inline-block !important; }
+.show-flex { display: flex !important; }
+.hidden { display: none !important; }
+
+/* Ensure generic modal-backdrop variants can be opened by adding .open */
+.modal-backdrop.open { display: flex !important; align-items: center; justify-content: center; }
+/* small layout helpers used by admin pages */
+.space-between-row { display:flex; justify-content:space-between; align-items:center; padding:.4rem; border-bottom:1px solid var(--admin-border); }
+.preview-box { margin-top:.6rem; background:var(--card-bg); padding:.6rem; border-radius:6px; border:1px solid var(--admin-border); }

@@ -92,7 +92,7 @@ header('Content-Type: text/html; charset=utf-8');
     <form method="post" class="mt-1" data-confirm="Clear quote audit? This will remove all entries. Continue?">
       <?php echo csrf_input_field(); ?>
       <input type="hidden" name="action" value="clear_quote_audit">
-      <button type="submit" class="btn btn-ghost">Clear audit</button>
+      <button type="submit" class="btn btn-danger-muted">Clear audit</button>
     </form>
   </body>
 </html>

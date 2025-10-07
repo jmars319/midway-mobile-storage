@@ -661,14 +661,14 @@
                     return;
                 }
                 
-                logsEl.innerHTML = '<table style="width:100%; border-collapse: collapse;">' +
-                    '<tr style="background: #f0f0f0;"><th style="padding:10px; text-align:left;">Date</th><th style="padding:10px; text-align:left;">Campaign ID</th><th style="padding:10px; text-align:left;">Status</th><th style="padding:10px; text-align:left;">Message</th></tr>' +
+                logsEl.innerHTML = '<table class="doc-table">' +
+                    '<tr class="doc-tr doc-tr--header"><th class="doc-th">Date</th><th class="doc-th">Campaign ID</th><th class="doc-th">Status</th><th class="doc-th">Message</th></tr>' +
                     data.logs.map(log => `
-                        <tr style="border-bottom: 1px solid #ddd;">
-                            <td style="padding:10px;">${log.sent_at}</td>
-                            <td style="padding:10px;">${log.campaign_id}</td>
-                            <td style="padding:10px;"><span class="status-badge ${log.status === 'success' ? 'status-active' : 'status-inactive'}">${log.status}</span></td>
-                            <td style="padding:10px;">${log.message}</td>
+                        <tr class="doc-tr">
+                            <td class="doc-td">${log.sent_at}</td>
+                            <td class="doc-td">${log.campaign_id}</td>
+                            <td class="doc-td"><span class="status-badge ${log.status === 'success' ? 'status-active' : 'status-inactive'}">${log.status}</span></td>
+                            <td class="doc-td">${log.message}</td>
                         </tr>
                     `).join('') +
                     '</table>';

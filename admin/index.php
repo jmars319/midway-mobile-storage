@@ -419,7 +419,7 @@ header('Content-Type: text/html; charset=utf-8');
                 <h1 class="m-0">Admin Dashboard</h1>
                 <div class="topbar">
                   <a href="../" class="btn btn-ghost" target="_blank">View site</a>
-                  <a href="email-scheduler.php" class="btn btn-ghost" style="margin-left:.25rem">Email Scheduler</a>
+                  <a href="email-scheduler.php" class="btn btn-ghost ml-025">Email Scheduler</a>
                 </div>
               </div>
             </div>
@@ -698,11 +698,11 @@ header('Content-Type: text/html; charset=utf-8');
             }
             html += '</table>';
             body.innerHTML = html;
-            modal.style.display = 'flex';
+            modal.classList.add('open');
             modal.setAttribute('aria-hidden','false');
           });
         });
-        el('#app-modal-close').addEventListener('click', function(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); });
+  el('#app-modal-close').addEventListener('click', function(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); });
       })();
       </script>
     </div>
@@ -728,7 +728,7 @@ header('Content-Type: text/html; charset=utf-8');
               <?php $url = preg_match('#^https?://#i', $current) ? $current : admin_upload_url($current); ?>
               <div class="mb-05">
                 <div class="small">Current:</div>
-                <img src="<?php echo htmlspecialchars($url); ?>" alt="<?php echo htmlspecialchars($tlabel); ?>" style="max-width:280px;max-height:140px;object-fit:contain;border:1px solid #eee;padding:4px;" />
+                <img src="<?php echo htmlspecialchars($url); ?>" alt="<?php echo htmlspecialchars($tlabel); ?>" class="img-preview-small" />
               </div>
             <?php endif; ?>
 
@@ -745,7 +745,7 @@ header('Content-Type: text/html; charset=utf-8');
             </form>
             <div class="section-image-list small" data-type="<?php echo htmlspecialchars($tkey); ?>"></div>
             <?php if ($tkey === 'gallery'): ?>
-              <div id="gallery-full-list" style="margin-top:.6rem"></div>
+              <div id="gallery-full-list" class="mt-06"></div>
             <?php endif; ?>
           </div>
         </details>
@@ -754,7 +754,7 @@ header('Content-Type: text/html; charset=utf-8');
       <!-- Button to show a global list of all images (hidden by default content-wise).
            The button is visible so admins can reveal the full list; images are hidden
            until the button is toggled. -->
-      <div style="margin-top:.5rem">
+  <div class="mt-05">
         <button id="show-all-images-btn" type="button" class="btn btn-ghost">Show all images</button>
       </div>
     </div>
@@ -770,13 +770,13 @@ header('Content-Type: text/html; charset=utf-8');
       // admin options submenu toggles for combined CSV/JSON actions with keyboard navigation
       (function(){
         function closeAll() {
-          document.querySelectorAll('.pm-combo-menu').forEach(function(m){ m.style.display = 'none'; });
+          document.querySelectorAll('.pm-combo-menu').forEach(function(m){ m.classList.remove('open'); });
           document.querySelectorAll('.pm-combo-toggle').forEach(function(b){ b.setAttribute('aria-expanded','false'); });
         }
 
         function openMenu(toggle, menu) {
           closeAll();
-          menu.style.display = 'block';
+          menu.classList.add('open');
           toggle.setAttribute('aria-expanded','true');
           // focus first focusable item in menu
           var first = menu.querySelector('.pm-subitem');
@@ -789,7 +789,7 @@ header('Content-Type: text/html; charset=utf-8');
           if (toggle) {
             var wrap = toggle.parentNode;
             var menu = wrap.querySelector('.pm-combo-menu');
-            var isOpen = menu.style.display !== 'none';
+            var isOpen = menu.classList.contains('open');
             if (isOpen) { closeAll(); }
             else { openMenu(toggle, menu); }
             return;
@@ -846,7 +846,7 @@ header('Content-Type: text/html; charset=utf-8');
           if (!c){ c = document.createElement('div'); c.id='toast-container'; document.body.appendChild(c); }
           var el = document.createElement('div'); el.className = 'toast ' + (type==='success' ? 'success' : (type==='error' ? 'error' : ''));
           el.textContent = msg; c.appendChild(el);
-          setTimeout(function(){ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(function(){ el.remove(); }, 350); }, timeout);
+          setTimeout(function(){ el.classList.add('fade-out'); setTimeout(function(){ el.remove(); }, 350); }, timeout);
         }
 
         var params = new URLSearchParams(window.location.search);

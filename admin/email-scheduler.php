@@ -58,15 +58,15 @@ header('Content-Type: text/html; charset=utf-8');
                 <h2>Campaigns</h2>
                 <div id="campaign-list" class="section-wrap">
                     <div id="toast-container"></div>
-                    <div class="search-form" style="margin-bottom:.6rem;align-items:center">
+                    <div class="search-form mt-06">
                         <input id="filter-text" class="search-input" placeholder="Search campaigns by name or subject">
-                        <select id="filter-status" style="min-width:140px">
+                        <select id="filter-status" class="min-w-140">
                             <option value="all">All statuses</option>
                             <option value="1">Active</option>
                             <option value="0">Paused</option>
                         </select>
                         <label class="perpage-label">Per page
-                            <select id="per-page" style="margin-left:.5rem">
+                            <select id="per-page" class="ml-025">
                                 <option>5</option>
                                 <option selected>10</option>
                                 <option>25</option>
@@ -93,7 +93,7 @@ header('Content-Type: text/html; charset=utf-8');
                         </tbody>
                     </table>
 
-                    <div class="pagination-wrap" style="margin-top:.6rem">
+                    <div class="pagination-wrap mt-06">
                         <div id="pagination-controls" class="pagination-wrap"></div>
                     </div>
                 </div>
@@ -132,32 +132,32 @@ header('Content-Type: text/html; charset=utf-8');
                     <div class="form-actions">
                         <input type="hidden" id="editing-id" value="">
                         <button class="btn btn-primary" id="campaign-submit" type="submit">Create</button>
-                        <button class="btn btn-ghost" id="campaign-cancel" type="button" style="display:none">Cancel</button>
+                        <button class="btn btn-ghost hidden" id="campaign-cancel" type="button">Cancel</button>
                     </div>
-                    <div class="card-spaced" id="supplier-editor" style="display:none">
+                    <div class="card-spaced hidden" id="supplier-editor">
                         <h3>Suppliers</h3>
                         <div id="supplier-list" class="section-wrap">No suppliers</div>
-                        <form id="supplier-form" class="smtp-form" style="margin-top:.6rem">
+                        <form id="supplier-form" class="smtp-form mt-06">
                             <input type="hidden" id="supplier-campaign-id" value="">
                             <input type="hidden" id="supplier-editing-id" value="">
                             <div class="form-row smtp-label"><label for="supplier-name">Name</label><input id="supplier-name" name="name"></div>
                             <div class="form-row smtp-label"><label for="supplier-url">URL</label><input id="supplier-url" name="url"></div>
                             <div class="form-row smtp-label">
                                 <label>Selectors</label>
-                                <div id="selector-rows" style="display:flex;flex-direction:column;gap:.35rem">
-                                    <div class="selector-row" style="display:flex;gap:.4rem"><input class="selector-key" placeholder="key"><input class="selector-val" placeholder="CSS selector"></div>
+                                <div id="selector-rows" class="flex-col">
+                                    <div class="selector-row"><input class="selector-key" placeholder="key"><input class="selector-val" placeholder="CSS selector"></div>
                                 </div>
-                                <div style="margin-top:.4rem;display:flex;gap:.5rem;align-items:center">
+                                <div class="flex-row-sm mt-04">
                                     <button type="button" class="btn btn-ghost" id="add-selector-row">Add selector</button>
                                     <button type="button" class="btn btn-ghost" id="preview-selectors">Preview</button>
-                                    <label style="margin-left:.8rem"><input type="checkbox" id="force-preview"> Force fresh</label>
+                                    <label class="ml-08"><input type="checkbox" id="force-preview"> Force fresh</label>
                                 </div>
-                                <div id="preview-results" style="margin-top:.6rem;display:none;background:var(--card-bg);padding:.6rem;border-radius:6px;border:1px solid var(--admin-border)"></div>
+                                <div id="preview-results" class="mt-06 hidden preview-box"></div>
                             </div>
                             <div class="form-actions">
                                 <button class="btn btn-primary" id="add-supplier" type="button">Add Supplier</button>
-                                <button class="btn btn-primary" id="update-supplier" type="button" style="display:none">Update Supplier</button>
-                                <button class="btn btn-ghost" id="cancel-supplier" type="button" style="display:none">Cancel</button>
+                                <button class="btn btn-primary hidden" id="update-supplier" type="button">Update Supplier</button>
+                                <button class="btn btn-ghost hidden" id="cancel-supplier" type="button">Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -197,11 +197,11 @@ header('Content-Type: text/html; charset=utf-8');
     </div>
 
     <!-- Confirmation modal -->
-    <div id="modal-backdrop" class="modal-backdrop" style="display:none;">
-        <div class="app-modal-dialog" role="dialog" aria-modal="true" id="confirm-modal">
+    <div id="modal-backdrop" class="modal-backdrop hidden">
+            <div class="app-modal-dialog" role="dialog" aria-modal="true" id="confirm-modal">
             <div id="modal-header"><h3 id="modal-title">Confirm</h3><button id="modal-close" class="app-modal-close">×</button></div>
             <div class="app-modal-body" id="modal-body">Are you sure?</div>
-            <div class="modal-actions" style="padding: .6rem 1rem; display:flex; gap:.5rem; justify-content:flex-end;">
+            <div class="modal-actions">
                 <button id="modal-cancel" class="btn btn-ghost">Cancel</button>
                 <button id="modal-confirm" class="btn btn-primary">Confirm</button>
             </div>
@@ -315,14 +315,14 @@ header('Content-Type: text/html; charset=utf-8');
             document.getElementById('fld-recipients').value=(c.recipients||[]).join('\n');
             document.getElementById('editing-id').value=c.id;
             document.getElementById('campaign-submit').textContent='Update';
-            document.getElementById('campaign-cancel').style.display='inline-block';
+            document.getElementById('campaign-cancel').classList.add('show-inline-block');
             // populate suppliers
             const supList = document.getElementById('supplier-list');
             if(c.suppliers && c.suppliers.length>0){
-                supList.innerHTML = c.suppliers.map(s=>`<div data-sid="${s.id}" style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-ghost\" data-sid=\"${s.id}\" data-action=\"edit-supplier\">Edit</button> <button class=\"btn btn-danger-muted\" data-sid=\"${s.id}\" data-action=\"del-supplier\">Delete</button></div></div>`).join('');
+                supList.innerHTML = c.suppliers.map(s=>`<div data-sid="${s.id}" class="space-between-row"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-ghost\" data-sid=\"${s.id}\" data-action=\"edit-supplier\">Edit</button> <button class=\"btn btn-danger-muted\" data-sid=\"${s.id}\" data-action=\"del-supplier\">Delete</button></div></div>`).join('');
             } else { supList.innerHTML = '<p class="muted">No suppliers</p>' }
             document.getElementById('supplier-campaign-id').value = c.id;
-            document.getElementById('supplier-editor').style.display = 'block';
+            document.getElementById('supplier-editor').classList.add('show-block');
             switchTab('new-campaign');
             // wire supplier delete buttons
             document.querySelectorAll('[data-action="del-supplier"]').forEach(b=>b.addEventListener('click', async (ev)=>{
@@ -344,9 +344,9 @@ header('Content-Type: text/html; charset=utf-8');
                 document.getElementById('supplier-name').value = sup.name || '';
                 document.getElementById('supplier-url').value = sup.url || '';
                 document.getElementById('supplier-selectors').value = JSON.stringify(sup.selectors || {});
-                document.getElementById('add-supplier').style.display='none';
-                document.getElementById('update-supplier').style.display='inline-block';
-                document.getElementById('cancel-supplier').style.display='inline-block';
+                document.getElementById('add-supplier').classList.add('hidden');
+                document.getElementById('update-supplier').classList.add('show-inline-block');
+                document.getElementById('cancel-supplier').classList.add('show-inline-block');
             }));
         }
 
@@ -361,7 +361,7 @@ header('Content-Type: text/html; charset=utf-8');
                 const closeBtn = document.getElementById('modal-close');
                 titleEl.textContent='Confirm';
                 bodyEl.textContent=message;
-                backdrop.style.display='flex';
+                backdrop.classList.add('open');
                 const prevActive = document.activeElement;
                 // hide main content from assistive tech while modal open
                 const mainContent = document.querySelector('body > .container');
@@ -376,7 +376,7 @@ header('Content-Type: text/html; charset=utf-8');
                 firstFocusable.focus();
 
                 const cleanup=()=>{
-                    backdrop.style.display='none';
+                    backdrop.classList.remove('open');
                     confirmBtn.onclick=null; cancelBtn.onclick=null; closeBtn.onclick=null;
                     if(mainContent) mainContent.removeAttribute('aria-hidden');
                     if(prevActive && prevActive.focus) prevActive.focus();
@@ -411,7 +411,7 @@ header('Content-Type: text/html; charset=utf-8');
                         const body = document.getElementById('modal-body');
                         if(!c.suppliers || c.suppliers.length===0){ body.innerHTML = '<p class="muted">No suppliers for this campaign</p>'; }
                         else {
-                            body.innerHTML = '<div>' + c.suppliers.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class="btn btn-danger-muted" data-sid="${s.id}" data-action="del-supplier-modal">Delete</button></div></div>`).join('') + '</div>';
+                            body.innerHTML = '<div>' + c.suppliers.map(s=>`<div class="space-between-row"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class="btn btn-danger-muted" data-sid="${s.id}" data-action="del-supplier-modal">Delete</button></div></div>`).join('') + '</div>';
                             // wire delete buttons
                             body.querySelectorAll('[data-action="del-supplier-modal"]').forEach(b=>b.addEventListener('click', async (ev)=>{
                                 const sid = ev.currentTarget.dataset.sid; if(!sid) return;
@@ -423,16 +423,16 @@ header('Content-Type: text/html; charset=utf-8');
                         }
                         document.getElementById('modal-title').textContent = 'Suppliers for: ' + (c.name||'');
                         // open modal
-                        const backdrop = document.getElementById('modal-backdrop'); backdrop.style.display='flex';
+                        const backdrop = document.getElementById('modal-backdrop'); backdrop.classList.add('open');
                         // focus handling via showConfirm's trap is not used here; attach simple close
-                        document.getElementById('modal-confirm').style.display='none';
+                        document.getElementById('modal-confirm').classList.add('hidden');
                         document.getElementById('modal-cancel').textContent='Close';
-                        document.getElementById('modal-cancel').onclick = ()=>{ backdrop.style.display='none'; document.getElementById('modal-confirm').style.display='inline-block'; document.getElementById('modal-cancel').textContent='Cancel'; };
+                        document.getElementById('modal-cancel').onclick = ()=>{ backdrop.classList.remove('open'); document.getElementById('modal-confirm').classList.remove('hidden'); document.getElementById('modal-cancel').textContent='Cancel'; };
                     }catch(e){ showToast('Failed to load suppliers','error'); }
                 }
 
         document.getElementById('campaign-cancel').addEventListener('click', (e)=>{
-            document.getElementById('campaign-form').reset(); document.getElementById('editing-id').value=''; document.getElementById('campaign-submit').textContent='Create'; document.getElementById('campaign-cancel').style.display='none';
+            document.getElementById('campaign-form').reset(); document.getElementById('editing-id').value=''; document.getElementById('campaign-submit').textContent='Create'; document.getElementById('campaign-cancel').classList.remove('show-inline-block');
         });
 
         function validateCampaignData(data){
@@ -457,7 +457,7 @@ header('Content-Type: text/html; charset=utf-8');
             const editingId = document.getElementById('editing-id').value;
             if(editingId){
                 const r=await fetch(`${API_URL}?action=campaign&id=${encodeURIComponent(editingId)}`,{method:'PUT',headers:{'X-CSRF-Token':CSRF_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(payload)});
-                const d=await r.json(); if(d.success){ showToast('Updated'); document.getElementById('campaign-form').reset(); document.getElementById('editing-id').value=''; document.getElementById('campaign-submit').textContent='Create'; document.getElementById('campaign-cancel').style.display='none'; loadCampaigns(); } else showToast(d.error||'Failed','error');
+                const d=await r.json(); if(d.success){ showToast('Updated'); document.getElementById('campaign-form').reset(); document.getElementById('editing-id').value=''; document.getElementById('campaign-submit').textContent='Create'; document.getElementById('campaign-cancel').classList.remove('show-inline-block'); loadCampaigns(); } else showToast(d.error||'Failed','error');
             } else {
                 const r=await fetch(`${API_URL}?action=campaign`,{method:'POST',headers:{'X-CSRF-Token':CSRF_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(payload)});
                 const d=await r.json(); if(d.success){ showToast('Created'); e.target.reset(); loadCampaigns(); } else showToast(d.error||'Failed','error');
@@ -511,7 +511,7 @@ header('Content-Type: text/html; charset=utf-8');
         function renderTempSuppliers(){
             const list = document.getElementById('supplier-list');
             if(TEMP_SUPPLIERS.length===0) { list.innerHTML = '<p class="muted">No suppliers</p>'; return }
-            list.innerHTML = TEMP_SUPPLIERS.map((s,idx)=>`<div data-temp-idx="${idx}" style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-danger-muted\" data-temp-action=\"del-temp\" data-idx=\"${idx}\">Delete</button></div></div>`).join('');
+            list.innerHTML = TEMP_SUPPLIERS.map((s,idx)=>`<div data-temp-idx="${idx}" class="space-between-row"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-danger-muted\" data-temp-action=\"del-temp\" data-idx=\"${idx}\">Delete</button></div></div>`).join('');
             document.querySelectorAll('[data-temp-action="del-temp"]').forEach(b=>b.addEventListener('click', (ev)=>{
                 const i = parseInt(ev.currentTarget.dataset.idx,10); if(isNaN(i)) return; TEMP_SUPPLIERS.splice(i,1); renderTempSuppliers();
             }));
@@ -527,17 +527,17 @@ header('Content-Type: text/html; charset=utf-8');
             try{ selectors = JSON.parse(selectors); } catch(e){ showToast('Selectors must be valid JSON','error'); return }
             if(!sid) { showToast('No supplier selected','error'); return }
             const r = await fetch(`${API_URL}?action=supplier&id=${encodeURIComponent(sid)}`,{method:'PUT',headers:{'X-CSRF-Token':CSRF_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({id:sid,name:name,url:url,selectors:selectors})});
-            const d = await r.json(); if(d.success){ showToast('Supplier updated'); document.getElementById('supplier-name').value=''; document.getElementById('supplier-url').value=''; document.getElementById('supplier-selectors').value=''; document.getElementById('supplier-editing-id').value=''; document.getElementById('add-supplier').style.display='inline-block'; document.getElementById('update-supplier').style.display='none'; document.getElementById('cancel-supplier').style.display='none'; editCampaign(cid); } else showToast(d.error||'Failed','error');
+            const d = await r.json(); if(d.success){ showToast('Supplier updated'); document.getElementById('supplier-name').value=''; document.getElementById('supplier-url').value=''; document.getElementById('supplier-selectors').value=''; document.getElementById('supplier-editing-id').value=''; document.getElementById('add-supplier').classList.remove('hidden'); document.getElementById('update-supplier').classList.remove('show-inline-block'); document.getElementById('cancel-supplier').classList.remove('show-inline-block'); editCampaign(cid); } else showToast(d.error||'Failed','error');
         });
 
         document.getElementById('cancel-supplier').addEventListener('click', ()=>{
-            document.getElementById('supplier-name').value=''; document.getElementById('supplier-url').value=''; document.getElementById('supplier-selectors').value=''; document.getElementById('supplier-editing-id').value=''; document.getElementById('add-supplier').style.display='inline-block'; document.getElementById('update-supplier').style.display='none'; document.getElementById('cancel-supplier').style.display='none';
+            document.getElementById('supplier-name').value=''; document.getElementById('supplier-url').value=''; document.getElementById('supplier-selectors').value=''; document.getElementById('supplier-editing-id').value=''; document.getElementById('add-supplier').classList.remove('hidden'); document.getElementById('update-supplier').classList.remove('show-inline-block'); document.getElementById('cancel-supplier').classList.remove('show-inline-block');
         });
 
         // add selector row
         document.getElementById('add-selector-row').addEventListener('click', ()=>{
             const wrap = document.getElementById('selector-rows');
-            const div = document.createElement('div'); div.className='selector-row'; div.style.display='flex'; div.style.gap='.4rem';
+            const div = document.createElement('div'); div.className='selector-row flex-row-sm';
             div.innerHTML = '<input class="selector-key" placeholder="key"><input class="selector-val" placeholder="CSS selector">';
             wrap.appendChild(div);
         });
@@ -554,7 +554,7 @@ header('Content-Type: text/html; charset=utf-8');
                 if(k && v) selectors[k]=v;
             });
             if(Object.keys(selectors).length===0){ showToast('Add at least one selector to preview','error'); return }
-            const previewEl = document.getElementById('preview-results'); previewEl.style.display='block'; previewEl.textContent='Loading...';
+            const previewEl = document.getElementById('preview-results'); previewEl.classList.remove('hidden'); previewEl.textContent='Loading...';
             const supplierId = document.getElementById('supplier-editing-id').value || null;
             const force = document.getElementById('force-preview').checked ? 1 : 0;
             try{
@@ -562,7 +562,7 @@ header('Content-Type: text/html; charset=utf-8');
                 const d = await r.json();
                 if(!d.success){ previewEl.innerHTML = '<div class="muted">Preview failed: '+(d.message||d.error||'Unknown')+'</div>'; return }
                 const cached = d.cached ? '<em>(cached)</em>' : '';
-                let html = `<div><strong>Preview results ${cached}</strong></div><div style="margin-top:.4rem">`;
+                let html = `<div><strong>Preview results ${cached}</strong></div><div class="mt-04">`;
                 for(const k of Object.keys(d.data||{})){
                     html += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(d.data[k]))}</div>`;
                 }

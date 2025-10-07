@@ -165,6 +165,33 @@ body {
 .mt-15 { margin-top:1.5rem !important; }
 .flex-center { display:flex !important; gap:1rem !important; justify-content:center !important; }
 .text-center { text-align:center !important; }
+/* >>> Appended helpers for replacing inline style attributes in templates */
+.hero-cta { margin-top: var(--spacing-md); display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+.accent-heading { color: var(--primary-color); }
+.mb-1rem { margin-bottom: 1rem !important; }
+.mt-2rem-mb-1rem { margin: 2rem 0 1rem 0 !important; }
+.sr-only { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; border: 0 !important; }
+.mt-035 { margin-top: .35rem !important; }
+.footer-row { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+.biz-name { font-weight:700; }
+.mt-025 { margin-top: .25rem !important; }
+.alert-error { border-left:4px solid var(--error-color); padding:.5rem; margin-bottom:1rem; }
+/* <<< end appended helpers */
+
+/* Body scroll lock used by modals/popup UI. Use a class so JS doesn’t write inline styles. */
+.scroll-lock { overflow: hidden !important; }
+
+/* Documentation helper styles — used by local admin/docs previews */
+.doc-table { width: 100%; border-collapse: collapse; font-family: inherit; }
+.doc-tr { border-bottom: 1px solid #e6e6e6; }
+.doc-tr--header { background: #f7f7f8; }
+.doc-th, .doc-td { padding: 10px; text-align: left; vertical-align: top; }
+.doc-td .status-badge { display: inline-block; padding: .15rem .4rem; border-radius: 6px; font-size: .85rem; }
+.status-active { background: #e6ffed; color: #0b6623; }
+.status-inactive { background: #fff4e6; color: #7a4b00; }
+/* iOS/position-fixed safe variant: when locking scroll on iOS, content may shift.
+    If you need pixel-perfect locking, use a small script to store window.scrollY and
+    apply position:fixed;top:-<y> on the body. For now, overflow:hidden covers most cases. */
 /* About section layout: main content + map column.
     Make the map column responsive and about 75% of the previous fixed width (≈510px).
     Use minmax so the map can shrink on narrower screens but has a sensible maximum. */

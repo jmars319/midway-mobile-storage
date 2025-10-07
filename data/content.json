@@ -1,7 +1,8 @@
 {
     "images": {
-        "logo": "logo\/logo.png",
-        "hero": "hero\/hero-1759774448-27cec1bdf1b3.webp"
+        "logo": "logo/logo.webp",
+        "hero": "hero/hero-1759774448-27cec1bdf1b3.webp",
+        "gallery": ""
     },
     "business_info": {
         "name": "Midway Mobile Storage",
@@ -13,7 +14,7 @@
     "hero": {
         "title": "Midway Mobile Storage",
         "subtitle": "Flexible unit sizes, affordable pricing, and reliable service.",
-        "image": "hero\/hero-1759774448-27cec1bdf1b3.webp",
+        "image": "hero/hero-1759774448-27cec1bdf1b3.webp",
         "btn_text": "View Units",
         "btn_link": "#units",
         "btn2_text": "Get a Quote",
@@ -43,7 +44,7 @@
             "price": "110"
         }
     ],
-    "last_updated": "2025-10-06 18:14:31",
+    "last_updated": "2025-10-07 01:10:04",
     "hours": {
         "monday": "10:00 AM - 3:00 PM",
         "tuesday": "10:00 AM - 3:00 PM",

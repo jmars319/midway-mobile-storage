@@ -74,7 +74,7 @@ if ($form_flash) {
     unset($_SESSION['form_flash']);
 }
 function fv($k, $fallback='') { global $form_flash; if (!$form_flash) return $fallback; return htmlspecialchars($form_flash['values'][$k] ?? $fallback); }
-function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['errors'])) return ''; $out = '<div class="card" style="border-left:4px solid var(--danger);padding:.5rem;margin-bottom:1rem"><strong>There were errors with your submission:</strong><ul>'; foreach ($form_flash['errors'] as $e) { $out .= '<li>'.htmlspecialchars($e).'</li>'; } $out .= '</ul></div>'; return $out; }
+function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['errors'])) return ''; $out = '<div class="card alert-error"><strong>There were errors with your submission:</strong><ul>'; foreach ($form_flash['errors'] as $e) { $out .= '<li>'.htmlspecialchars($e).'</li>'; } $out .= '</ul></div>'; return $out; }
 ?>
 <header class="header">
     <div class="container">
@@ -82,7 +82,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             <?php
                 $logoFile = $content['images']['logo'] ?? '';
                 $logoUrl = '';
-                if ($logoFile) { $logoUrl = preg_match('#^https?://#i', $logoFile) ? $logoFile : 'uploads/images/'.ltrim($logoFile, '/'); }
+                if ($logoFile) { $logoUrl = preg_match('#^https?://#i', $logoFile) ? $logoFile : '/uploads/images/'.ltrim($logoFile, '/'); }
             ?>
             <a href="/" class="logo">
                 <?php if ($logoUrl): ?>
@@ -137,9 +137,9 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             $heroBtn2 = getContent($content, 'hero.btn2_text', 'Get a Quote');
             $heroBtn2Link = getContent($content, 'hero.btn2_link', '#storage-quote');
             $heroBackgroundStyleTag = '';
-            if ($heroImage) {
+                if ($heroImage) {
                 // prefer full URL when provided
-                $imgUrl = preg_match('#^https?://#i', $heroImage) ? $heroImage : 'uploads/images/'.ltrim($heroImage, '/');
+                $imgUrl = preg_match('#^https?://#i', $heroImage) ? $heroImage : '/uploads/images/'.ltrim($heroImage, '/');
                 // emit a small style block to avoid inline style attributes on the section element
                 $heroBackgroundStyleTag = '<style>.hero{background-image: url("' . htmlspecialchars((string)$imgUrl, ENT_QUOTES, 'UTF-8') . '"); background-size: cover; background-position: center;}</style>';
             }
@@ -149,7 +149,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             <div class="container">
                 <h1 class="hero-title"><?php echo htmlspecialchars($heroTitle); ?></h1>
                 <?php if ($heroSubtitle): ?><p class="hero-subtitle"><?php echo htmlspecialchars($heroSubtitle); ?></p><?php endif; ?>
-                <div style="margin-top:1rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+                <div class="hero-cta">
                     <a class="btn btn-primary" href="<?php echo htmlspecialchars($heroBtn1Link); ?>"><?php echo htmlspecialchars($heroBtn1); ?></a>
                         <a class="btn btn-outline" href="<?php echo htmlspecialchars($heroBtn2Link); ?>"><?php echo htmlspecialchars($heroBtn2); ?></a>
                 </div>
@@ -218,7 +218,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             <div class="container-narrow">
                 <form class="card" id="storage-quote-form" method="post" action="admin/reserve.php" data-no-ajax="1">
                     <!-- Customer Information -->
-                    <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Contact Information</h3>
+                    <h3 class="accent-heading mb-1rem">Contact Information</h3>
                     <div class="grid grid-2">
                         <div>
                             <label for="customer-name-storage" class="form-label">Full Name *</label>
@@ -242,7 +242,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     </div>
                     
                     <!-- Storage Requirements -->
-                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Storage Requirements</h3>
+                    <h3 class="accent-heading mt-2rem-mb-1rem">Storage Requirements</h3>
                     <div class="grid grid-2">
                         <div>
                             <label for="container-size-storage" class="form-label">Container Size Needed *</label>
@@ -283,7 +283,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     </div>
                     
                     <!-- Delivery Information -->
-                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Delivery Information</h3>
+                    <h3 class="accent-heading mt-2rem-mb-1rem">Delivery Information</h3>
                     <div>
                         <label for="delivery-address" class="form-label">Delivery Address *</label>
                         <textarea id="delivery-address" name="delivery_address" rows="3" required placeholder="Full street address including city, state, and zip code" class="form-input"></textarea>
@@ -321,7 +321,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     </div>
                     
                     <!-- Usage Information -->
-                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Usage Information</h3>
+                    <h3 class="accent-heading mt-2rem-mb-1rem">Usage Information</h3>
                     <div>
                         <label for="storage-purpose" class="form-label">What will you be storing? *</label>
                         <select id="storage-purpose" name="storage_purpose" required class="form-input">
@@ -366,7 +366,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     </div>
                     
                     <!-- Additional Services -->
-                    <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Additional Services</h3>
+                    <h3 class="accent-heading mt-2rem-mb-1rem">Additional Services</h3>
                     <div class="grid grid-2">
                         <div>
                             <label class="form-checkbox">
@@ -516,9 +516,9 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     <?php echo ferrs(); ?>
           <!-- Honeypot field to deter bots (hidden from users) -->
           <input type="text" name="hp_field" id="hp-field" autocomplete="off" tabindex="-1"
-              style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;border:0;">
+              class="sr-only" >
                 <!-- Personal Information -->
-                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Personal Information</h3>
+                <h3 class="accent-heading mb-1rem">Personal Information</h3>
                 <div class="grid grid-2">
                     <div>
                         <label for="applicant-first-name" class="form-label">First Name *</label>
@@ -554,7 +554,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                             <input type="number" id="age" name="age" min="16" max="100" required class="form-input" value="<?php echo fv('age'); ?>">
                             <button type="button" class="stepper-btn" data-step="up" aria-label="Increase age"> <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> </button>
                         </div>
-                        <div id="age-note" class="form-note small" style="margin-top:.35rem">Minimum age to apply is 16 years.</div>
+                        <div id="age-note" class="form-note small mt-035">Minimum age to apply is 16 years.</div>
                     </div>
                     <div>
                         <label for="eligible-to-work" class="form-label">Eligible to work in US? *</label>
@@ -567,7 +567,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 </div>
                 
                 <!-- Position Information -->
-                <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);">Position Information</h3>
+                <h3 class="accent-heading mt-2rem-mb-1rem">Position Information</h3>
                 <div class="grid grid-2">
                     <div>
                         <label for="position-desired" class="form-label">Position Desired *</label>
@@ -595,14 +595,14 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
              page sections inside this footer. -->
     <footer class="footer" id="contact">
         <div class="container">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+            <div class="footer-row">
                 <div class="small footer-left">&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($content['business_info']['name'] ?? 'Midway Mobile Storage'); ?>. All rights reserved.</div>
                 <div class="small footer-center center">
                     <?php $biz = $content['business_info'] ?? []; ?>
-                    <div class="biz-name" style="font-weight:700"><?php echo htmlspecialchars($biz['name'] ?? 'Midway Mobile Storage'); ?></div>
+                    <div class="biz-name"><?php echo htmlspecialchars($biz['name'] ?? 'Midway Mobile Storage'); ?></div>
                     <div class="small biz-address"><?php echo htmlspecialchars($biz['address'] ?? ''); ?></div>
                     <div class="small biz-contact"><a href="tel:<?php echo preg_replace('/[^0-9+]/','', $biz['phone'] ?? ''); ?>"><?php echo htmlspecialchars($biz['phone'] ?? ''); ?></a> &nbsp;|&nbsp; <a href="mailto:<?php echo htmlspecialchars($biz['email'] ?? ''); ?>"><?php echo htmlspecialchars($biz['email'] ?? ''); ?></a></div>
-                    <div class="small" style="margin-top:.25rem"><a href="#" id="footer-hours-link">Hours</a></div>
+                    <div class="small mt-025"><a href="#" id="footer-hours-link">Hours</a></div>
                 </div>
                 <div class="small footer-right right">
                     <nav class="footer-links" aria-label="Footer navigation">

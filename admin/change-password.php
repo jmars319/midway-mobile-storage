@@ -106,8 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         var form = document.querySelector('form');
                         var newInput = document.querySelector('input[name="new_password"]');
                         var strengthEl = document.createElement('div');
-                        strengthEl.className = 'small muted';
-                        strengthEl.style.marginTop = '.25rem';
+                        strengthEl.className = 'small muted strength-helper';
                         newInput.parentNode.appendChild(strengthEl);
 
                         function scorePassword(pw) {
