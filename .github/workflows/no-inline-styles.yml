@@ -1,0 +1,23 @@
+name: "Check - No Inline Styles"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  scan:
+    name: Scan repository for non-vendor inline styles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make validation script executable
+        run: |
+          chmod +x scripts/validate-no-inline-styles.sh
+
+      - name: Run inline-style validation
+        run: |
+          ./scripts/validate-no-inline-styles.sh
