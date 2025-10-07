@@ -26,6 +26,9 @@ Note: some admin actions (download, purge, clear) are POST forms that use `csrf_
 
 - Image uploads and optimization use the GD extension. Install/enable the PHP GD extension if you plan to upload/optimize images.
 
+Image browsing:
+- The admin UI includes per-section image upload and preview controls. There's also a hidden "Show all images" modal that lists all uploaded images when needed.
+
 Security recommendations:
 - Avoid using the development `.htaccess` on production. Keep long Expires headers for static assets in production.
 - Consider moving admin functionality behind basic auth or a separate secure host when in production.

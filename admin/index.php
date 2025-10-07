@@ -419,7 +419,6 @@ header('Content-Type: text/html; charset=utf-8');
                 <h1 class="m-0">Admin Dashboard</h1>
                 <div class="topbar">
                   <a href="../" class="btn btn-ghost" target="_blank">View site</a>
-                  <a href="image-preview.php" class="btn btn-ghost" style="margin-left:.25rem">Images</a>
                   <a href="email-scheduler.php" class="btn btn-ghost" style="margin-left:.25rem">Email Scheduler</a>
                 </div>
               </div>
@@ -449,10 +448,10 @@ header('Content-Type: text/html; charset=utf-8');
                 </div>
                 <div class="pm-item pm-sep">
                     <form method="post" class="pm-form" data-confirm="This will archive and remove all logs — are you sure?">
-                    <?php echo csrf_input_field(); ?>
-                    <input type="hidden" name="action" value="purge_logs">
-                    <button type="submit" class="btn btn-ghost"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Archive & clear all applications</button>
-                  </form>
+                      <?php echo csrf_input_field(); ?>
+                      <input type="hidden" name="action" value="purge_logs">
+                      <button type="submit" class="btn btn-danger-muted"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke-linecap="round" stroke-linejoin="round"></svg></span>Archive & clear all applications</button>
+                    </form>
                 </div>
                 <!-- quote audit submenu handled below -->
                 <div class="pm-item">
@@ -465,7 +464,7 @@ header('Content-Type: text/html; charset=utf-8');
                       <form method="post" class="m-0" data-confirm="Clear quote audit? This will remove recent audit entries. Continue?">
                         <?php echo csrf_input_field(); ?>
                         <input type="hidden" name="action" value="clear_quote_audit">
-                        <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear quote audit</button>
+                        <button type="submit" class="btn btn-danger-muted pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear quote audit</button>
                       </form>
                       <form method="post" class="m-0">
                         <?php echo csrf_input_field(); ?>
@@ -478,7 +477,7 @@ header('Content-Type: text/html; charset=utf-8');
                   <div class="pm-item">
                     <form method="post" action="empty-trash.php" class="pm-form" data-confirm="Empty image trash? This will permanently delete trashed images. Continue?">
                       <?php echo csrf_input_field(); ?>
-                      <button type="submit" class="btn btn-ghost"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Empty image trash</button>
+                      <button type="submit" class="btn btn-danger-muted"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke-linecap="round" stroke-linejoin="round"></svg></span>Empty image trash</button>
                     </form>
                   </div>
                 <div class="pm-item pm-sep">
@@ -632,7 +631,7 @@ header('Content-Type: text/html; charset=utf-8');
                 <?php echo csrf_input_field(); ?>
                 <input type="hidden" name="action" value="delete_quote">
                 <input type="hidden" name="idx" value="<?php echo (int)$i; ?>">
-                <button type="submit" class="btn btn-ghost">Delete</button>
+                <button type="submit" class="btn btn-danger-muted">Delete</button>
               </form>
             </td>
           </tr>
@@ -745,11 +744,19 @@ header('Content-Type: text/html; charset=utf-8');
               </div>
             </form>
             <div class="section-image-list small" data-type="<?php echo htmlspecialchars($tkey); ?>"></div>
+            <?php if ($tkey === 'gallery'): ?>
+              <div id="gallery-full-list" style="margin-top:.6rem"></div>
+            <?php endif; ?>
           </div>
         </details>
       <?php endforeach; ?>
 
-      <div id="image-list"></div>
+      <!-- Button to show a global list of all images (hidden by default content-wise).
+           The button is visible so admins can reveal the full list; images are hidden
+           until the button is toggled. -->
+      <div style="margin-top:.5rem">
+        <button id="show-all-images-btn" type="button" class="btn btn-ghost">Show all images</button>
+      </div>
     </div>
 
 

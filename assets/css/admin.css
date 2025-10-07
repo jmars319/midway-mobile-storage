@@ -98,6 +98,26 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 .admin #profile-menu .btn.btn-ghost { background: transparent; border: none; color:var(--muted); }
 .admin .btn-logout { background:var(--admin-danger); color:var(--card-bg); border:none; }
 .admin .btn-logout:hover { background: var(--admin-danger); filter: brightness(.95); }
+
+/* Destructive action styles
+   - .btn-logout: full, primary red used for logout (already used)
+   - .btn-danger-muted: used for other destructive actions (delete/empty/restore)
+	 it's visually muted so it's noticeable but not as prominent as logout.
+*/
+.admin .btn-danger-muted {
+	/* muted red fill so destructive actions are noticeable but not as prominent as logout */
+	background: color-mix(in srgb, var(--admin-danger) 12%, var(--card-bg) 88%);
+	border: 1px solid color-mix(in srgb, var(--admin-danger) 16%, var(--card-bg) 84%);
+	color: color-mix(in srgb, var(--admin-danger) 40%, black 60%);
+}
+.admin .btn-danger-muted:hover {
+	background: color-mix(in srgb, var(--admin-danger) 18%, var(--card-bg) 82%);
+	filter: none;
+}
+.admin .btn-danger-muted:focus {
+	outline: 3px solid color-mix(in srgb, var(--admin-danger) 8%, var(--card-bg) 92%);
+	outline-offset: 2px;
+}
 .admin .profile-wrap { position:relative; }
 .admin .header-left { display:flex; align-items:center; gap:1rem; }
 .admin .header-actions { display:flex; align-items:center; gap:.75rem; }
@@ -185,6 +205,16 @@ body.admin { overflow-x: hidden; }
 #image-list > div { display:flex; gap:.5rem; align-items:center; padding:.4rem; border-radius:8px; background: var(--card-bg); border:1px solid var(--admin-divider-weak) }
 #image-list img { border-radius:6px; border:1px solid var(--admin-border); height:48px; width:64px; object-fit:cover }
 
+/* images modal (used by Show all images) */
+#images-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 9999; }
+#images-modal { background: var(--card-bg); border-radius:10px; max-width: 1000px; width: calc(100% - 48px); max-height: 80vh; overflow: auto; box-shadow: 0 12px 40px rgba(2,6,23,0.35); padding: 1rem; }
+#images-modal .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem }
+#images-modal .close-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer }
+
+/* animated show/hide for inline/modal imageArea */
+#image-list { transition: max-height .28s cubic-bezier(.2,.9,.22,1), opacity .22s ease; overflow: hidden; max-height: 0; opacity: 0; }
+#image-list.show { max-height: 1400px; opacity: 1; }
+
 /* Menu admin layout and preview */
 .menu-admin-wrap { gap:1rem; display:flex; align-items:flex-start; margin-top:.5rem }
 .menu-admin-wrap #menu-list { max-height:620px; overflow:auto; padding-right:.25rem }
@@ -209,13 +239,6 @@ body.admin { overflow-x: hidden; }
 #modal { border-radius:12px; }
 
 /* Profile-menu combined submenu (CSV/JSON, audit actions) */
-.pm-combo { position:relative }
-.pm-combo-toggle { background:transparent; border:1px solid rgba(15,23,42,0.06); padding:.25rem .45rem; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:.3rem; font-size:var(--admin-menu-font-size); line-height:var(--admin-menu-line-height); min-height:32px }
-.pm-combo-toggle[aria-expanded="true"] { background: rgba(15,23,42,0.03); }
-.pm-combo-menu { display:none; position:absolute; right:0; margin-top:.3rem; background:var(--card-bg); border:1px solid rgba(0,0,0,0.04); border-radius:8px; padding:.3rem; box-shadow:0 8px 20px rgba(2,6,23,0.08); min-width:180px; z-index:60 }
-.pm-combo-menu .pm-subitem { display:flex; align-items:center; gap:.45rem; width:100%; text-align:left; padding:.35rem .5rem; border-radius:6px; background:transparent; border:none; color:var(--admin-text); font-weight:600; font-size:var(--admin-menu-font-size); line-height:var(--admin-menu-line-height); min-height:32px }
-.pm-combo-menu .pm-subitem:hover, .pm-combo-menu .pm-subitem:focus { background: rgba(15,23,42,0.03); outline:none }
-.pm-combo-menu .pm-subitem + .pm-subitem { margin-top:.15rem }
 
 /* polished submenu visuals */
 .pm-combo { position: relative }
@@ -316,8 +339,6 @@ body.admin { overflow-x: hidden; }
 /* helper for small muted footers */
 .muted-footer { font-size: 0.875rem }
 
-/* modal improvements */
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000 }
 #modal { background:white; padding:0; border-radius:10px; max-width:520px; width:92%; box-shadow:0 12px 36px rgba(2,6,23,0.18); overflow:hidden }
 #modal-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid rgba(0,0,0,0.04); }
 #modal-title { margin:0; font-size:1rem }

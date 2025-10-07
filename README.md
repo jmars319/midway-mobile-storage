@@ -42,7 +42,8 @@ ps aux | grep "php -S"
 
 ## Admin area
 - Admin UI: `/admin/index.php`
-- Default config file: `admin/config.php` (credentials stored/managed by the admin UI). If you used the change-password screen it will write a hashed password into the config.
+ - Default config file: `admin/config.php` (credentials stored/managed by the admin UI). If you used the change-password screen it will write a hashed password into the config.
+ - Image management: image uploads, per-section previews, and a hidden "Show all images" modal are available from the admin UI (`/admin/index.php`). The separate image-preview page was removed.
  - Quote audit: `/admin/quote-audit.php` exposes a full quote audit viewer and small management actions (download/clear).
 
 ## Contact form / email
