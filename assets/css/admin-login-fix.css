@@ -1,0 +1,33 @@
+/* Page-scoped fixes for admin login layout
+   This file enforces the original login card layout in case the
+   admin stylesheet is not loading or is being overridden. It's
+   intentionally specific and local to the login page. Remove
+   when the root cause is fixed. */
+
+body.admin.login-page {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  padding: 2rem !important;
+}
+
+/* Ensure the container is constrained and visually a card */
+body.admin.login-page > .login-container,
+.admin.login-page > .login-container {
+  width: 100% !important;
+  max-width: 400px !important;
+  padding: 2.5rem !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3) !important;
+  background: var(--admin-surface, #f3f4f6) !important;
+  margin: 0 auto !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.admin.login-page .login-header { text-align: center !important; }
+.admin.login-page .admin-logo { margin: 0 auto .5rem !important; }
+
+/* Make the login button visible and full width inside the container */
+.admin.login-page .btn-login { width: 100% !important; }

@@ -97,3 +97,4 @@ Note: there's a deprecated manifest copy inside `uploads/images/favicon-set/site
 - Use `./dev.sh start` to run the PHP built-in server locally on `127.0.0.1:8000`.
 - For email testing install MailHog (Homebrew: `brew install mailhog`) or configure SMTP settings in `admin/auth.json` (do not commit real credentials).
 - To add self-hosted fonts: place WOFF2 files under `assets/fonts/` matching names in `assets/fonts/README.md`.
+// test
