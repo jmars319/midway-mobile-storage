@@ -64,10 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!doctype html>
 <html>
     <head>
-    <?php require_once __DIR__ . '/partials/head.php'; ?>
         <meta charset="utf-8">
         <title>Change Admin Password</title>
-        <link rel="stylesheet" href="/assets/css/styles.css">
+    <?php require_once __DIR__ . '/partials/head.php'; ?>
+    <?php require_once __DIR__ . '/partials/head.php'; ?>
     </head>
     <body class="admin">
     <div class="container container-narrow pad-2rem">

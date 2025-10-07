@@ -7,10 +7,10 @@ header('Content-Type: text/html; charset=utf-8');
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <?php require_once __DIR__ . '/partials/head.php'; ?>
     <title>Email Scheduler Admin</title>
     <!-- use admin brand styles plus page-specific lightweight overrides -->
-    <link rel="stylesheet" href="/assets/css/styles.css">
+    <?php require_once __DIR__ . '/partials/head.php'; ?>
+    <?php require_once __DIR__ . '/partials/head.php'; ?>
     <style>
         /* lightweight page overrides kept minimal; prefer admin.css for branding */
         .container{max-width:1100px;margin:20px auto;padding:20px}

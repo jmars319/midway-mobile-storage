@@ -24,7 +24,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
     <?php require_once __DIR__ . '/partials/head.php'; ?>
-    <link rel="stylesheet" href="/assets/css/styles.css">
     <!-- Favicons are included via admin/partials/head.php -->
     <!-- Login page styles have been moved to /assets/css/admin.css -->
 </head>

@@ -361,9 +361,8 @@ header('Content-Type: text/html; charset=utf-8');
 <!doctype html>
 <html>
   <head>
-    <?php require_once __DIR__ . '/partials/head.php'; ?>
   <title>Admin - Job Applications</title>
-    <link rel="stylesheet" href="/assets/css/styles.css">
+  <?php require_once __DIR__ . '/partials/head.php'; ?>
   </head>
   <body class="admin">
   <!-- page-level helpers are now in /assets/css/admin.css -->

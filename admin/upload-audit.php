@@ -72,10 +72,9 @@ header('Content-Type: text/html; charset=utf-8');
 <!doctype html>
 <html>
   <head>
-    <?php require_once __DIR__ . '/partials/head.php'; ?>
     <meta charset="utf-8">
     <title>Admin - Upload Audit</title>
-  <link rel="stylesheet" href="/assets/css/styles.css">
+    <?php require_once __DIR__ . '/partials/head.php'; ?>
   <!-- Page helpers moved to /assets/css/admin.css -->
   </head>
   <body>
