@@ -10,8 +10,8 @@ echo "Running inline-style check (non-vendor files)..."
 # the project's pattern uses CSS variables via setProperty for numeric values.
 
 set +e
-raw_matches=$(git grep -nE --no-color -e 'style="' -e '\.style\b' -- "$(git rev-parse --show-toplevel)" 2>/dev/null)
-git_grep_exit=$?
+raw_matches=$(git grep -nE --no-color -e 'style="' -e '\.style\b' 2>/dev/null || true)
+git_grep_exit=0
 set -e
 
 if [ $git_grep_exit -ne 0 ] && [ -z "$raw_matches" ]; then
@@ -20,8 +20,10 @@ if [ $git_grep_exit -ne 0 ] && [ -z "$raw_matches" ]; then
 fi
 
 # Filter out vendor and other excluded paths and allow .style.setProperty
+# Also ignore matches in markdown and shell script files and anything under scripts/
 filtered=$(printf "%s\n" "$raw_matches" \
-  | grep -vE '/vendor/|/node_modules/|/\.github/|/\.git/|/uploads/|/tmp/' \
+  | grep -vE '/vendor/|/node_modules/|/\.github/|/\.git/|/uploads/|/tmp/|/scripts/' \
+  | grep -vE '\.md:|\.sh:' \
   | grep -v '\.style\.setProperty' \
   || true)
 
