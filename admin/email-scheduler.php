@@ -11,7 +11,6 @@ header('Content-Type: text/html; charset=utf-8');
     <title>Email Scheduler Admin</title>
     <!-- use admin brand styles plus page-specific lightweight overrides -->
     <link rel="stylesheet" href="/assets/css/styles.css">
-    <link rel="stylesheet" href="/assets/css/admin.css">
     <style>
         /* lightweight page overrides kept minimal; prefer admin.css for branding */
         .container{max-width:1100px;margin:20px auto;padding:20px}
@@ -269,7 +268,7 @@ header('Content-Type: text/html; charset=utf-8');
                     <button class="btn btn-ghost" data-action="view-suppliers">View Suppliers</button>
                     <button class="btn btn-ghost" data-action="edit">Edit</button>
                     <button class="btn btn-ghost" data-action="send">Send</button>
-                    <button class="btn btn-ghost" data-action="delete">Delete</button>
+                    <button class="btn btn-danger-muted" data-action="delete">Delete</button>
                 </td></tr>`;
             }).join('');
             // rebind actions
@@ -320,7 +319,7 @@ header('Content-Type: text/html; charset=utf-8');
             // populate suppliers
             const supList = document.getElementById('supplier-list');
             if(c.suppliers && c.suppliers.length>0){
-                supList.innerHTML = c.suppliers.map(s=>`<div data-sid="${s.id}" style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-ghost\" data-sid=\"${s.id}\" data-action=\"edit-supplier\">Edit</button> <button class=\"btn btn-ghost\" data-sid=\"${s.id}\" data-action=\"del-supplier\">Delete</button></div></div>`).join('');
+                supList.innerHTML = c.suppliers.map(s=>`<div data-sid="${s.id}" style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-ghost\" data-sid=\"${s.id}\" data-action=\"edit-supplier\">Edit</button> <button class=\"btn btn-danger-muted\" data-sid=\"${s.id}\" data-action=\"del-supplier\">Delete</button></div></div>`).join('');
             } else { supList.innerHTML = '<p class="muted">No suppliers</p>' }
             document.getElementById('supplier-campaign-id').value = c.id;
             document.getElementById('supplier-editor').style.display = 'block';
@@ -412,7 +411,7 @@ header('Content-Type: text/html; charset=utf-8');
                         const body = document.getElementById('modal-body');
                         if(!c.suppliers || c.suppliers.length===0){ body.innerHTML = '<p class="muted">No suppliers for this campaign</p>'; }
                         else {
-                            body.innerHTML = '<div>' + c.suppliers.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class="btn btn-ghost" data-sid="${s.id}" data-action="del-supplier-modal">Delete</button></div></div>`).join('') + '</div>';
+                            body.innerHTML = '<div>' + c.suppliers.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class="btn btn-danger-muted" data-sid="${s.id}" data-action="del-supplier-modal">Delete</button></div></div>`).join('') + '</div>';
                             // wire delete buttons
                             body.querySelectorAll('[data-action="del-supplier-modal"]').forEach(b=>b.addEventListener('click', async (ev)=>{
                                 const sid = ev.currentTarget.dataset.sid; if(!sid) return;
@@ -512,7 +511,7 @@ header('Content-Type: text/html; charset=utf-8');
         function renderTempSuppliers(){
             const list = document.getElementById('supplier-list');
             if(TEMP_SUPPLIERS.length===0) { list.innerHTML = '<p class="muted">No suppliers</p>'; return }
-            list.innerHTML = TEMP_SUPPLIERS.map((s,idx)=>`<div data-temp-idx="${idx}" style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-ghost\" data-temp-action=\"del-temp\" data-idx=\"${idx}\">Delete</button></div></div>`).join('');
+            list.innerHTML = TEMP_SUPPLIERS.map((s,idx)=>`<div data-temp-idx="${idx}" style="display:flex;justify-content:space-between;align-items:center;padding:.4rem;border-bottom:1px solid var(--admin-border)"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-danger-muted\" data-temp-action=\"del-temp\" data-idx=\"${idx}\">Delete</button></div></div>`).join('');
             document.querySelectorAll('[data-temp-action="del-temp"]').forEach(b=>b.addEventListener('click', (ev)=>{
                 const i = parseInt(ev.currentTarget.dataset.idx,10); if(isNaN(i)) return; TEMP_SUPPLIERS.splice(i,1); renderTempSuppliers();
             }));

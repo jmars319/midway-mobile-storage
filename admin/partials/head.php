@@ -15,8 +15,20 @@
 <link rel="apple-touch-icon" sizes="180x180" href="<?php echo htmlspecialchars(admin_image_src('favicon-set/favicon-180x180.png')); ?>">
 <link rel="manifest" href="../site.webmanifest">
 <!-- Admin stylesheet (centralized) with cache-busting based on file modification time -->
-<?php $adminCssPath = realpath(__DIR__ . '/../../assets/css/admin.css'); ?>
-<link rel="stylesheet" href="/assets/css/admin.css?v=<?php echo $adminCssPath ? filemtime($adminCssPath) : time(); ?>">
+<?php
+// Prefer a pre-built minified bundle when present for production. Fall back to
+// the canonical admin.css wrapper which imports the modular files.
+$adminMinPath = realpath(__DIR__ . '/../../assets/css/admin.min.css');
+if ($adminMinPath) {
+	$ver = filemtime($adminMinPath);
+	$href = '/assets/css/admin.min.css?v=' . $ver;
+} else {
+	$adminCssPath = realpath(__DIR__ . '/../../assets/css/admin.css');
+	$ver = $adminCssPath ? filemtime($adminCssPath) : time();
+	$href = '/assets/css/admin.css?v=' . $ver;
+}
+?>
+<link rel="stylesheet" href="<?php echo $href; ?>">
 <script>
 	// Expose admin uploads base for client scripts to construct image URLs
 	window.ADMIN_UPLOADS_BASE = <?php echo json_encode(admin_uploads_base()); ?>;
