@@ -557,45 +557,20 @@
   modal.style.width = 'calc(100% - 48px)';
   modal.style.maxHeight = '80vh';
   modal.style.overflow = 'auto';
-  modal.style.boxShadow = '0 12px 40px rgba(2,6,23,0.35)';
-  modal.style.padding = '1rem';
-  modal.style.boxSizing = 'border-box';
-  modal.style.position = 'relative';
+      // modal styles moved to CSS; append modal/backdrop to the document
       modalBackdrop.appendChild(modal);
       document.body.appendChild(modalBackdrop);
       const closeBtn = modalBackdrop.querySelector('.close-btn');
       if (closeBtn) {
-        // ensure close button is visible and clickable regardless of CSS
-        closeBtn.style.position = 'absolute';
-        closeBtn.style.top = '8px';
-        closeBtn.style.right = '8px';
-        // make it visually prominent and tappable
-        closeBtn.style.background = 'color-mix(in srgb, var(--card-bg, #fff) 92%, black 8%)';
-        closeBtn.style.color = 'var(--text-primary, #0b1220)';
-        closeBtn.style.padding = '6px 10px';
-        closeBtn.style.borderRadius = '8px';
-        closeBtn.style.border = '1px solid rgba(0,0,0,0.06)';
-        closeBtn.style.fontSize = '1.15rem';
-        closeBtn.style.lineHeight = '1';
-        closeBtn.style.cursor = 'pointer';
-        closeBtn.style.display = 'inline-flex';
-        closeBtn.style.alignItems = 'center';
-        closeBtn.style.justifyContent = 'center';
-        closeBtn.style.boxShadow = '0 6px 18px rgba(2,6,23,0.12)';
         closeBtn.setAttribute('aria-label', 'Close images modal');
-        closeBtn.addEventListener('click', ()=>{ modalBackdrop.style.display='none'; showAllMode = false; refreshImageCount(); });
-        // subtle hover/focus styles (inline for robustness)
-        closeBtn.addEventListener('mouseenter', ()=>{ closeBtn.style.transform = 'translateY(-1px)'; closeBtn.style.boxShadow = '0 10px 26px rgba(2,6,23,0.14)'; });
-        closeBtn.addEventListener('mouseleave', ()=>{ closeBtn.style.transform = ''; closeBtn.style.boxShadow = '0 6px 18px rgba(2,6,23,0.12)'; });
-        closeBtn.addEventListener('focus', ()=>{ closeBtn.style.outline = '3px solid color-mix(in srgb, var(--primary-color, #2563eb) 12%, var(--card-bg, #fff) 88%)'; });
-        closeBtn.addEventListener('blur', ()=>{ closeBtn.style.outline = 'none'; });
+        closeBtn.addEventListener('click', ()=>{ modalBackdrop.classList.remove('images-modal-open'); showAllMode = false; refreshImageCount(); });
       }
       // bind Escape to close modal once
       if (!modalBackdrop.__keyBound) {
         modalBackdrop.__keyBound = true;
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && modalBackdrop.style.display === 'flex') {
-            modalBackdrop.style.display = 'none';
+          if (e.key === 'Escape' && modalBackdrop.classList.contains('images-modal-open')) {
+            modalBackdrop.classList.remove('images-modal-open');
             showAllMode = false;
             try { refreshImageCount(); } catch (err) { void 0; }
           }
@@ -606,24 +581,20 @@
     showAllBtn.addEventListener('click', async function(){
       showAllMode = !showAllMode;
       if (showAllMode) {
-        // show modal with image list
-        modalBackdrop.style.display = 'flex';
-          // move imageArea content into modal body for display and ensure it's visible
+        // show modal with image list (CSS handles layout)
+        modalBackdrop.classList.add('images-modal-open');
+          // move imageArea content into modal body for display
           const body = document.getElementById('images-modal-body'); body.innerHTML = '';
           // append first so refreshImageList populates an attached node
           body.appendChild(imageArea);
-          // remove any inline 'display:none' and use flex layout so CSS/JS rows show
-          imageArea.style.display = 'flex';
-          imageArea.style.flexDirection = 'column';
           imageArea.classList.add('show');
           await refreshImageList();
       } else {
         // hide modal and move imageArea back into the upload-wrap
-        modalBackdrop.style.display = 'none';
+        modalBackdrop.classList.remove('images-modal-open');
         const wrap = document.querySelector('.upload-wrap'); if (wrap) wrap.appendChild(imageArea);
         // hide the global image list when not in modal
         imageArea.classList.remove('show');
-        imageArea.style.display = 'none';
       }
       await refreshImageCount();
     });
