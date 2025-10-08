@@ -119,6 +119,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode($entries, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
   }
+  
+  // Delete an uploaded resume file and clear references in applications.json
+  if ($action === 'delete_resume') {
+    $resume = $_POST['resume_file'] ?? '';
+    $resume = basename((string)$resume);
+    if ($resume && preg_match('/^[a-zA-Z0-9_\-\.]+$/', $resume)) {
+      $candidates = [
+        __DIR__ . '/../private_data/resumes/',
+        dirname(__DIR__) . '/../private_data/resumes/',
+        __DIR__ . '/../../private_data/resumes/',
+      ];
+      foreach ($candidates as $cand) {
+        $full = $cand . $resume;
+        if (file_exists($full) && is_file($full)) {
+          @unlink($full);
+          break;
+        }
+      }
+      // Clear resume_file references in live applications file
+      $appsPath = $APPLICATIONS_FILE;
+      $apps = [];
+      if (file_exists($appsPath)) {
+        $raw = @file_get_contents($appsPath);
+        $apps = $raw ? json_decode($raw, true) : [];
+        if (!is_array($apps)) $apps = [];
+      }
+      $changed = false;
+      foreach ($apps as &$a) {
+        if (!empty($a['resume_file']) && basename($a['resume_file']) === $resume) { $a['resume_file'] = ''; $changed = true; }
+      }
+      if ($changed) {
+        $tmp = $appsPath . '.tmp';
+        $json = json_encode($apps, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($json !== false) { file_put_contents($tmp, $json, LOCK_EX); @rename($tmp, $appsPath); }
+      }
+    }
+    header('Location: index.php'); exit;
+  }
   // export all (live + archives)
   if ($action === 'download_all_csv' || $action === 'download_all_json') {
     $entries = load_entries($APPLICATIONS_FILE, $LEGACY_MESSAGES_FILE);
@@ -546,7 +584,15 @@ header('Content-Type: text/html; charset=utf-8');
               ?>
                 <a href="download-resume.php?file=<?php echo urlencode($rf); ?>">Download</a>
                 <span class="small ml-05"><?php echo htmlspecialchars($rf); ?></span>
-                <div class="mt-04"><button type="button" class="btn btn-ghost view-app" data-entry="<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>">View</button></div>
+                <div class="mt-04">
+                  <form method="post" class="d-inline" onsubmit="return confirm('Delete this resume file? This cannot be undone.');">
+                    <?php echo csrf_input_field(); ?>
+                    <input type="hidden" name="action" value="delete_resume">
+                    <input type="hidden" name="resume_file" value="<?php echo htmlspecialchars($rf); ?>">
+                    <button type="submit" class="btn btn-danger-muted">Delete</button>
+                  </form>
+                  <button type="button" class="btn btn-ghost view-app" data-entry="<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>">View</button>
+                </div>
               <?php else: ?>
                 — <div class="mt-04"><button type="button" class="btn btn-ghost view-app" data-entry="<?php echo htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8'); ?>">View</button></div>
               <?php endif; ?>
