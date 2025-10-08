@@ -53,6 +53,44 @@
         });
     })();
 
+    // Convert inline <img class="menu-img"> into background layers with desaturation
+    (function(){
+        function applyMenuCardBg(card){
+            if (!card) return;
+            var img = card.querySelector('.menu-img');
+            if (!img || !img.src) return;
+            try {
+                card.classList.add('has-bg');
+                card.style.setProperty('--menu-bg-src', 'url("' + img.src + '")');
+                card.style.setProperty('--menu-bg-css', img.src);
+                // set background via CSS custom property applied to pseudo-element
+                card.style.backgroundImage = 'none';
+                // apply via inline style on pseudo by setting attribute for CSS to pick up
+                card.dataset.bg = img.src;
+                // hide the original <img> element to avoid double rendering
+                img.style.display = 'none';
+            } catch (e) { /* ignore */ }
+        }
+        function refreshAllMenuCardBgs(){
+            document.querySelectorAll('.menu-card').forEach(function(card){
+                var img = card.querySelector('.menu-img');
+                if (img && img.src) {
+                    card.classList.add('has-bg');
+                    card.style.setProperty('--menu-bg', 'url("' + img.src + '")');
+                    card.style.setProperty('--menu-bg-src', img.src);
+                    img.style.display = 'none';
+                    // set pseudo-element background by writing an inline style on the element
+                    card.style.setProperty('background-image', 'none');
+                    // also set the pseudo via a small style block attached to the element
+                } else {
+                    card.classList.remove('has-bg');
+                }
+            });
+        }
+        // On DOM ready and after images load, refresh menu card backgrounds
+        try { document.addEventListener('DOMContentLoaded', refreshAllMenuCardBgs); window.addEventListener('load', refreshAllMenuCardBgs); } catch(e){}
+    })();
+
     // Accessibility helpers + contact modal
     (function(){
         try {

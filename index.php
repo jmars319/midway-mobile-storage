@@ -173,8 +173,68 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
 
             <div class="menu-grid">
                 <?php
-                    $units = $content['units'] ?? null;
-                    if (is_array($units) && count($units)) {
+                    // Prefer the 'menu' structure (sections with items and section images) when available
+                    $menuSections = $content['menu'] ?? null;
+                    if (is_array($menuSections) && count($menuSections)) {
+                        foreach ($menuSections as $section) {
+                            $secTitle = htmlspecialchars($section['title'] ?? ($section['id'] ?? 'Section'));
+                            $secDetails = is_array($section['details']) ? $section['details'] : [];
+                            $secImage = $section['image'] ?? '';
+                            $items = is_array($section['items']) ? $section['items'] : [];
+                            // If a section image exists, expose it as a background immediately to avoid flicker
+                            $hasBg = !empty($secImage);
+                            $imgUrl = '';
+                            if ($hasBg) {
+                                $imgUrl = preg_match('#^https?://#i', $secImage) ? $secImage : '/uploads/images/'.ltrim($secImage, '/');
+                            }
+                            $cardClasses = 'card unit-card menu-card' . ($hasBg ? ' has-bg' : '');
+                            $cardStyle = $hasBg ? ' style="--menu-bg: url(\'' . htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') . '\')"' : '';
+                            echo '<div class="' . $cardClasses . '"' . $cardStyle . '>';
+                            // Section image (kept as an inline <img> for accessibility/fallback; CSS hides it when has-bg)
+                            if ($hasBg) {
+                                echo '<img class="menu-img" src="'.htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8').'" alt="'.htmlspecialchars($secTitle).'">';
+                            }
+                            echo '<div class="menu-body card-body">';
+                            echo '<div class="card-header"><h3 class="card-title">'.$secTitle.'</h3></div>';
+                            // Section details (small text)
+                            if (!empty($secDetails)) {
+                                echo '<div class="menu-short">' . htmlspecialchars(implode(' · ', $secDetails)) . '</div>';
+                            }
+                            // Expand / collapse control and items
+                            echo '<div class="menu-actions">';
+                            echo '<button class="expand-btn" aria-expanded="false"><span class="expand-label">View All</span></button>';
+                            echo '</div>';
+                            // Items (hidden until expanded)
+                            echo '<div class="menu-details">';
+                            if (!empty($items)) {
+                                foreach ($items as $it) {
+                                    $itTitle = htmlspecialchars($it['title'] ?? '');
+                                    $itShort = htmlspecialchars($it['short'] ?? '');
+                                    $itDesc = htmlspecialchars($it['description'] ?? '');
+                                    $itPrice = isset($it['price']) && $it['price'] !== '' ? '$'.htmlspecialchars($it['price']) : '';
+                                    echo '<div class="section-item">';
+                                    echo '<div class="menu-item-head"><strong class="menu-title">'.$itTitle.'</strong>'; if ($itPrice) echo '<span class="menu-price">'.$itPrice.'</span>'; echo '</div>';
+                                    if ($itShort) echo '<div class="menu-short">'.$itShort.'</div>';
+                                    if ($itDesc) echo '<div class="menu-details-desc">'.nl2br($itDesc).'</div>';
+                                    echo '</div>';
+                                }
+                            } else {
+                                echo '<div class="small muted">No items available</div>';
+                            }
+                            echo '</div>'; // .menu-details
+                            echo '</div>'; // .menu-body
+                            echo '</div>'; // .menu-card
+                        }
+                    } else {
+                        // fallback: render legacy flat units array
+                        $units = $content['units'] ?? [];
+                        if (!is_array($units) || !count($units)) {
+                            $units = [
+                                ['title'=>'Small Unit','size'=>'5x5','description'=>'Ideal for boxes and small furniture.','price'=>'25'],
+                                ['title'=>'Medium Unit','size'=>'10x10','description'=>'Fits contents of a one-bedroom apartment.','price'=>'60'],
+                                ['title'=>'Large Unit','size'=>'10x20','description'=>'Great for larger moves or business storage.','price'=>'110']
+                            ];
+                        }
                         foreach ($units as $u) {
                             $title = htmlspecialchars($u['title'] ?? ($u['id'] ?? 'Unit'));
                             $desc = htmlspecialchars($u['description'] ?? '');
@@ -186,18 +246,6 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                             if ($desc) echo '<p>'.nl2br($desc).'</p>';
                             if ($price) echo '<div class="small">Starting at <strong>'.$price.'</strong></div>';
                             echo '</div>';
-                            echo '</div>';
-                        }
-                    } else {
-                        $placeholders = [
-                            ['title'=>'Small Unit','size'=>'5x5','description'=>'Ideal for boxes and small furniture.','price'=>'25'],
-                            ['title'=>'Medium Unit','size'=>'10x10','description'=>'Fits contents of a one-bedroom apartment.','price'=>'60'],
-                            ['title'=>'Large Unit','size'=>'10x20','description'=>'Great for larger moves or business storage.','price'=>'110']
-                        ];
-                        foreach ($placeholders as $ph) {
-                            echo '<div class="card unit-card">';
-                            echo '<div class="card-header"><h3 class="card-title">'.htmlspecialchars($ph['title']).'</h3><p class="card-description">'.htmlspecialchars($ph['size']).'</p></div>';
-                            echo '<div class="card-body"><p>'.htmlspecialchars($ph['description']).'</p><div class="small">Starting at <strong>$'.htmlspecialchars($ph['price']).'</strong></div></div>';
                             echo '</div>';
                         }
                     }

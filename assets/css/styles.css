@@ -607,6 +607,58 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 .menu-card { padding:0; overflow:hidden; display:flex; flex-direction:column; }
 .menu-card .menu-img { width:100%; height:160px; object-fit:cover; display:block }
 .menu-card .menu-body { padding: var(--spacing-md); display:flex; flex-direction:column; gap:.5rem }
+.menu-card.has-bg { position: relative; overflow: hidden; }
+.menu-card.has-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0; /* cover top area only */
+    height: 160px; /* same height as .menu-img */
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    /* allow JS to set --menu-bg to 'url("...")' for the chosen image */
+    background-image: var(--menu-bg, none);
+    filter: saturate(.5) brightness(.85);
+    opacity: 1;
+    transition: opacity .28s ease, filter .28s ease;
+    z-index: 0;
+}
+/* hide the original inline image when a background is provided to avoid double-render and flicker */
+.menu-card.has-bg .menu-img { display: none !important; }
+
+/* Modal-like expanded menu card */
+.menu-card.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 1200; }
+.menu-card.modal-backdrop.open { display: flex; }
+.menu-card.modal-panel { width: 94%; max-width: 980px; max-height: 88vh; overflow: auto; border-radius: 12px; box-shadow: var(--shadow-xl); transform: none; }
+/* Backdrop element created by JS: .menu-modal-backdrop */
+.menu-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 1200; }
+.menu-modal-backdrop.open { display: flex; animation: menuBackdropIn .18s ease both; }
+.menu-modal-backdrop .modal-panel { animation: menuPanelIn .18s cubic-bezier(.2,.9,.25,1) both; }
+@keyframes menuBackdropIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes menuPanelIn { from { transform: translateY(8px) scale(.98); opacity: 0 } to { transform: translateY(0) scale(1); opacity: 1 } }
+
+/* When a card is expanded, present it as a centered modal panel */
+.menu-card.expanded { position: relative; }
+.menu-card.expanded.modal-mode { z-index: 1210; }
+.menu-card.expanded.modal-mode .menu-body { max-height: none; }
+.menu-card.expanded.modal-mode .menu-details { max-height: none; opacity: 1; }
+
+/* Stronger backdrop effect for expanded modal mode (JS will toggle .modal-mode on the card and attach a backdrop wrapper) */
+.menu-card.expanded::before { opacity: 0.5; filter: saturate(.5) brightness(.92); }
+
+/* Improve readability inside the modal: larger paddings and increased font sizes for content */
+.menu-card.modal-panel .menu-body { padding: 1.25rem; gap: .75rem; }
+.menu-card.modal-panel .menu-title { font-size: 1.35rem; }
+.menu-card.modal-panel .section-item { padding: .85rem; border-radius: 8px; }
+
+/* When body has scroll-lock (added by JS), prevent background scroll */
+.scroll-lock { overflow: hidden !important; }
+/* When the card is expanded to show items, make the background less prominent */
+.menu-card.expanded::before {
+    opacity: 0.5; /* 50% opacity when expanded */
+    filter: saturate(.5) brightness(.92);
+}
+.menu-card .menu-body { position: relative; z-index: 1; }
 .menu-card .menu-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
 .menu-card .menu-short { color: var(--text-secondary); font-size: var(--font-size-sm); }
 .menu-card .menu-details { max-height:0; overflow:hidden; transition:max-height .4s cubic-bezier(.2,.9,.2,1), padding .25s ease, opacity .25s ease; padding:0 var(--spacing-md); opacity:0 }
