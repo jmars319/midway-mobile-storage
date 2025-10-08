@@ -130,12 +130,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         dirname(__DIR__) . '/../private_data/resumes/',
         __DIR__ . '/../../private_data/resumes/',
       ];
+      $moved = false; $foundAt = null;
+      $archDir = dirname(__DIR__) . '/../private_data/resumes/archived/';
+      if (!is_dir($archDir)) @mkdir($archDir, 0755, true);
       foreach ($candidates as $cand) {
         $full = $cand . $resume;
         if (file_exists($full) && is_file($full)) {
-          @unlink($full);
+          $dest = rtrim($archDir, '/') . '/' . $resume;
+          // ensure unique dest name if collision
+          $i = 0; $base = pathinfo($resume, PATHINFO_FILENAME); $ext = pathinfo($resume, PATHINFO_EXTENSION);
+          while (file_exists($dest)) { $i++; $dest = rtrim($archDir, '/') . '/' . $base . '_' . $i . ($ext?'.'.$ext:''); }
+          if (@rename($full, $dest)) { $moved = true; $foundAt = $full; $archivedAs = basename($dest); }
           break;
         }
+      }
+      // Audit log for deletions (JSON lines)
+      if ($moved) {
+        $audit = [
+          'timestamp' => function_exists('eastern_now') ? eastern_now('c') : date('c'),
+          'admin' => $_SESSION['admin_user'] ?? ($_SESSION['admin_logged_in'] ? 'admin' : 'unknown'),
+          'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+          'original_path' => $foundAt,
+          'archived_filename' => $archivedAs,
+        ];
+        $logDir = dirname(__DIR__) . '/data';
+        if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+        $logFile = $logDir . '/resume-deletions.log';
+        @file_put_contents($logFile, json_encode($audit, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
       }
       // Clear resume_file references in live applications file
       $appsPath = $APPLICATIONS_FILE;
@@ -501,6 +522,19 @@ header('Content-Type: text/html; charset=utf-8');
                       <form method="post" class="m-0" data-confirm="Clear quote audit? This will remove recent audit entries. Continue?">
                         <?php echo csrf_input_field(); ?>
                         <input type="hidden" name="action" value="clear_quote_audit">
+                <div class="pm-item">
+                    <div class="pm-combo">
+                    <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM8 10v6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Resume Management ▾</button>
+                    <div class="pm-combo-menu">
+                      <a href="admin-resumes.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/></svg></span>View archived resumes</a>
+                      <form method="post" class="pm-subitem" data-confirm="Permanently delete all archived resumes?">
+                        <?php echo csrf_input_field(); ?>
+                        <input type="hidden" name="action" value="empty_resume_archive">
+                        <button type="submit" class="pm-subitem btn btn-link">Empty archive</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
                         <button type="submit" class="btn btn-danger-muted pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear quote audit</button>
                       </form>
                       <form method="post" class="m-0">
