@@ -1,8 +1,8 @@
 {
     "images": {
-        "logo": "logo\/logo.webp",
-        "hero": "hero\/hero-1759774448-27cec1bdf1b3.webp",
-        "gallery": "gallery\/gallery-mms-trailers_webready-1759894854-36edce5b.webp"
+        "logo": "logo/logo.webp",
+        "hero": "hero/hero-1759774448-27cec1bdf1b3.webp",
+        "gallery": "gallery/gallery-mms-trailers_webready-1759894854-36edce5b.webp"
     },
     "business_info": {
         "name": "Midway Mobile Storage",
@@ -14,7 +14,7 @@
     "hero": {
         "title": "Midway Mobile Storage",
         "subtitle": "Flexible unit sizes, affordable pricing, and reliable service.",
-        "image": "hero\/hero-1759774448-27cec1bdf1b3.webp",
+        "image": "hero/hero-1759774448-27cec1bdf1b3.webp",
         "btn_text": "View Units",
         "btn_link": "#units",
         "btn2_text": "Get a Quote",
@@ -44,7 +44,7 @@
             "price": "110"
         }
     ],
-    "last_updated": "2025-10-08 03:40:55",
+    "last_updated": "2025-10-08 06:54:25",
     "hours": {
         "monday": "10:00 AM - 3:00 PM",
         "tuesday": "10:00 AM - 3:00 PM",
@@ -53,5 +53,57 @@
         "friday": "10:00 AM - 3:00 PM",
         "saturday": "Closed",
         "sunday": "Closed"
-    }
+    },
+    "menu": [
+        {
+            "title": "Standard Storage Containers",
+            "id": "small-units",
+            "items": [
+                {
+                    "title": "20ft Container",
+                    "short": "20L x 8W x 8.5H",
+                    "description": "",
+                    "image": "",
+                    "quantities": [],
+                    "prices": []
+                }
+            ],
+            "details": [],
+            "image": "gallery/gallery-mms-containerstacks3_webready-1759893164-473c5832.webp"
+        },
+        {
+            "title": "Custom-built Storage Containers",
+            "id": "medium-units",
+            "items": [
+                {
+                    "title": "Custom 20ft Container",
+                    "short": "20L x 8W x 8.5H",
+                    "description": "",
+                    "image": "",
+                    "price": "",
+                    "quantities": [],
+                    "prices": []
+                }
+            ],
+            "details": [],
+            "image": "gallery/gallery-mms-paintedcontainers_webready-1759893857-1e18965d.webp"
+        },
+        {
+            "title": "Trailers",
+            "id": "large-units",
+            "items": [
+                {
+                    "title": "Enclosed Full-size Trailer",
+                    "short": "48ft, 50ft, and 53ft",
+                    "description": "",
+                    "image": "",
+                    "price": "",
+                    "quantities": [],
+                    "prices": []
+                }
+            ],
+            "details": [],
+            "image": "gallery/gallery-mms-trailers_webready-1759894854-36edce5b.webp"
+        }
+    ]
 }
