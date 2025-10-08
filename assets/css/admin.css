@@ -124,7 +124,7 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 	outline-offset: 2px;
 }
 .admin .profile-wrap { position:relative; }
-.admin .header-left { display:flex; align-items:center; gap:1rem; }
+.admin .header-left { display:flex; flex-direction:column; align-items:flex-start; gap:.45rem; flex:1; }
 .admin .header-actions { display:flex; align-items:center; gap:.75rem; }
 .admin #profile-menu .pm-item { margin-bottom:.25rem; }
 .admin #profile-menu .pm-item:last-child { margin-bottom:0; }
@@ -291,13 +291,15 @@ body.admin { overflow-x: hidden; }
 .pm-combo-menu.open { display: block !important; }
 
 /* SMTP settings form layout helpers */
-.admin-card-header { display:flex; align-items:center; justify-content:space-between }
+.admin-card-header { display:flex; align-items:flex-start; justify-content:space-between }
 .admin-card-title { margin:0 }
 .card-spaced { margin-top:1rem; }
-.smtp-form { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap }
-.smtp-label { flex:1; min-width:220px; display:block }
-.smtp-test { min-width:240px; display:flex; gap:.4rem; align-items:center }
-.smtp-test-input { width:260px }
+/* Stack SMTP fields vertically: label on its own row, input below. */
+.smtp-form { display:block; }
+.smtp-label { display:block; margin-bottom:.75rem; }
+.smtp-label > .form-input { display:block; width:100%; margin-top:.35rem; box-sizing:border-box; }
+.smtp-test { display:block; margin-top:.5rem }
+.smtp-test-input { width:100%; box-sizing:border-box; max-width:460px }
 .admin .smtp-form .btn { border-radius:8px; padding:.6rem .85rem; }
 
 /* Make buttons on the SMTP settings page more visible and accessible */
@@ -310,6 +312,19 @@ body.admin { overflow-x: hidden; }
 /* Ensure disabled test button is clearly dimmed but still visible */
 .admin .smtp-form #smtp-test[disabled] { opacity: .6; cursor: not-allowed; box-shadow: none; }
 .smtp-result { margin-top:.6rem }
+
+/* Fix: ensure admin-card header rows (used on SMTP and other pages)
+	keep the top-actions aligned to the top-right and the heading
+	content arranged predictably. Add explicit rules for the
+	admin-card header so small helper paragraphs don't push action
+	buttons out of alignment. */
+.admin-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.admin-card-header .header-left { display:flex; flex-direction:column; gap:.35rem; flex:1; }
+.admin-card-header .top-actions { display:flex; gap:.5rem; align-self:flex-start; }
+
+/* Ensure smtp form inputs grow to fill their label container
+	so fields align vertically and the actions sit consistently. */
+.smtp-label .form-input, .smtp-test-input { width:100%; box-sizing:border-box; }
 
 /* NOTE: menu-admin-wrap rules are defined earlier; no-op placeholder removed */
 /* helpers to replace common inline styles found in admin templates */
@@ -330,8 +345,14 @@ body.admin { overflow-x: hidden; }
 .ml-05 { margin-left:.5rem !important }
 .mb-05 { margin-bottom:.5rem !important }
 .mb-075 { margin-bottom:.75rem !important }
+.section-subheader { display:flex; align-items:center; gap:.5rem; font-size:1.05rem; font-weight:600; color:var(--admin-text); margin-bottom:.5rem }
 .d-inline { display:inline !important }
 .flex-1 { flex:1 }
+/* Images modal specific: make image list scrollable and hidden when not shown */
+#images-modal-body { max-height:60vh; overflow:auto; padding: .5rem }
+#images-modal-body .show { display:block }
+#image-list { display:none }
+#image-list.show { display:block }
 .menu-preview { flex:1; min-width:300px; max-width:480px }
 .mt-0 { margin-top:0 !important }
 .pl-1 { padding-left:1rem !important }
@@ -481,4 +502,23 @@ body.admin { overflow-x: hidden; }
 	.admin.login-page .login-container { padding: 1.25rem; border-radius:10px; max-width: calc(100% - 2rem); }
 	.admin .admin-logo { height:56px; }
 }
+
+/* Responsive admin layout tidy-ups (no !important). These keep the same
+   visual intent while relying on cascade and specificity properly. */
+.admin .page-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:2rem 0.75rem; }
+
+.admin.login-page > .login-container, .admin.login-page .login-container { width:100%; max-width:420px; padding:2.5rem; border-radius:12px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); background:var(--admin-surface, #f3f4f6); margin:0 auto; opacity:1; transform:none; }
+
+/* Ensure admin cards keep a sensible max width while remaining responsive */
+.admin .admin-card { max-width:1100px; width:100%; }
+
+/* Tidy button visuals inside admin surfaces */
+.admin .btn, .admin .btn-primary, .admin .btn-ghost { box-shadow:none; }
+
+/* Additional responsive tweaks */
+@media (max-width:700px) {
+  .admin.login-page > .login-container, .admin.login-page .login-container { padding:1.25rem; }
+  .admin .admin-card { margin: 0 1rem; }
+}
+
 

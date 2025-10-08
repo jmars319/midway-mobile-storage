@@ -94,6 +94,26 @@
     return fetch(schemaUrl).then(r=>{ if (!r.ok) throw new Error('Failed to load schemas'); return r.json(); }).catch(()=>({}));
   }
 
+  // Small utility: remove duplicate entries by 'relative' path while
+  // preserving order. Accepts an array of file objects or strings and
+  // returns a normalized array of objects { relative, url }.
+  function dedupeFiles(entries) {
+    if (!entries || !entries.length) return [];
+    const seen = new Set();
+    const out = [];
+    entries.forEach(e => {
+      let rel = null, url = null;
+      if (!e) return;
+      if (typeof e === 'string') { rel = e; url = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + e; }
+      else if (typeof e === 'object') { rel = e.relative || ''; url = e.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + (e.relative || '')); }
+      rel = (rel || '').trim(); if (!rel) return;
+      if (seen.has(rel)) return;
+      seen.add(rel);
+      out.push({ relative: rel, url: url });
+    });
+    return out;
+  }
+
   function makeOption(val, label){ const o = document.createElement('option'); o.value=val; o.textContent=label||val; return o; }
 
   function renderField(field, value){
@@ -264,7 +284,28 @@
           }
         });
         xhr.addEventListener('load', function(){
-          try { const j = JSON.parse(xhr.responseText || '{}');
+          try {
+            if (xhr.status === 401) {
+              status.textContent = 'Not authenticated';
+              showToast('Session expired — please log in again', 'error');
+              // Optionally reload to show login page
+              // window.location = 'login.php';
+              return;
+            }
+            const ct = (xhr.getResponseHeader && xhr.getResponseHeader('Content-Type') || '').toLowerCase();
+            let j;
+            if (ct.indexOf('application/json') !== -1) {
+              j = JSON.parse(xhr.responseText || '{}');
+            } else {
+              // Try to parse anyway; if it fails, surface a helpful error with a snippet
+              try { j = JSON.parse(xhr.responseText || '{}'); }
+              catch (e) {
+                status.textContent = 'Upload response parse error';
+                showToast('Upload response parse error — server returned non-JSON. See console for details.','error');
+                console.error('Upload non-JSON response:', xhr.status, xhr.responseText);
+                return;
+              }
+            }
             if (j && j.success) {
               status.textContent = 'Uploaded: ' + (j.filename || j.message || '');
               // update preview and per-section list
@@ -288,9 +329,10 @@
             }
           } catch (err) { status.textContent = 'Upload response parse error'; showToast('Upload response parse error','error'); }
         });
-        xhr.addEventListener('error', function(){ status.textContent = 'Upload error'; showToast('Upload error','error'); });
-        xhr.open('POST', 'upload-image.php');
-        xhr.send(fd);
+  xhr.addEventListener('error', function(){ status.textContent = 'Upload error'; showToast('Upload error','error'); });
+  xhr.open('POST', 'upload-image.php');
+  try { xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); xhr.setRequestHeader('Accept', 'application/json'); } catch(e){ /* some browsers may disallow setting certain headers for FormData but try */ }
+  xhr.send(fd);
         // cleanup
         xhr.addEventListener('readystatechange', function(){ if (xhr.readyState === 4) { btn && btn.removeAttribute('disabled'); if (btn && btn.dataset && btn.dataset.orig) btn.textContent = btn.dataset.orig; setTimeout(()=>{ if (progressBar && progressBar.parentNode) progressBar.remove(); }, 700); } });
       });
@@ -326,32 +368,28 @@
       }
       return j;
     }).then(j=>{
-      if (!j || !Array.isArray(j.files)) { list.innerHTML = '<i>No images</i>'; return; }
-      list.innerHTML = '';
-      const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
-      j.files.forEach(entry=>{
-        // entry can be either a string path (legacy) or an object { relative, url }
-        let rel = null;
-        let url = null;
-        if (!entry) return;
-        if (typeof entry === 'string') { rel = entry; url = (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + entry; }
-        else if (typeof entry === 'object') { rel = entry.relative || ''; url = entry.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + (entry.relative || '')); }
-        rel = (rel || '').trim(); if (!rel) return;
-        // skip hidden files and non-image types
-        if (rel.charAt(0) === '.') return;
-        const ext = (rel.split('.').pop() || '').toLowerCase(); if (!ext || allowedExt.indexOf(ext) === -1) return;
+  if (!j || !Array.isArray(j.files)) { list.innerHTML = '<i>No images</i>'; return; }
+  list.innerHTML = '';
+  const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
+  // normalize and dedupe entries to objects { relative, url }
+  const files = dedupeFiles(j.files);
+  files.forEach(entry=>{
+    const rel = (entry.relative || '').trim(); if (!rel) return;
+    // skip hidden files and non-image types
+    if (rel.charAt(0) === '.') return;
+    const ext = (rel.split('.').pop() || '').toLowerCase(); if (!ext || allowedExt.indexOf(ext) === -1) return;
 
-        // If an activeType is set, only show images that match the type.
-        // Matching rules: first path segment equals type OR filename contains the type keyword.
-        if (activeType) {
-          const firstSeg = (rel.split('/')[0] || '').toLowerCase();
-          const basename = (rel.split('/').pop() || '').toLowerCase();
-          if (firstSeg !== activeType && basename.indexOf(activeType) === -1) return;
-        }
+    // If an activeType is set, only show images that match the type.
+    // Matching rules: first path segment equals type OR filename contains the type keyword.
+    if (activeType) {
+      const firstSeg = (rel.split('/')[0] || '').toLowerCase();
+      const basename = (rel.split('/').pop() || '').toLowerCase();
+      if (firstSeg !== activeType && basename.indexOf(activeType) === -1) return;
+    }
 
   const row = document.createElement('div'); row.className = 'flex-row';
-  const img = document.createElement('img'); img.src = url; img.className = 'img-48';
-        img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
+  const img = document.createElement('img'); img.src = entry.url; img.className = 'img-48';
+    img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
   const name = document.createElement('div'); name.textContent = rel; name.className = 'flex-1 text-ellipsis';
         const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{
           if (!await showConfirm('Delete '+rel+'?')) return;
@@ -374,20 +412,21 @@
     if (!containers || !containers.length) return;
     fetch('list-images.php').then(r=>r.json()).then(j=>{
       if (!j || !Array.isArray(j.files)) { containers.forEach(c=> c.innerHTML = '<i>No images</i>'); return; }
-        // Normalize file entries to objects { relative, url }
-        const files = j.files.map(function(entry){
-          if (!entry) return null;
-          if (typeof entry === 'string') {
-            return { relative: entry, url: (window.ADMIN_UPLOADS_BASE || '../uploads/images/') + entry };
-          }
-          if (typeof entry === 'object' && entry.relative) {
-            return { relative: entry.relative, url: entry.url || ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + entry.relative) };
-          }
-          return null;
-        }).filter(Boolean);
+        // Normalize and dedupe file entries to objects { relative, url }
+        const files = dedupeFiles(j.files);
         containers.forEach(c=>{
         const type = (c.getAttribute('data-type') || '').toLowerCase();
         c.innerHTML = '';
+        // If the page contains a dedicated full-gallery container, prefer
+        // rendering gallery images there instead of repeating them in the
+        // compact per-section list. This avoids duplicate UI entries with
+        // different styling (small vs full list) for the same files.
+        if (type === 'gallery' && document.getElementById('gallery-full-list')) {
+          // leave the per-section container empty (the full gallery is rendered separately)
+          c.innerHTML = '';
+          return;
+        }
+
         // For gallery section, show all gallery images and provide a Delete control
         // Only consider files that match this container's data-type
         const matches = files.filter(fn => fn && fn.relative && (function(){
@@ -421,7 +460,24 @@
             matches.length = 0;
             broad.forEach(m => matches.push(m));
           }
-        
+          
+          // Avoid showing the currently-selected image (the "Current:" preview)
+          // as one of the selectable images in the per-section list. The
+          // server stores the current image path in window.__siteContent.images[type]
+          // (if available). Filter it out to prevent a duplicated visual entry
+          // where the preview (small caption) appears above the upload form and
+          // again in the list below.
+          try {
+            const currentImage = (window.__siteContent && window.__siteContent.images && window.__siteContent.images[type]) ? (window.__siteContent.images[type] || '') : '';
+            if (currentImage) {
+              const curNorm = (''+currentImage).replace(/^\/+/, '').toLowerCase();
+              for (let i = matches.length - 1; i >= 0; i--) {
+                const r = matches[i] && matches[i].relative ? (''+matches[i].relative).replace(/^\/+/, '').toLowerCase() : '';
+                if (r && r === curNorm) matches.splice(i, 1);
+              }
+            }
+          } catch (e) { /* defensive: if site content isn't available, ignore */ }
+
           // show full list of matches (no limit)
           matches.forEach(entry => {
             if (!entry || !entry.relative) return;
@@ -514,12 +570,19 @@
   // auto-create a global image list container here.
   // However, keep an optional hidden global list and wire a toggle button
   // in the admin template (#show-all-images-btn) to reveal it on demand.
+  // Acquire or create the global imageArea but ensure it is detached from
+  // the document so it does not render under the tabs unless intentionally
+  // attached into the modal. If an #image-list already exists in the DOM,
+  // remove it immediately.
   let imageArea = document.getElementById('image-list');
-  if (!imageArea) {
+  if (imageArea) {
+    // detach existing node so it doesn't show on page load
+    try { if (imageArea.parentNode) imageArea.parentNode.removeChild(imageArea); } catch (e) { /* ignore */ }
+  } else {
     imageArea = document.createElement('div'); imageArea.id = 'image-list';
-    // insert at end of upload-wrap
-    const wrap = document.querySelector('.upload-wrap'); if (wrap) wrap.appendChild(imageArea);
   }
+  // force hidden when detached (inline style is highest priority)
+  imageArea.style.display = 'none';
   let showAllMode = false;
   const showAllBtn = document.getElementById('show-all-images-btn');
   if (showAllBtn) {
@@ -548,7 +611,7 @@
       const closeBtn = modalBackdrop.querySelector('.close-btn');
       if (closeBtn) {
         closeBtn.setAttribute('aria-label', 'Close images modal');
-        closeBtn.addEventListener('click', ()=>{ modalBackdrop.classList.remove('images-modal-open'); showAllMode = false; refreshImageCount(); });
+  closeBtn.addEventListener('click', ()=>{ modalBackdrop.classList.remove('images-modal-open'); modalBackdrop.style.display = 'none'; showAllMode = false; try { if (imageArea.parentNode) imageArea.parentNode.removeChild(imageArea); } catch(e){}; refreshImageCount(); });
       }
       // bind Escape to close modal once
       if (!modalBackdrop.__keyBound) {
@@ -556,7 +619,9 @@
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape' && modalBackdrop.classList.contains('images-modal-open')) {
             modalBackdrop.classList.remove('images-modal-open');
+            modalBackdrop.style.display = 'none';
             showAllMode = false;
+            try { if (imageArea.parentNode) imageArea.parentNode.removeChild(imageArea); } catch(e){}
             try { refreshImageCount(); } catch (err) { void 0; }
           }
         });
@@ -565,21 +630,29 @@
 
     showAllBtn.addEventListener('click', async function(){
       showAllMode = !showAllMode;
+      const body = document.getElementById('images-modal-body');
       if (showAllMode) {
-        // show modal with image list (CSS handles layout)
+        // show modal with image list
         modalBackdrop.classList.add('images-modal-open');
-          // move imageArea content into modal body for display
-          const body = document.getElementById('images-modal-body'); body.innerHTML = '';
-          // append first so refreshImageList populates an attached node
-          body.appendChild(imageArea);
-          imageArea.classList.add('show');
-          await refreshImageList();
+        // ensure it displays as a centered flex container regardless of CSS
+        modalBackdrop.style.display = 'flex';
+        modalBackdrop.style.alignItems = 'center';
+        modalBackdrop.style.justifyContent = 'center';
+        // clear modal body then attach imageArea and make visible
+        body.innerHTML = '';
+        imageArea.style.display = 'block';
+        body.appendChild(imageArea);
+        // ensure modal itself centers
+        try { modal.style.margin = 'auto'; modal.style.display = 'block'; } catch(e) { /* ignore if modal not set */ }
+        imageArea.classList.add('show');
+        await refreshImageList();
       } else {
-        // hide modal and move imageArea back into the upload-wrap
+        // hide modal and detach the imageArea so it can't appear under tabs
         modalBackdrop.classList.remove('images-modal-open');
-        const wrap = document.querySelector('.upload-wrap'); if (wrap) wrap.appendChild(imageArea);
-        // hide the global image list when not in modal
+        modalBackdrop.style.display = 'none';
+        try { if (imageArea.parentNode) imageArea.parentNode.removeChild(imageArea); } catch (e) { /* ignore */ }
         imageArea.classList.remove('show');
+        imageArea.style.display = 'none';
       }
       await refreshImageCount();
     });
@@ -625,8 +698,8 @@
     }
   }
   wireImageSectionToggles();
-  // initial population
-  refreshImageList();
+  // initial population: only refresh per-section lists (global image list
+  // remains detached and is populated when the modal is opened).
   refreshPerSectionLists();
   if (document.getElementById('gallery-full-list')) refreshGalleryFullList();
 
@@ -639,8 +712,8 @@
       const r = await fetch('list-images.php');
       const j = await r.json();
       if (!j || !Array.isArray(j.files)) { wrap.innerHTML = '<i>No images</i>'; return; }
-      // Normalize entries to objects
-      const files = j.files.map(function(e){ if (!e) return null; if (typeof e === 'string') return { relative: e, url: (window.ADMIN_UPLOADS_BASE||'../uploads/images/')+e }; if (e.relative) return { relative: e.relative, url: e.url || ((window.ADMIN_UPLOADS_BASE||'../uploads/images/')+e.relative) }; return null; }).filter(Boolean);
+  // Normalize and dedupe entries to objects
+  const files = dedupeFiles(j.files);
       const galleryFiles = files.filter(f => f.relative && f.relative.split('/')[0] === 'gallery');
       if (!galleryFiles.length) { wrap.innerHTML = '<i>No gallery images found</i>'; return; }
       galleryFiles.forEach(f => {

@@ -63,45 +63,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Change Admin Password</title>
-    <?php require_once __DIR__ . '/partials/head.php'; ?>
-    <?php require_once __DIR__ . '/partials/head.php'; ?>
-    </head>
-    <body class="admin">
-    <div class="container container-narrow pad-2rem">
-            <div class="card">
-                <h1 class="card-title">Change Password</h1>
-
-                <?php if ($error): ?><div class="form-error mb-1" role="alert"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-                <?php if ($success): ?><div class="form-note mb-1 text-success" role="status"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
-
-                <form method="post">
-                    <?php echo csrf_input_field(); ?>
-                    <div class="form-group">
-                        <label class="form-label">Current password</label>
-                        <input name="current_password" type="password" required class="form-input">
+        <head>
+                <meta charset="utf-8">
+                <title>Change Admin Password</title>
+        <?php require_once __DIR__ . '/partials/head.php'; ?>
+        </head>
+        <body class="admin">
+        <div class="page-wrap">
+            <div class="admin-card">
+                <div class="admin-card-header header-row">
+                    <div class="header-left">
+                        <h1 class="admin-card-title m-0">Change Password</h1>
+                        <p class="muted small">Change your admin account password. You will be logged out after a successful change.</p>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">New password</label>
-                        <input name="new_password" type="password" required class="form-input">
+                    <div class="top-actions">
+                        <a href="index.php" class="btn btn-ghost">Back to dashboard</a>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Confirm new password</label>
-                        <input name="confirm_password" type="password" required class="form-input">
-                    </div>
+                <div class="admin-card-body">
+                    <?php if ($error): ?><div class="form-error mb-1" role="alert"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
+                    <?php if ($success): ?><div class="form-note mb-1 text-success" role="status"><?php echo htmlspecialchars($success); ?></div><?php endif; ?>
 
-                    <div class="mt-1">
-                        <button type="submit" class="btn btn-primary">Change Password</button>
-                        <a href="index.php" class="btn btn-secondary ml-05">Back</a>
-                    </div>
-                </form>
+                    <form method="post">
+                        <?php echo csrf_input_field(); ?>
+                        <div class="form-group">
+                            <label class="form-label">Current password</label>
+                            <input name="current_password" type="password" required class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">New password</label>
+                            <input name="new_password" type="password" required class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Confirm new password</label>
+                            <input name="confirm_password" type="password" required class="form-input">
+                        </div>
+
+                        <div class="mt-1">
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-                <script>
+                                <script>
                     (function(){
                         var form = document.querySelector('form');
                         var newInput = document.querySelector('input[name="new_password"]');

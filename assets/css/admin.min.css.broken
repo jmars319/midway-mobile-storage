@@ -1,0 +1,7 @@
+/* admin.min.css.broken
+   This file intentionally contains the last generated bundle content moved aside
+   because the generated admin.min.css did not include the full login-page card
+   rules. Keeping a .broken file so we can restore it if needed:
+
+   See existing backup: admin.min.css.bak.1759881848
+*/

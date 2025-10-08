@@ -23,6 +23,11 @@ session_start();
 require_once 'config.php';
 checkAuth();
 
+// Provide helper functions used to compute public URLs for uploaded images
+// (admin_image_src, admin_uploads_base). Require this early so the upload
+// handler can always call these helpers when building JSON responses.
+require_once __DIR__ . '/partials/uploads.php';
+
 header('Content-Type: application/json');
 // Start output buffering to prevent stray notices/warnings from corrupting JSON output
 if (!ob_get_level()) ob_start();
@@ -260,11 +265,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
         'thumbnail' => file_exists($thumbPath) ? admin_image_src(($typeFolder !== 'general' ? $typeFolder . '/' : '') . 'thumbs/' . $filename) : null,
     ], 200);
 } else {
-    http_response_code(400);
-    echo json_encode([
+    json_exit([
         'success' => false,
         'message' => 'No image file provided'
-    ]);
+    ], 400);
 }
 
 /**
@@ -475,4 +479,3 @@ function sanitizeSvg($svg) {
     // Return trimmed string
     return trim($svg);
 }
-?>

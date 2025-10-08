@@ -147,6 +147,7 @@
 #images-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 9999; }
 #images-modal-backdrop.images-modal-open { display: flex; }
 #images-modal { background: var(--card-bg); border-radius:10px; max-width: 1000px; width: calc(100% - 48px); max-height: 80vh; overflow: auto; box-shadow: 0 12px 40px rgba(2,6,23,0.35); padding: 1rem; box-sizing: border-box; position: relative; }
+#images-modal { /* ensure modal is centered in viewport even if other styles conflict */ position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; }
 #images-modal .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem }
 #images-modal .close-btn { background: color-mix(in srgb, var(--card-bg, #fff) 92%, black 8%); color: var(--text-primary, #0b1220); padding:6px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); font-size:1.15rem; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(2,6,23,0.12); }
 #images-modal .close-btn:hover { transform: translateY(-1px); box-shadow:0 10px 26px rgba(2,6,23,0.14); }

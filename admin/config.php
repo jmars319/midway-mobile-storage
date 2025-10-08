@@ -85,13 +85,31 @@ define('SESSION_TIMEOUT', 1800);
 // Check if session is valid
 function checkAuth() {
     if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+        // If this is an AJAX or JSON-accepting request, return JSON instead of redirecting
+        $accept = isset($_SERVER['HTTP_ACCEPT']) ? strtolower($_SERVER['HTTP_ACCEPT']) : '';
+        $isXhr = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        if ($isXhr || strpos($accept, 'application/json') !== false) {
+            if (!headers_sent()) header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            exit;
+        }
         header('Location: login.php');
         exit;
     }
     
     // Check session timeout
     if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time'] > SESSION_TIMEOUT)) {
+        // session timed out: if AJAX request, return JSON instead of redirecting
+        $accept = isset($_SERVER['HTTP_ACCEPT']) ? strtolower($_SERVER['HTTP_ACCEPT']) : '';
+        $isXhr = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
         session_destroy();
+        if ($isXhr || strpos($accept, 'application/json') !== false) {
+            if (!headers_sent()) header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Session timed out']);
+            exit;
+        }
         header('Location: login.php?timeout=1');
         exit;
     }

@@ -22,33 +22,41 @@ if (file_exists(CONTENT_FILE)) {
   </head>
   <body class="admin">
     <div class="page-wrap">
-        <div class="admin-card-header">
-          <h1 class="admin-card-title">SMTP Settings</h1>
-          <div><a href="index.php" class="btn btn-ghost">Back to dashboard</a></div>
+      <div class="admin-card">
+        <div class="admin-card-header header-row">
+          <div class="header-left">
+            <h1 class="admin-card-title m-0">SMTP Settings</h1>
+            <p class="muted small">Enter the SMTP settings provided by your email provider. (Passwords are not stored in this repository.)</p>
+          </div>
+          <div class="top-actions">
+            <a href="index.php" class="btn btn-ghost">Back to dashboard</a>
+          </div>
         </div>
 
-  <p class="small">Enter the details your email provider gave you so the site can send emails (for example, quote notifications). We keep passwords out of the public repo.</p>
-        <?php if (!file_exists(__DIR__ . '/../vendor/autoload.php')): ?>
-          <div class="small mt-05"><span class="muted">Note:</span> <span class="muted-text">A helper library for sending email is not installed. The "Send Test Email" button will be disabled until you install the project's dependencies (see the README).</span></div>
-        <?php endif; ?>
+        <div class="admin-card-body">
+          <?php if (!file_exists(__DIR__ . '/../vendor/autoload.php')): ?>
+            <div class="small mt-05"><span class="muted">Note:</span> <span class="muted-text">A helper library for sending email is not installed. The "Send Test Email" button will be disabled until you install the project's dependencies (see the README).</span></div>
+          <?php endif; ?>
 
-        <section class="card card-spaced">
-          <form id="smtp-form" method="post" action="save-smtp.php" class="smtp-form">
-            <?php echo csrf_input_field(); ?>
-            <label class="smtp-label">Username <input type="text" name="smtp_username" value="<?php echo htmlspecialchars($GLOBALS['SMTP_USERNAME_OVERRIDE'] ?? (defined('SMTP_USERNAME') ? SMTP_USERNAME : '')); ?>" class="form-input"></label>
-            <div class="small muted">This is usually your email address or the account name your email provider gave you.</div>
+          <section class="card card-spaced">
+            <form id="smtp-form" method="post" action="save-smtp.php" class="smtp-form">
+              <?php echo csrf_input_field(); ?>
+              <label class="smtp-label">Username <input type="text" name="smtp_username" value="<?php echo htmlspecialchars($GLOBALS['SMTP_USERNAME_OVERRIDE'] ?? (defined('SMTP_USERNAME') ? SMTP_USERNAME : '')); ?>" class="form-input"></label>
+              <div class="small muted">This is usually your email address or the account name your email provider gave you.</div>
 
-            <label class="smtp-label">Password <input type="password" name="smtp_password" value="" placeholder="(leave blank to keep existing)" class="form-input"></label>
-            <div class="small muted">The password for that account. Leave blank to keep the current password already configured.</div>
-            <button type="submit" class="btn btn-primary">Save</button>
-            <label class="smtp-test">Test recipient <input type="email" id="smtp-test-recipient" placeholder="you@yourdomain.com" class="form-input smtp-test-input"></label>
-            <div class="small muted">Enter an email address to receive a test message so you can verify the settings work.</div>
-            <button type="button" id="smtp-test" class="btn btn-ghost">Send Test Email</button>
-          </form>
+              <label class="smtp-label">Password <input type="password" name="smtp_password" value="" placeholder="(leave blank to keep existing)" class="form-input"></label>
+              <div class="small muted">The password for that account. Leave blank to keep the current password already configured.</div>
 
-          <div id="smtp-result" class="small smtp-result"></div>
-        </section>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <label class="smtp-test ml-06">Test recipient <input type="email" id="smtp-test-recipient" placeholder="you@yourdomain.com" class="form-input smtp-test-input"></label>
+                <button type="button" id="smtp-test" class="btn btn-ghost">Send Test Email</button>
+              </div>
+            </form>
 
+            <div id="smtp-result" class="small smtp-result"></div>
+          </section>
+        </div>
       </div>
     </div>
 

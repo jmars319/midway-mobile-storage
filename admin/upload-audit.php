@@ -77,28 +77,38 @@ header('Content-Type: text/html; charset=utf-8');
     <?php require_once __DIR__ . '/partials/head.php'; ?>
   <!-- Page helpers moved to /assets/css/admin.css -->
   </head>
-  <body>
-    <a href="index.php" class="btn btn-ghost">◀ Back to Admin</a>
-  <p class="small">This shows a chronological list of image uploads recorded by the site. Newest entries appear first.</p>
+  <body class="admin">
+    <div class="page-wrap">
+      <div class="admin-card">
+        <div class="admin-card-header header-row">
+          <div class="header-left">
+            <h1 class="admin-card-title m-0">Upload Audit</h1>
+            <p class="muted small">This shows a chronological list of image uploads recorded by the site. Newest entries appear first.</p>
+          </div>
+          <div class="top-actions">
+            <a href="index.php" class="btn btn-ghost">Back to dashboard</a>
+          </div>
+        </div>
 
-    <div class="top-actions">
-      <form method="get" class="search-form">
-        <input type="text" name="q" placeholder="Search admin, filename, type, ip..." value="<?php echo htmlspecialchars($search); ?>">
-        <label class="small">Per page:
-          <select name="per_page">
-            <option value="20" <?php if ($per_page==20) echo 'selected'; ?>>20</option>
-            <option value="50" <?php if ($per_page==50) echo 'selected'; ?>>50</option>
-            <option value="100" <?php if ($per_page==100) echo 'selected'; ?>>100</option>
-          </select>
-        </label>
-        <button type="submit" class="btn">Filter</button>
-      </form>
+        <div class="admin-card-body">
+          <div class="top-actions">
+            <form method="get" class="search-form">
+              <input type="text" name="q" placeholder="Search admin, filename, type, ip..." value="<?php echo htmlspecialchars($search); ?>">
+              <label class="small">Per page:
+                <select name="per_page">
+                  <option value="20" <?php if ($per_page==20) echo 'selected'; ?>>20</option>
+                  <option value="50" <?php if ($per_page==50) echo 'selected'; ?>>50</option>
+                  <option value="100" <?php if ($per_page==100) echo 'selected'; ?>>100</option>
+                </select>
+              </label>
+              <button type="submit" class="btn">Filter</button>
+            </form>
 
-      <div class="ml-auto">
-        <a class="btn btn-ghost" href="upload-audit.php?download=csv">Download CSV</a>
-        <a class="btn btn-ghost" href="upload-audit.php?download=json">Download JSON</a>
-      </div>
-    </div>
+            <div class="ml-auto">
+              <a class="btn btn-ghost" href="upload-audit.php?download=csv">Download CSV</a>
+              <a class="btn btn-ghost" href="upload-audit.php?download=json">Download JSON</a>
+            </div>
+          </div>
 
     <?php if (empty($filtered)): ?>
       <p>No entries found.</p>

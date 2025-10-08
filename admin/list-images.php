@@ -60,7 +60,17 @@ if (is_dir($dir)) {
             }
         }
 
-    $files[] = [ 'relative' => $relPath, 'url' => admin_image_src($relPath) ];
+        // Skip thumbnail files stored in a 'thumbs' subdirectory to avoid
+        // returning both the original image and its thumbnail as separate
+        // entries in the admin UI (which causes duplicate visible items).
+        if (preg_match('#(^|/)thumbs(/|$)#i', $relPath)) {
+            continue;
+        }
+
+        // avoid duplicates in the returned list (same relative path found twice via different filesystem entries)
+        if (!in_array($relPath, array_column($files, 'relative'), true)) {
+            $files[] = [ 'relative' => $relPath, 'url' => admin_image_src($relPath) ];
+        }
     }
 }
 echo json_encode(['files' => $files]);

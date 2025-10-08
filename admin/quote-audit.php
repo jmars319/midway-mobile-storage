@@ -54,20 +54,30 @@ header('Content-Type: text/html; charset=utf-8');
     <?php require_once __DIR__ . '/partials/head.php'; ?>
   <!-- Page helpers moved to /assets/css/admin.css -->
   </head>
-  <body>
-    <a href="index.php" class="btn btn-ghost">◀ Back to Admin</a>
-    <p class="small">Append-only audit entries written to <code>data/quote-audit.json</code>. Newest first.</p>
+  <body class="admin">
+    <div class="page-wrap">
+      <div class="admin-card">
+        <div class="admin-card-header header-row">
+          <div class="header-left">
+            <h1 class="admin-card-title m-0">Quote Audit</h1>
+            <p class="muted small">Append-only audit entries written to <code>data/quote-audit.json</code>. Newest first.</p>
+          </div>
+          <div class="top-actions">
+            <a href="index.php" class="btn btn-ghost">Back to dashboard</a>
+          </div>
+        </div>
 
-    <div class="top-actions">
-      <div class="ml-auto">
-        <a class="btn btn-ghost" href="quote-audit.php?download=csv">Download CSV</a>
-        <a class="btn btn-ghost" href="quote-audit.php?download=json">Download JSON</a>
-      </div>
-    </div>
+        <div class="admin-card-body">
+          <div class="top-actions">
+            <div class="ml-auto">
+              <a class="btn btn-ghost" href="quote-audit.php?download=csv">Download CSV</a>
+              <a class="btn btn-ghost" href="quote-audit.php?download=json">Download JSON</a>
+            </div>
+          </div>
 
-    <?php if (empty($entries)): ?>
-      <p>No audit entries.</p>
-    <?php else: ?>
+          <?php if (empty($entries)): ?>
+            <p>No audit entries.</p>
+          <?php else: ?>
       <table>
         <thead>
           <tr><th>Time</th><th>Name</th><th>Phone</th><th>Container</th><th>Quantity</th><th>Duration</th><th>IP</th></tr>

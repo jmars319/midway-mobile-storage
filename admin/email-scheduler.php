@@ -39,7 +39,7 @@ header('Content-Type: text/html; charset=utf-8');
                     <p class="muted mb-05">Manage scheduled campaigns and email configuration</p>
                 </div>
                 <div class="top-actions">
-                    <a href="/admin/index.php" class="btn btn-ghost">Back to Dashboard</a>
+                    <a href="/admin/index.php" class="btn btn-ghost">Back to dashboard</a>
                 </div>
             </div>
         </div>

@@ -714,20 +714,24 @@ header('Content-Type: text/html; charset=utf-8');
         $types = [
           'logo' => 'Logo (site header)',
           'hero' => 'Hero / banner',
-          'gallery' => 'Gallery image',
-          'general' => 'General image (other)'
+          'gallery' => 'Gallery image'
         ];
       ?>
       <?php foreach ($types as $tkey => $tlabel): ?>
         <details class="image-section">
           <summary><?php echo htmlspecialchars($tlabel); ?></summary>
           <div class="image-section-body">
-            <?php // show current image preview when available ?>
-            <?php $current = $siteContent['images'][$tkey] ?? ''; if ($current): ?>
+            <?php // show current image preview when available (skip for gallery) ?>
+            <?php $current = $siteContent['images'][$tkey] ?? ''; if ($current && $tkey !== 'gallery'): ?>
               <?php $url = preg_match('#^https?://#i', $current) ? $current : admin_upload_url($current); ?>
               <div class="mb-05">
                 <div class="small">Current:</div>
                 <img src="<?php echo htmlspecialchars($url); ?>" alt="<?php echo htmlspecialchars($tlabel); ?>" class="img-preview-small" />
+              </div>
+            <?php endif; ?>
+            <?php if ($tkey === 'gallery'): ?>
+              <div class="mb-05 section-subheader">
+                <div>Use the gallery below to manage images.</div>
               </div>
             <?php endif; ?>
 
@@ -754,7 +758,7 @@ header('Content-Type: text/html; charset=utf-8');
            The button is visible so admins can reveal the full list; images are hidden
            until the button is toggled. -->
   <div class="mt-05">
-        <button id="show-all-images-btn" type="button" class="btn btn-ghost">Show all images</button>
+  <button id="show-all-images-btn" type="button" class="btn btn-ghost">See all images</button>
       </div>
     </div>
 
