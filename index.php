@@ -211,9 +211,28 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                                     $itTitle = htmlspecialchars($it['title'] ?? '');
                                     $itShort = htmlspecialchars($it['short'] ?? '');
                                     $itDesc = htmlspecialchars($it['description'] ?? '');
-                                    $itPrice = isset($it['price']) && $it['price'] !== '' ? '$'.htmlspecialchars($it['price']) : '';
+                                    // support multiple price entries per item
+                                    $prices = is_array($it['prices'] ?? null) ? $it['prices'] : null;
+                                    $legacyPrice = isset($it['price']) && $it['price'] !== '' ? $it['price'] : null;
                                     echo '<div class="section-item">';
-                                    echo '<div class="menu-item-head"><strong class="menu-title">'.$itTitle.'</strong>'; if ($itPrice) echo '<span class="menu-price">'.$itPrice.'</span>'; echo '</div>';
+                                    echo '<div class="menu-item-head"><strong class="menu-title">'.$itTitle.'</strong>';
+                                    if ($prices && count($prices)) {
+                                        echo '<div class="menu-item-prices">';
+                                        foreach ($prices as $p) {
+                                            $label = htmlspecialchars($p['label'] ?? '');
+                                            $amt = ($p['amount'] !== null && $p['amount'] !== '') ? '$'.htmlspecialchars($p['amount']) : '';
+                                            $note = htmlspecialchars($p['note'] ?? '');
+                                            echo '<div class="menu-price-entry">';
+                                            if ($label) echo '<span class="menu-price-label">'. $label .'</span> ';
+                                            if ($amt) echo '<span class="menu-price">'. $amt .'</span>';
+                                            if ($note) echo '<div class="menu-price-note">'. $note .'</div>';
+                                            echo '</div>';
+                                        }
+                                        echo '</div>';
+                                    } else if ($legacyPrice !== null) {
+                                        echo '<span class="menu-price">$'.htmlspecialchars($legacyPrice).'</span>';
+                                    }
+                                    echo '</div>';
                                     if ($itShort) echo '<div class="menu-short">'.$itShort.'</div>';
                                     if ($itDesc) echo '<div class="menu-details-desc">'.nl2br($itDesc).'</div>';
                                     echo '</div>';

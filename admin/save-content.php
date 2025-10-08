@@ -166,15 +166,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $merged[$si]['items'][$ii]['quantity'] = $qint;
                                 }
 
-                                // Price sanitization and normalization. We permit numeric
-                                // strings (for example "$12.00" or "12") so we first
-                                // strip everything except digits, dot, and minus sign.
-                                // After that we confirm it's numeric, cast to float and
-                                // store a normalized fixed-precision string with two
-                                // decimal places. This keeps the stored JSON consistent
-                                // (e.g. "12.00").
-                                if (isset($item['price'])) {
-                                    // allow numeric strings, strip non-numeric except dot and minus
+                                // Support multiple price entries per item via `prices` array
+                                if (isset($item['prices']) && is_array($item['prices'])) {
+                                    $normalizedPrices = [];
+                                    foreach ($item['prices'] as $pidx => $pentry) {
+                                        if (!is_array($pentry)) $pentry = ['amount' => (string)$pentry];
+                                        $rawAmt = isset($pentry['amount']) ? preg_replace('/[^0-9\.\-]/', '', (string)$pentry['amount']) : '';
+                                        if ($rawAmt === '' || !is_numeric($rawAmt)) {
+                                            http_response_code(400);
+                                            echo json_encode(['success' => false, 'message' => 'Invalid price amount for item: ' . ($item['title'] ?? 'unknown')]);
+                                            exit;
+                                        }
+                                        $num = (float)$rawAmt;
+                                        $normalizedPrices[] = [
+                                            'label' => isset($pentry['label']) ? (string)$pentry['label'] : '',
+                                            'amount' => number_format($num, 2, '.', ''),
+                                            'note' => isset($pentry['note']) ? (string)$pentry['note'] : ''
+                                        ];
+                                    }
+                                    $merged[$si]['items'][$ii]['prices'] = $normalizedPrices;
+                                } elseif (isset($item['price'])) {
+                                    // Backwards compatibility: single price -> prices[ { amount } ]
                                     $clean = preg_replace('/[^0-9\.\-]/', '', (string)$item['price']);
                                     if ($clean === '' || !is_numeric($clean)) {
                                         http_response_code(400);
@@ -182,8 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         exit;
                                     }
                                     $num = (float)$clean;
-                                    // number_format ensures we store prices like "12.00"
-                                    $merged[$si]['items'][$ii]['price'] = number_format($num, 2, '.', '');
+                                    $merged[$si]['items'][$ii]['prices'] = [[ 'label' => '', 'amount' => number_format($num, 2, '.', ''), 'note' => '' ]];
                                 }
                                     // Preserve optional section-level 'details' if provided (support array or string)
                                     if (isset($sdata['details'])) {

@@ -661,6 +661,10 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 .menu-card .menu-body { position: relative; z-index: 1; }
 .menu-card .menu-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
 .menu-card .menu-short { color: var(--text-secondary); font-size: var(--font-size-sm); }
+.menu-item-prices { display:flex; flex-direction:column; gap:0.25rem; margin-left: auto; text-align:right; }
+.menu-price-entry { display:flex; gap:0.5rem; align-items:center; justify-content:flex-end; }
+.menu-price-label { font-size: .85rem; color: rgba(255,255,255,0.9); margin-right:.35rem; }
+.menu-price-note { font-size: .8rem; color: rgba(255,255,255,0.85); margin-top: 0.15rem; }
 .menu-card .menu-details { max-height:0; overflow:hidden; transition:max-height .4s cubic-bezier(.2,.9,.2,1), padding .25s ease, opacity .25s ease; padding:0 var(--spacing-md); opacity:0 }
 .menu-card.expanded .menu-details { padding: var(--spacing-md); max-height: 1200px; opacity:1 }
 .menu-card .menu-actions { padding: var(--spacing-md); display:flex; justify-content:space-between; align-items:center; gap:.5rem }
