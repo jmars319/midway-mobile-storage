@@ -411,7 +411,7 @@
   const img = document.createElement('img'); img.src = entry.url; img.className = 'img-48';
     img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
   const name = document.createElement('div'); name.textContent = rel; name.className = 'flex-1 text-ellipsis';
-        const del = document.createElement('button'); del.type='button'; del.textContent='Delete'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{
+        const del = document.createElement('button'); del.type='button'; del.textContent='Move to Trash'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{
           if (!await showConfirm('Delete '+rel+'?')) return;
           const fd = new FormData(); fd.append('filename', rel); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
           fetch('delete-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(res=>{
@@ -419,8 +419,7 @@
             else showToast('Delete failed: '+(res && res.message ? res.message : 'unknown'),'error');
           }).catch(()=>{ showToast('Delete failed','error'); });
         });
-        const restoreBtn = document.createElement('button'); restoreBtn.type='button'; restoreBtn.textContent='Trash'; restoreBtn.disabled=true; restoreBtn.title='In images list';
-  row.appendChild(img); row.appendChild(name); row.appendChild(del); row.appendChild(restoreBtn);
+  row.appendChild(img); row.appendChild(name); row.appendChild(del);
         list.appendChild(row);
       });
     }).catch(()=>{ list.innerHTML = '<i>Failed to list images</i>'; });
