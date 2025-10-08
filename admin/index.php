@@ -380,6 +380,48 @@ if (file_exists(CONTENT_FILE)) {
   if (!is_array($siteContent)) $siteContent = [];
 }
 
+// Precompute admin counts so server-side rendering can use them earlier
+$live_entries = load_entries($APPLICATIONS_FILE, $LEGACY_MESSAGES_FILE);
+$applications_live_count = is_array($live_entries) ? count($live_entries) : 0;
+$archiveDir = __DIR__ . '/../data/archives';
+$archived_entries = load_archived_entries($archiveDir);
+$applications_archive_count = is_array($archived_entries) ? count($archived_entries) : 0;
+$applications_all_count = $applications_live_count + $applications_archive_count;
+
+// resumes archived count
+$resumeCandidates = [
+  __DIR__ . '/../private_data/resumes/archived/',
+  dirname(__DIR__) . '/../private_data/resumes/archived/',
+  __DIR__ . '/../../private_data/resumes/archived/',
+];
+$resumes_count = 0;
+foreach ($resumeCandidates as $rc) {
+  if (is_dir($rc)) {
+    $g = glob(rtrim($rc, '/') . '/*');
+    if ($g) {
+      foreach ($g as $f) { if (is_file($f)) $resumes_count++; }
+    }
+    break;
+  }
+}
+
+// quotes count
+$quotesFile = __DIR__ . '/../data/quotes.json';
+$quotes_count = 0;
+if (file_exists($quotesFile)) {
+  $jq = @file_get_contents($quotesFile);
+  $qrows = $jq ? json_decode($jq, true) : [];
+  if (is_array($qrows)) $quotes_count = count($qrows);
+}
+
+$admin_counts = [
+  'applications_live' => $applications_live_count,
+  'applications_archive' => $applications_archive_count,
+  'applications_all' => $applications_all_count,
+  'resumes' => $resumes_count,
+  'quotes' => $quotes_count,
+];
+
 // filter
 $filtered = [];
 if ($search === '') {
@@ -441,6 +483,106 @@ if (isset($_GET['download']) && $_GET['download'] === 'csv') {
         ]);
     }
     fclose($out);
+    exit;
+}
+
+// Download combined (live + archived) applications as CSV or JSON via GET
+if (isset($_GET['download']) && $_GET['download'] === 'applications_all') {
+    $format = strtolower((string)($_GET['format'] ?? 'json'));
+    $entries = load_entries($APPLICATIONS_FILE, $LEGACY_MESSAGES_FILE);
+    // include archives (both new and legacy patterns)
+    $archiveDir = __DIR__ . '/../data/archives';
+    $archived = load_archived_entries($archiveDir);
+    if (!empty($archived)) $entries = array_merge($entries, $archived);
+
+    if ($format === 'csv') {
+      header('Content-Type: text/csv; charset=utf-8');
+      header('Content-Disposition: attachment; filename="all-applications.csv"');
+      $out = fopen('php://output', 'w');
+      fputcsv($out, ['timestamp','first_name','last_name','email','phone','address','age','eligible_to_work','position_desired','employment_type','desired_salary','start_date','availability','shift_preference','hours_per_week','restaurant_experience','other_experience','why_work_here','references','certifications','resume_file','mail_sent','ip']);
+      foreach ($entries as $e) {
+        fputcsv($out, [
+          $e['timestamp'] ?? '',
+          $e['first_name'] ?? '',
+          $e['last_name'] ?? '',
+          $e['email'] ?? '',
+          $e['phone'] ?? '',
+          $e['address'] ?? '',
+          $e['age'] ?? '',
+          $e['eligible_to_work'] ?? '',
+          $e['position_desired'] ?? '',
+          $e['employment_type'] ?? '',
+          $e['desired_salary'] ?? '',
+          $e['start_date'] ?? '',
+          is_array($e['availability']) ? implode('|', $e['availability']) : $e['availability'] ?? '',
+          $e['shift_preference'] ?? '',
+          $e['hours_per_week'] ?? '',
+          $e['restaurant_experience'] ?? '',
+          $e['other_experience'] ?? '',
+          $e['why_work_here'] ?? '',
+          $e['references'] ?? '',
+          is_array($e['certifications']) ? implode('|', $e['certifications']) : ($e['certifications'] ?? ''),
+          $e['resume_file'] ?? '',
+          !empty($e['mail_sent']) ? '1' : '0',
+          $e['ip'] ?? ''
+        ]);
+      }
+      fclose($out);
+      exit;
+    }
+
+    // default to JSON
+    header('Content-Type: application/json');
+    header('Content-Disposition: attachment; filename="all-applications.json"');
+    echo json_encode($entries, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+// Download current (live) applications as CSV or JSON via GET
+if (isset($_GET['download']) && $_GET['download'] === 'applications') {
+    $format = strtolower((string)($_GET['format'] ?? 'json'));
+    $entries = load_entries($APPLICATIONS_FILE, $LEGACY_MESSAGES_FILE);
+
+    if ($format === 'csv') {
+      header('Content-Type: text/csv; charset=utf-8');
+      header('Content-Disposition: attachment; filename="submissions.csv"');
+      $out = fopen('php://output', 'w');
+      fputcsv($out, ['timestamp','first_name','last_name','email','phone','address','age','eligible_to_work','position_desired','employment_type','desired_salary','start_date','availability','shift_preference','hours_per_week','restaurant_experience','other_experience','why_work_here','references','certifications','resume_file','mail_sent','ip']);
+      foreach ($entries as $e) {
+        fputcsv($out, [
+          $e['timestamp'] ?? '',
+          $e['first_name'] ?? '',
+          $e['last_name'] ?? '',
+          $e['email'] ?? '',
+          $e['phone'] ?? '',
+          $e['address'] ?? '',
+          $e['age'] ?? '',
+          $e['eligible_to_work'] ?? '',
+          $e['position_desired'] ?? '',
+          $e['employment_type'] ?? '',
+          $e['desired_salary'] ?? '',
+          $e['start_date'] ?? '',
+          is_array($e['availability']) ? implode('|', $e['availability']) : $e['availability'] ?? '',
+          $e['shift_preference'] ?? '',
+          $e['hours_per_week'] ?? '',
+          $e['restaurant_experience'] ?? '',
+          $e['other_experience'] ?? '',
+          $e['why_work_here'] ?? '',
+          $e['references'] ?? '',
+          is_array($e['certifications']) ? implode('|', $e['certifications']) : ($e['certifications'] ?? ''),
+          $e['resume_file'] ?? '',
+          !empty($e['mail_sent']) ? '1' : '0',
+          $e['ip'] ?? ''
+        ]);
+      }
+      fclose($out);
+      exit;
+    }
+
+    // default to JSON
+    header('Content-Type: application/json');
+    header('Content-Disposition: attachment; filename="submissions.json"');
+    echo json_encode($entries, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
@@ -507,7 +649,6 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="topbar">
                   <a href="../" class="btn btn-ghost" target="_blank">View site</a>
                   <a href="email-scheduler.php" class="btn btn-ghost ml-025">Email Scheduler</a>
-                  <a href="admin-resumes.php" class="btn btn-ghost ml-025">Resumes</a>
                 </div>
               </div>
             </div>
@@ -519,19 +660,29 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="pm-item pm-sep">
                     <div class="pm-combo">
                     <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v12M8 7l4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download current applications ▾</button>
-                    <div class="pm-combo-menu">
-                        <a href="?download=applications&amp;format=csv" class="pm-subitem" role="menuitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h10M4 17h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>CSV</a>
-                        <a href="?download=applications&amp;format=json" class="pm-subitem" role="menuitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>JSON</a>
-                    </div>
+          <div class="pm-combo-menu">
+<?php if (!empty($admin_counts['applications_live'])): ?>
+                        <a href="?download=applications&amp;format=csv" class="pm-subitem" role="menuitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h10M4 17h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>CSV <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['applications_live']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['applications_live']; ?> current applications</span></a>
+                        <a href="?download=applications&amp;format=json" class="pm-subitem" role="menuitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>JSON <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['applications_live']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['applications_live']; ?> current applications</span></a>
+<?php else: ?>
+                        <span class="pm-subitem disabled" role="menuitem" aria-disabled="true"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h10M4 17h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>CSV <span class="small muted">(0)</span></span>
+                        <span class="pm-subitem disabled" role="menuitem" aria-disabled="true"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>JSON <span class="small muted">(0)</span></span>
+<?php endif; ?>
+          </div>
                   </div>
                 </div>
                 <div class="pm-item pm-sep">
                   <div class="pm-combo">
-                    <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false" data-confirm="Downloading all applications may create a large file. Continue?"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18v10H3zM7 3v4M17 3v4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download all applications ▾</button>
-                    <div class="pm-combo-menu">
-                        <a href="?download=applications_all&amp;format=csv" class="pm-subitem" role="menuitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>CSV</a>
-                        <a href="?download=applications_all&amp;format=json" class="pm-subitem" role="menuitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5h8v14H8z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>JSON</a>
-                    </div>
+                    <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18v10H3zM7 3v4M17 3v4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download all applications ▾</button>
+          <div class="pm-combo-menu">
+<?php if (!empty($admin_counts['applications_all'])): ?>
+                        <a href="?download=applications_all&amp;format=csv" class="pm-subitem" role="menuitem" data-confirm="Downloading all applications may create a large file. Continue?"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>CSV <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['applications_all']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['applications_all']; ?> total applications</span></a>
+                        <a href="?download=applications_all&amp;format=json" class="pm-subitem" role="menuitem" data-confirm="Downloading all applications may create a large file. Continue?"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5h8v14H8z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>JSON <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['applications_all']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['applications_all']; ?> total applications</span></a>
+<?php else: ?>
+                        <span class="pm-subitem disabled" role="menuitem" aria-disabled="true" data-confirm="Downloading all applications may create a large file. Continue?"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>CSV <span class="small muted">(0)</span></span>
+                        <span class="pm-subitem disabled" role="menuitem" aria-disabled="true" data-confirm="Downloading all applications may create a large file. Continue?"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5h8v14H8z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>JSON <span class="small muted">(0)</span></span>
+<?php endif; ?>
+          </div>
                   </div>
                 </div>
                 <div class="pm-item pm-sep">
@@ -547,18 +698,47 @@ header('Content-Type: text/html; charset=utf-8');
                     <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M3 12h18M3 17h18" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Quote Audit ▾</button>
                     <div class="pm-combo-menu">
                       <a href="quote-audit.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM4 10h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>View full quote audit</a>
-                      <a href="quote-audit.php?download=csv" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM8 10v6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV</a>
-                      <a href="quote-audit.php?download=json" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON</a>
+                      <a href="quote-audit.php?download=csv" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM8 10v6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV <span class="count-badge" aria-hidden="true"><?php echo (int)($admin_counts['quotes'] ?? 0); ?></span><span class="sr-only"><?php echo (int)($admin_counts['quotes'] ?? 0); ?> quote audit entries</span></a>
+                      <a href="quote-audit.php?download=json" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON <span class="count-badge" aria-hidden="true"><?php echo (int)($admin_counts['quotes'] ?? 0); ?></span><span class="sr-only"><?php echo (int)($admin_counts['quotes'] ?? 0); ?> quote audit entries</span></a>
                       <form method="post" class="m-0" data-confirm="Clear quote audit? This will remove recent audit entries. Continue?">
                         <?php echo csrf_input_field(); ?>
                         <input type="hidden" name="action" value="clear_quote_audit">
-                <!-- Resume Management moved to topbar -> admin-resumes.php -->
+                
                         <button type="submit" class="btn btn-danger-muted pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear quote audit</button>
                       </form>
                       <form method="post" class="m-0">
                         <?php echo csrf_input_field(); ?>
                         <input type="hidden" name="action" value="download_quotes">
                         <button type="submit" class="pm-subitem pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v10M8 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download Quotes (CSV)</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                  <div class="pm-item pm-sep">
+                    <div class="pm-combo">
+                    <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Resumes ▾</button>
+                    <div class="pm-combo-menu">
+                      <a href="admin-resumes.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h10M4 17h16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>View archived resumes</a>
+<?php if (!empty($admin_counts['resumes'])): ?>
+                      <a href="admin-resumes.php?download=csv" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['resumes']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['resumes']; ?> archived resumes</span></a>
+                      <a href="admin-resumes.php?download=json" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['resumes']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['resumes']; ?> archived resumes</span></a>
+                      <a href="download-all-resumes.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 5h18v14H3z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download all resumes (zip) <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['resumes']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['resumes']; ?> archived resumes</span></a>
+<?php else: ?>
+                      <span class="pm-subitem disabled" role="menuitem" aria-disabled="true"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV <span class="count-badge" aria-hidden="true">0</span><span class="sr-only">0 archived resumes</span></span>
+                      <span class="pm-subitem disabled" role="menuitem" aria-disabled="true"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON <span class="count-badge" aria-hidden="true">0</span><span class="sr-only">0 archived resumes</span></span>
+                      <span class="pm-subitem disabled" role="menuitem" aria-disabled="true"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 5h18v14H3z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download all resumes (zip) <span class="count-badge" aria-hidden="true">0</span><span class="sr-only">0 archived resumes</span></span>
+<?php endif; ?>
+                      <form method="post" action="restore-recent-resumes.php" class="m-0" style="display:flex;gap:.5rem;align-items:center;padding:.35rem .5rem;" data-confirm="Restore trashed resumes from the last N days?">
+                        <?php echo csrf_input_field(); ?>
+                        <input type="hidden" name="action" value="restore_recent">
+                        <label style="font-weight:600;">From last <input type="number" name="days" value="7" min="1" style="width:5rem;margin-left:.4rem;padding:.2rem .4rem;border:1px solid rgba(0,0,0,0.06);border-radius:6px"> days</label>
+                        <button type="submit" class="btn btn-ghost" style="margin-left:auto;">Restore recent</button>
+                      </form>
+                      <form method="post" class="m-0" style="display:flex;gap:.5rem;align-items:center;padding:.35rem .5rem;" data-confirm="Move archived resumes older than the specified days to trash?">
+                        <?php echo csrf_input_field(); ?>
+                        <input type="hidden" name="action" value="purge_old">
+                        <label style="font-weight:600;">Older than <input type="number" name="days" value="30" min="1" style="width:5rem;margin-left:.4rem;padding:.2rem .4rem;border:1px solid rgba(0,0,0,0.06);border-radius:6px"> days</label>
+                        <button type="submit" class="btn btn-danger-muted" style="margin-left:auto;">Purge</button>
                       </form>
                     </div>
                   </div>
@@ -799,6 +979,13 @@ header('Content-Type: text/html; charset=utf-8');
         </form>
       </div>
 
+      <!-- Admin-only live preview panel -->
+      <div id="admin-preview-wrap" class="admin-preview-wrap mt-05">
+        <div class="admin-preview-header"><strong>Admin Preview</strong> <span id="preview-last-updated" class="small muted"></span></div>
+        <div id="admin-content-preview" class="admin-content-preview small muted">Loading preview&hellip;</div>
+        <div class="mt-05"><button id="toggle-preview" type="button" class="btn btn-ghost small">Hide Preview</button></div>
+      </div>
+
       <!-- Application detail modal -->
       <div id="app-modal" role="dialog" aria-hidden="true" class="modal-backdrop">
         <div role="document" class="app-modal-dialog">
@@ -910,6 +1097,45 @@ header('Content-Type: text/html; charset=utf-8');
       window.__siteContent = <?php echo json_encode($siteContent, JSON_UNESCAPED_SLASHES); ?> || {};
       window.__csrfToken = (document.querySelector('input[name="csrf_token"]') || { value: '' }).value || '';
       window.__schemaUrl = 'content-schemas.json';
+      window.__adminCounts = <?php echo json_encode($admin_counts, JSON_UNESCAPED_SLASHES); ?>;
+    </script>
+    <script>
+      // disable download links where there are no items to download
+      (function(){
+        try {
+          var counts = window.__adminCounts || {};
+          document.querySelectorAll('.pm-subitem[href]').forEach(function(a){
+            try {
+              var href = a.getAttribute('href');
+              if (!href) return;
+              var url = new URL(href, window.location.href);
+              var page = (url.pathname.split('/').pop() || 'index.php');
+              var download = url.searchParams.get('download');
+              var disabled = false;
+
+              if (page === '' || page === 'index.php') {
+                if (download === 'applications' && (counts.applications_live || 0) === 0) disabled = true;
+                if (download === 'applications_all' && (counts.applications_all || 0) === 0) disabled = true;
+              } else if (page === 'admin-resumes.php') {
+                // any download or zip on resumes should require at least one resume
+                if ((counts.resumes || 0) === 0) disabled = true;
+              } else if (page === 'quote-audit.php') {
+                if ((counts.quotes || 0) === 0) disabled = true;
+              }
+
+              if (disabled) {
+                a.setAttribute('aria-disabled','true');
+                a.classList.add('disabled');
+                a.style.opacity = '.6';
+                a.style.cursor = 'not-allowed';
+                var title = a.getAttribute('title') || a.textContent.trim() || 'Download';
+                a.setAttribute('title', 'Nothing to download: ' + title);
+                a.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); }, { capture: true });
+              }
+            } catch (e) { /* ignore per-link errors */ }
+          });
+        } catch (err) { /* no-op */ }
+      })();
     </script>
     <script>
       // admin options submenu toggles for combined CSV/JSON actions with keyboard navigation
@@ -1036,25 +1262,43 @@ header('Content-Type: text/html; charset=utf-8');
       // Replace native confirm() with a centralized helper provided in assets/js/admin.js
       (function(){
         // if the page's admin.js exposes showAdminConfirm, use it for any forms/buttons with data-confirm
-        function delegateConfirmForForms() {
-          document.addEventListener('submit', async function(e){
-            var form = e.target;
-            if (form && form.getAttribute && form.getAttribute('data-confirm')) {
-              e.preventDefault();
-              var msg = form.getAttribute('data-confirm');
-              try {
-                if (window.showAdminConfirm) {
-                  var ok = await window.showAdminConfirm(msg);
-                  if (ok) form.submit();
-                } else {
-                  if (confirm(msg)) form.submit();
-                }
-              } catch (err) { /* ignore */ }
-            }
-          }, true);
-        }
+      function delegateConfirmForButtons() {
+        document.addEventListener('click', function (e) {
+          var el = e.target.closest('button, a');
+          if (!el) return;
+          // find the closest element that carries the data-confirm attribute
+          var elWithConfirm = el.closest('[data-confirm]');
+          if (!elWithConfirm) return;
 
-        // handle elements that are toggle buttons with data-confirm (e.g., before opening a large submenu)
+          var msg = elWithConfirm.getAttribute('data-confirm') || 'Are you sure?';
+
+          // If the element itself is an anchor, intercept navigation and confirm first
+          if (el.tagName.toLowerCase() === 'a') {
+            e.preventDefault();
+            if (confirm(msg)) {
+              // proceed with navigation
+              window.location.href = el.getAttribute('href');
+            }
+            return;
+          }
+
+          // If it's a pm-combo-toggle button (submenu opener) we don't confirm here
+          var isToggle = el.classList && el.classList.contains('pm-combo-toggle');
+          if (isToggle) {
+            // allow toggle to open/close without confirmation
+            return;
+          }
+
+          // For other buttons, fall back to simple confirm and let default actions run on accept
+          e.preventDefault();
+          if (confirm(msg)) {
+            // If it's a button inside a form, submit it
+            var form = el.closest('form');
+            if (form) form.submit();
+            else if (typeof el.click === 'function') el.click();
+          }
+        });
+      }
         function delegateConfirmForButtons() {
           document.addEventListener('click', async function(e){
             var btn = e.target.closest && e.target.closest('[data-confirm]');
@@ -1074,6 +1318,28 @@ header('Content-Type: text/html; charset=utf-8');
                 }
               } else {
                 if (confirm(msg)) btn.click();
+              }
+            } catch (err) { /* ignore */ }
+          }, true);
+        }
+
+        function delegateConfirmForForms() {
+          // Intercept form submissions for forms (or controls) with data-confirm.
+          document.addEventListener('submit', async function(e){
+            var form = e.target;
+            if (!form || form.tagName.toLowerCase() !== 'form') return;
+            // prefer the nearest data-confirm-bearing ancestor, otherwise the form itself
+            var elWithConfirm = form.closest('[data-confirm]') || (form.hasAttribute && form.hasAttribute('data-confirm') ? form : null);
+            if (!elWithConfirm) return;
+            var msg = elWithConfirm.getAttribute('data-confirm') || 'Are you sure?';
+            e.preventDefault();
+            try {
+              var ok;
+              if (window.showAdminConfirm) ok = await window.showAdminConfirm(msg);
+              else ok = confirm(msg);
+              if (ok) {
+                // allow the original submission to proceed
+                form.submit();
               }
             } catch (err) { /* ignore */ }
           }, true);
@@ -1112,5 +1378,31 @@ header('Content-Type: text/html; charset=utf-8');
       exit;
     ?>
     <?php endif; ?>
+  <script>
+    (function(){
+      try{
+        var params = new URLSearchParams(window.location.search);
+        var msgs = [];
+        if (params.has('msg')) {
+          var m = params.get('msg');
+          if (m === 'trash_emptied') {
+            var c = params.get('count') || '0'; msgs.push((parseInt(c,10)||0) + ' trashed images permanently deleted');
+          } else if (m === 'notrash') { msgs.push('No trashed images found'); }
+          else if (m === 'save_ok') { msgs.push('Settings saved'); }
+          else if (m === 'save_failed') { msgs.push('Save failed'); }
+          else { msgs.push(m); }
+        }
+        if (params.has('pw_changed')) { msgs.push('Password changed — you have been logged out'); }
+        if (params.has('purged')) { msgs.push((parseInt(params.get('purged')||'0',10) || 0) + ' archived resumes moved to trash'); }
+        if (params.has('restored')) { msgs.push((parseInt(params.get('restored')||'0',10) || 0) + ' resumes restored'); }
+        if (msgs.length === 0) return;
+        var container = document.getElementById('toast-container');
+        if (!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+        msgs.forEach(function(t){ var el = document.createElement('div'); el.className='toast success'; el.textContent = t; container.appendChild(el); setTimeout(function(){ el.classList.add('fade-out'); setTimeout(function(){ el.remove(); }, 350); }, 3500); });
+        // clear query
+        var url = new URL(window.location.href); ['msg','count','pw_changed','purged','restored'].forEach(function(k){ url.searchParams.delete(k); }); history.replaceState({},'',url.toString());
+      } catch(e){ /* no-op */ }
+    })();
+  </script>
   </body>
  </html>
