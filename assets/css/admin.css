@@ -96,7 +96,7 @@ body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--a
 .admin .top-actions form, .admin .top-actions a { margin:0; }
 .admin #profile-btn { background:transparent; border:1px solid rgba(15,23,42,0.06); padding:.35rem .5rem; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:.5rem }
 .admin #profile-btn img { height:26px; width:26px; border-radius:50%; object-fit:cover }
-.admin #profile-menu { display:none; position:absolute; right:0; top:100%; margin-top:.35rem; background:var(--card-bg); border-radius:8px; box-shadow:0 8px 20px rgba(2,6,23,0.10); padding:.35rem; min-width:160px; z-index:50; border:1px solid rgba(15,23,42,0.06) }
+.admin #profile-menu { display:none; position:absolute; right:0; top:100%; margin-top:.35rem; background:var(--card-bg); border-radius:8px; box-shadow:0 8px 20px rgba(2,6,23,0.10); padding:.35rem; min-width:160px; z-index:30010; border:1px solid rgba(15,23,42,0.06) }
 .admin #profile-menu a, .admin #profile-menu form { display:flex; align-items:center; gap:.35rem; padding:.35rem .5rem; color:var(--admin-text); text-decoration:none; border-radius:6px; font-weight:600 }
 .admin #profile-menu a:hover, .admin #profile-menu form:hover { background: rgba(15,23,42,0.03) }
 .admin #profile-menu .btn { width:100%; text-align:left; padding-left:.6rem; }
@@ -221,7 +221,11 @@ body.admin { overflow-x: hidden; }
 #image-list.show { max-height: 1400px; opacity: 1; }
 
 /* Menu admin layout and preview */
-.menu-admin-wrap { gap:1rem; display:flex; align-items:flex-start; margin-top:.5rem }
+.menu-admin-wrap { gap:1rem; display:flex; align-items:stretch; margin-top:.5rem }
+/* Ensure a stable two-column layout: left editor and right preview. */
+.menu-admin-wrap { flex-wrap: nowrap; }
+#menu-admin { flex: 1 1 0%; min-width: 0; }
+.menu-preview { flex: 0 0 380px; min-width: 300px; max-width: 480px; }
 .menu-admin-wrap #menu-list { max-height:620px; overflow:auto; padding-right:.25rem }
 .menu-admin-wrap .menu-admin-row, .menu-admin-wrap .menu-admin-row * { box-sizing:border-box }
 .menu-admin-wrap input[type="text"], .menu-admin-wrap textarea { padding:.45rem; border-radius:8px; border:1px solid var(--admin-border) }
@@ -233,6 +237,7 @@ body.admin { overflow-x: hidden; }
 .menu-admin-wrap .menu-section-items.expanded { max-height:2000px; opacity:1 }
 #menu-preview h3 { margin:0 0 .5rem 0 }
 .preview-section { border-bottom:1px solid var(--admin-divider-weak); padding:.5rem 0 }
+.preview-area { border: 1px solid var(--admin-border); border-radius:8px; padding:.6rem; background: var(--card-bg); min-height:240px; overflow:auto; max-height:620px }
 .preview-section .preview-title { font-weight:700 }
 .preview-item { display:flex; gap:.5rem; align-items:flex-start; padding:.45rem 0 }
 .preview-item img { width:72px;height:56px;object-fit:cover;border-radius:6px }
@@ -248,7 +253,46 @@ body.admin { overflow-x: hidden; }
 /* polished submenu visuals */
 .pm-combo { position: relative }
 .pm-combo-toggle { display:inline-flex; align-items:center; gap:.4rem }
-.pm-combo-menu { display:none; position:absolute; right:0; margin-top:.4rem; background:var(--card-bg); border:1px solid rgba(2,6,23,0.06); border-radius:8px; padding:.35rem; box-shadow:0 10px 30px rgba(2,6,23,0.08); min-width:220px }
+.pm-combo-menu { display:none; position:absolute; right:0; margin-top:.4rem; background:var(--card-bg); border:1px solid rgba(2,6,23,0.06); border-radius:8px; padding:.35rem; box-shadow:0 10px 30px rgba(2,6,23,0.08); min-width:220px; z-index:30010; }
+
+/* Styles for admin/resume management page */
+.admin-resumes-page .container{ max-width:1100px; margin:1.25rem auto; padding:1rem; background:var(--admin-surface); border-radius:10px; box-shadow:0 12px 20px rgba(2,6,23,.06); border:1px solid color-mix(in srgb,var(--admin-surface) 85%,black 15%); }
+.admin-resumes-page h1{ margin-top:0; font-size:1.125rem }
+.admin-resumes-page p.small-path{ font-size:.85rem; color:var(--muted); margin-top:.25rem }
+.admin-resumes-page .table{ width:100%; border-collapse:collapse; margin-top:.8rem }
+.admin-resumes-page .table thead th{ text-align:left; padding:.6rem; border-bottom:1px solid var(--admin-divider-weak); font-weight:700; background:color-mix(in srgb,var(--card-bg) 92%,black 8%)}
+.admin-resumes-page .table td{ padding:.6rem; vertical-align:middle; border-top:1px solid var(--admin-divider-weak) }
+.admin-resumes-page .table tbody tr:hover{ background: color-mix(in srgb,var(--card-bg) 96%,black 4%) }
+.admin-resumes-page .btn{ margin-right:.5rem }
+.admin-resumes-page .btn-ghost{ padding:.35rem .6rem }
+.admin-resumes-page .empty-note{ padding:.8rem; background:color-mix(in srgb,var(--card-bg) 92%,black 8%); border:1px solid var(--admin-divider-weak); border-radius:8px }
+
+/* Resumes page helpers: icon spacing, inputs, pager */
+.admin-resumes-page .icon { display:inline-block; width:1em; margin-right:.45rem; text-align:center; font-size:0.95rem }
+.admin-resumes-page .field-input, .admin-resumes-page .search-form input[type="text"] { padding:.45rem .6rem; border:1px solid var(--admin-border); border-radius:8px; background:var(--card-bg); }
+.admin-resumes-page .pager { font-size:0.95rem; display:flex; align-items:center; gap:.5rem }
+.admin-resumes-page .pager .pager-info { color:var(--muted) }
+.admin-resumes-page .pager .muted { color:var(--muted) }
+.admin-resumes-page .btn.btn-danger { background: color-mix(in srgb, var(--admin-danger) 8%, var(--card-bg) 92%); border:1px solid color-mix(in srgb,var(--admin-danger) 12%,var(--card-bg)88%); color: color-mix(in srgb,var(--admin-danger) 45%,black 55%); }
+.admin-resumes-page .btn.btn-danger:hover { filter: brightness(.96); }
+
+/* Row removal animation */
+.admin-resumes-page .removing { animation: removeRow .42s ease forwards; }
+@keyframes removeRow { to { opacity: 0; transform: translateX(12px) scale(.98); height: 0; margin: 0; padding: 0; } }
+
+/* Undo toast styles (small inline action) */
+.undo-toast { display:inline-flex; gap:.5rem; align-items:center; }
+.undo-toast .undo-btn { background:transparent; border:1px solid rgba(0,0,0,0.06); padding:.25rem .45rem; border-radius:6px; cursor:pointer; font-weight:700 }
+
+/* Snackbar (bottom action) */
+.snackbar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 8px 28px rgba(2,6,23,0.16); padding: .6rem .8rem; display:flex; gap:.6rem; align-items:center; z-index:40000; font-weight:600 }
+.snackbar .sb-action { background:transparent; border:1px solid rgba(0,0,0,0.06); padding:.25rem .5rem; border-radius:6px; cursor:pointer }
+
+
+/* Ensure admin submenus appear above modal/backdrop overlays and remain readable.
+	Modal/backdrops use very large z-index values (10k+ / 20k). Raise the menu z-index
+	to sit above those. If you use a build step that regenerates minified CSS, update
+	that output as well. */
 .pm-combo-menu.open { display:block; animation: submenuOpen .18s ease both }
 
 @keyframes submenuOpen {
@@ -353,6 +397,25 @@ body.admin { overflow-x: hidden; }
 #images-modal-body .show { display:block }
 #image-list { display:none }
 #image-list.show { display:block }
+.preview-collapsible-wrap { display:flex; flex-direction:column; gap:.35rem; }
+.preview-toggle { align-self:flex-end; padding:.25rem .5rem; font-size:.9rem }
+.preview-collapsible { max-height:0; overflow:hidden; transition: max-height .28s cubic-bezier(.2,.9,.25,1), opacity .2s ease; opacity:0 }
+.preview-collapsible.expanded { max-height:220px; opacity:1 }
+.preview-collapsible .preview-img { width:100%; height:80px; object-fit:cover; border-radius:6px }
+
+/* Flash highlight for newly added item rows */
+.new-item-flash { animation: newItemFlash 1.6s ease-in-out; }
+@keyframes newItemFlash {
+	0% { background-color: rgba(56, 189, 248, 0.12); }
+	40% { background-color: rgba(56, 189, 248, 0.06); }
+	100% { background-color: transparent; }
+}
+
+/* caret rotation for preview toggle */
+.preview-toggle { display:inline-flex; align-items:center; gap:.4rem }
+.preview-toggle .caret { transition: transform .22s ease; transform-origin: center; }
+.preview-toggle.open .caret { transform: rotate(180deg); }
+.preview-toggle .preview-label { font-size: .95rem }
 .menu-preview { flex:1; min-width:300px; max-width:480px }
 .mt-0 { margin-top:0 !important }
 .pl-1 { padding-left:1rem !important }

@@ -761,6 +761,7 @@
   // Menu admin: render editable sections with items, add/delete/reorder, and save whole array
   function initMenuAdmin(){
     const container = document.getElementById('menu-admin');
+    console.debug && console.debug('initMenuAdmin: container=', container);
     if (!container) return;
     let listEl = document.getElementById('menu-list');
     const addBtn = document.getElementById('add-menu-item');
@@ -783,6 +784,11 @@
         { title: "Large Units", id: 'large-units', items: [] }
       ];
     }
+  console.debug && console.debug('initMenuAdmin: menuData.length=', menuData.length, 'rawMenu=', rawMenu);
+  // Ensure each section has a stable id before rendering so persisted
+  // expanded/collapsed state matches current sections. Use index-based
+  // ids for any missing ones to avoid time-based churn between renders.
+  menuData.forEach(function(s, i){ if (!s.id) s.id = 'section-' + (s.title ? s.title.replace(/\s+/g,'-').toLowerCase() : 'idx') + '-' + i; });
 
   function makeInput(value, placeholder){ const i = document.createElement('input'); i.type='text'; i.value = value || ''; i.placeholder = placeholder || ''; i.className = 'field-input'; return i; }
   function makeTextarea(value, placeholder){ const t = document.createElement('textarea'); t.value = value || ''; t.placeholder = placeholder || ''; t.className = 'field-textarea min-h-60'; return t; }
@@ -798,12 +804,15 @@
   let lastAdded = null;
 
     function render(){
+      console.debug && console.debug('menu.render: about to render; menuData.length=', menuData.length);
       listEl.innerHTML = '';
       if (!menuData.length) {
         const hint = document.createElement('div'); hint.textContent = 'No sections yet. Click "Add Section" to create one.'; hint.className = 'muted'; listEl.appendChild(hint);
       }
 
       // render sections
+  // Build a quick set of current section ids so we can detect stale stored state
+  const currentIds = new Set(menuData.map(s => s.id));
   menuData.forEach((section, sidx) => {
         // ensure each section has a stable id to track collapsed state across renders
         if (!section.id) {
@@ -958,6 +967,9 @@
             }
             if (!Array.isArray(it.prices)) it.prices = [];
 
+            // legacy scalar price input placeholder (may remain null)
+            let priceIn = null;
+
             const priceContainer = document.createElement('div'); priceContainer.className = 'price-entries mt-03';
             const renderPriceEntries = function() {
               priceContainer.innerHTML = '';
@@ -1086,8 +1098,15 @@
           itemsWrap.appendChild(row);
         });
 
-        // honor persisted expanded state: default collapsed (not expanded)
-        const isExpanded = expandedSections.has(sectionId);
+        // honor persisted expanded state: if the user has never stored a
+        // preference (no keys in localStorage), default to expanded so the
+        // Units Management UI is visible and discoverable. If the user has
+        // previously toggled sections, respect that stored state.
+  // If localStorage contains expanded-section ids but none of them
+  // correspond to current section ids (stale format or previous scheme),
+  // treat sections as expanded by default to avoid hiding content.
+  const storedHasMatch = Array.from(expandedSections).some(id => currentIds.has(id));
+  const isExpanded = (expandedSections.size === 0) || (!storedHasMatch) || expandedSections.has(sectionId);
         if (!isExpanded) {
           itemsWrap.classList.remove('expanded');
           toggleBtn.setAttribute('aria-expanded','false');
@@ -1246,6 +1265,20 @@
 
     if (addBtn) addBtn.addEventListener('click', ()=>{ menuData.push({ title:'New Section', id:'section-'+Date.now(), items:[] }); render(); });
     render();
+
+    // Visibility safeguard: some pages/CSS combinations can leave the
+    // `#menu-list` visually collapsed. Ensure it has a sensible min-height
+    // and show a helpful hint if rendering produced no visible children.
+    try {
+      if (listEl) {
+        if (!listEl.style.minHeight) listEl.style.minHeight = '140px';
+        // if render failed to populate children for any reason, show a hint
+        if (!listEl.children || listEl.children.length === 0) {
+          const fallback = document.createElement('div'); fallback.className = 'empty-note'; fallback.textContent = 'Menu editor ready — click "Add Unit Category" to create a section.';
+          listEl.appendChild(fallback);
+        }
+      }
+    } catch (e) { /* non-fatal */ }
   }
 
   // initialize menu admin if present

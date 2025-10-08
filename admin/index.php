@@ -178,6 +178,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     header('Location: index.php'); exit;
   }
+  
+  // Permanently delete all files in the archived resumes directory
+  if ($action === 'empty_resume_archive') {
+    $archDir = dirname(__DIR__) . '/../private_data/resumes/archived/';
+    if (is_dir($archDir)) {
+      $files = glob(rtrim($archDir, '/') . '/*');
+      if ($files) {
+        foreach ($files as $f) {
+          if (is_file($f)) {
+            $name = basename($f);
+            @unlink($f);
+            // write audit line
+            $audit = [
+              'timestamp' => function_exists('eastern_now') ? eastern_now('c') : date('c'),
+              'admin' => $_SESSION['admin_user'] ?? ($_SESSION['admin_logged_in'] ? 'admin' : 'unknown'),
+              'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+              'action' => 'empty_archive_delete',
+              'archived_filename' => $name,
+            ];
+            $logDir = dirname(__DIR__) . '/data';
+            if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+            $logFile = $logDir . '/resume-deletions.log';
+            @file_put_contents($logFile, json_encode($audit, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+          }
+        }
+      }
+    }
+    header('Location: index.php'); exit;
+  }
   // export all (live + archives)
   if ($action === 'download_all_csv' || $action === 'download_all_json') {
     $entries = load_entries($APPLICATIONS_FILE, $LEGACY_MESSAGES_FILE);
@@ -478,6 +507,7 @@ header('Content-Type: text/html; charset=utf-8');
                 <div class="topbar">
                   <a href="../" class="btn btn-ghost" target="_blank">View site</a>
                   <a href="email-scheduler.php" class="btn btn-ghost ml-025">Email Scheduler</a>
+                  <a href="admin-resumes.php" class="btn btn-ghost ml-025">Resumes</a>
                 </div>
               </div>
             </div>
@@ -522,19 +552,7 @@ header('Content-Type: text/html; charset=utf-8');
                       <form method="post" class="m-0" data-confirm="Clear quote audit? This will remove recent audit entries. Continue?">
                         <?php echo csrf_input_field(); ?>
                         <input type="hidden" name="action" value="clear_quote_audit">
-                <div class="pm-item">
-                    <div class="pm-combo">
-                    <button type="button" class="btn btn-ghost pm-combo-toggle" aria-expanded="false"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4zM8 10v6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Resume Management ▾</button>
-                    <div class="pm-combo-menu">
-                      <a href="admin-resumes.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/></svg></span>View archived resumes</a>
-                      <form method="post" class="pm-subitem" data-confirm="Permanently delete all archived resumes?">
-                        <?php echo csrf_input_field(); ?>
-                        <input type="hidden" name="action" value="empty_resume_archive">
-                        <button type="submit" class="pm-subitem btn btn-link">Empty archive</button>
-                      </form>
-                    </div>
-                  </div>
-                </div>
+                <!-- Resume Management moved to topbar -> admin-resumes.php -->
                         <button type="submit" class="btn btn-danger-muted pm-subitem-full"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 7h12M9 7v10M15 7v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clear quote audit</button>
                       </form>
                       <form method="post" class="m-0">
@@ -571,6 +589,8 @@ header('Content-Type: text/html; charset=utf-8');
           </div>
         </div>
     <!-- SMTP settings moved to smtp-settings.php -->
+
+    
 
     <h1>Job Applications</h1>
     <form method="get" class="search-form">
@@ -644,7 +664,49 @@ header('Content-Type: text/html; charset=utf-8');
     <div id="menu-admin-wrap" class="menu-admin-wrap">
   <div id="menu-admin" class="flex-1">
   <div class="mb-05"><button id="add-menu-item" type="button" class="btn btn-primary">Add Unit Category</button></div>
-        <div id="menu-list"></div>
+        <div id="menu-list">
+          <?php
+            // Server-side fallback: render the current menu so the admin can
+            // view existing sections even if JS is not running or fails. This
+            // is a minimal, read-only rendering to aid discoverability.
+            $menu = $siteContent['menu'] ?? [];
+            if (is_array($menu) && count($menu)) {
+              foreach ($menu as $sec) {
+                $stitle = htmlspecialchars($sec['title'] ?? ($sec['id'] ?? 'Section'));
+                // optionally emit a data-section-id attribute when available so
+                // the client-side editor can correlate persisted state with
+                // server-rendered sections
+                $secIdAttr = '';
+                if (!empty($sec['id'])) {
+                  $secIdAttr = ' data-section-id="' . htmlspecialchars($sec['id']) . '"';
+                }
+                echo '<div class="section-wrap"' . $secIdAttr . '>';
+                echo '<div class="menu-section-header"><div class="flex-1"><strong>' . $stitle . '</strong></div></div>';
+                $items = [];
+                if (isset($sec['items']) && is_array($sec['items'])) { $items = $sec['items']; }
+                elseif (is_array($sec)) { $items = $sec; }
+                // Wrap items in the same class the client uses and add the
+                // `expanded` class so the fallback is visible even when JS is
+                // not running or when CSS collapse rules are in effect.
+                if (!empty($items)) {
+                  echo '<div class="menu-section-items expanded">';
+                  echo '<ul class="small m-0 pl-1">';
+                  foreach ($items as $it) {
+                    $label = is_array($it) ? ($it['title'] ?? ($it['name'] ?? '')) : (string)$it;
+                    echo '<li>' . htmlspecialchars($label) . '</li>';
+                  }
+                  echo '</ul>';
+                  echo '</div>';
+                } else {
+                  echo '<div class="menu-section-items expanded"><div class="small muted">No items</div></div>';
+                }
+                echo '</div>';
+              }
+            } else {
+              echo '<div class="empty-note">Menu editor ready — click "Add Unit Category" to create a section.</div>';
+            }
+          ?>
+        </div>
       </div>
       <div id="menu-preview" class="menu-preview">
         <h3 class="mt-0">Live Preview</h3>
@@ -920,6 +982,33 @@ header('Content-Type: text/html; charset=utf-8');
       })();
     </script>
     <script src="/assets/js/admin.js"></script>
+    <script>
+      // Defensive: if a profile/admin menu is left open due to earlier debug changes
+      // or race conditions, close it and ensure clicking outside or Escape will close it.
+      (function(){
+        try {
+          var profileBtn = document.getElementById('profile-btn');
+          var profileMenu = document.getElementById('profile-menu');
+          if (profileMenu) {
+            // remove any forced show-block class that might have been left
+            profileMenu.classList.remove('show-block');
+            // ensure aria-expanded on button reflects closed state
+            if (profileBtn) profileBtn.setAttribute('aria-expanded','false');
+            // click outside to close
+            document.addEventListener('click', function(e){
+              if (!profileMenu.classList.contains('show-block')) return;
+              if (!profileBtn.contains(e.target) && !profileMenu.contains(e.target)) {
+                profileMenu.classList.remove('show-block');
+                if (profileBtn) profileBtn.setAttribute('aria-expanded','false');
+              }
+            });
+            // Escape to close
+            document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { if (profileMenu.classList.contains('show-block')) { profileMenu.classList.remove('show-block'); if (profileBtn) profileBtn.setAttribute('aria-expanded','false'); } } });
+          }
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
+    
 
     <script>
       // lightweight toast (works even if admin.js scope doesn't expose showToast)

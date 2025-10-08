@@ -35,7 +35,7 @@
             var card = btn.closest('.menu-card'); if (!card) return;
             var expanded = card.classList.toggle('expanded');
             btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-            var label = btn.querySelector('.expand-label'); if (label) label.textContent = expanded ? 'Less' : 'View All';
+            var label = btn.querySelector('.expand-label'); if (label) label.textContent = expanded ? 'Show less' : 'See all units';
             return expanded;
         }
 
