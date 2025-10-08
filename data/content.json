@@ -22,7 +22,7 @@
     },
     "about": {
         "heading": "About Midway Mobile Storage",
-        "body": "Midway Mobile Storage provides secure, convenient mobile storage solutions for residents and businesses in the Midway area. We offer flexible unit sizes, month-to-month rentals, and friendly local service."
+        "body": "Founded in 1988 by Zeno Marshall Jr, Midway Mobile Storage hase been revolutionizing the storage business ever since. Having started with storage sales, MMS started renting their growing fleet of trailers and containers in 1989. Ever since then MMS has provided safe and  clean storage options, offering professional rental services to anyone who needs them. Midway Mobile Storage is a member of the National Portable Storage Association."
     },
     "units": [
         {
@@ -44,7 +44,7 @@
             "price": "110"
         }
     ],
-    "last_updated": "2025-10-08 06:54:25",
+    "last_updated": "2025-10-08 19:41:00",
     "hours": {
         "monday": "10:00 AM - 3:00 PM",
         "tuesday": "10:00 AM - 3:00 PM",

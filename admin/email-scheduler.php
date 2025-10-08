@@ -8,27 +8,11 @@ header('Content-Type: text/html; charset=utf-8');
 <html lang="en">
 <head>
     <title>Email Scheduler Admin</title>
-    <!-- use admin brand styles plus page-specific lightweight overrides -->
+    <!-- use admin brand styles; head partial provides CSS/JS includes -->
     <?php require_once __DIR__ . '/partials/head.php'; ?>
-    <?php require_once __DIR__ . '/partials/head.php'; ?>
-    <style>
-        /* lightweight page overrides kept minimal; prefer admin.css for branding */
-        .container{max-width:1100px;margin:20px auto;padding:20px}
-        .tabs{display:flex;gap:8px;margin:16px 0}
-        .tab{padding:8px 14px;border-radius:6px;background:transparent;border:none;cursor:pointer}
-        .tab.active{background:var(--accent);color:var(--card-bg)}
-        .tab-content{display:none;background:var(--card-bg);padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.04)}
-        .tab-content.active{display:block}
-        .campaign-card{border:1px solid var(--admin-border);padding:12px;border-radius:6px;background:var(--card-bg);margin-bottom:12px}
-        /* prefer admin button styles */
-        .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
-        .btn-primary{background:var(--accent);color:var(--card-bg)}
-        .btn-ghost{background:transparent;border:1px solid rgba(15,23,42,0.06)}
-        .mb-05 { margin-bottom:.5rem }
-    </style>
 </head>
 <body class="admin">
-    <div class="container">
+    <div class="page-wrap">
         <div class="admin-card">
             <div class="admin-card-header header-row">
                 <div class="header-left">
@@ -42,7 +26,6 @@ header('Content-Type: text/html; charset=utf-8');
                     <a href="/admin/index.php" class="btn btn-ghost">Back to dashboard</a>
                 </div>
             </div>
-        </div>
 
         <div class="admin-card-body">
             <div class="top-actions">

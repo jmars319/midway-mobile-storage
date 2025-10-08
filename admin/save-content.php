@@ -28,6 +28,26 @@ checkAuth();
 
 header('Content-Type: application/json');
 
+// Lightweight debug logger for admin save attempts. Writes minimal entries
+// to data/admin-save.log to help diagnose save failures (CSRF, JSON, write)
+function admin_save_log($event, $meta = []) {
+    $logDir = __DIR__ . '/../data';
+    if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+    $file = $logDir . '/admin-save.log';
+    $entry = [
+        'ts' => (function_exists('eastern_now') ? eastern_now('c') : date('c')),
+        'event' => $event,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+    ];
+    if (is_array($meta) && count($meta)) {
+        // avoid logging raw tokens or large payloads
+        if (isset($meta['csrf'])) $meta['csrf_len'] = strlen((string)$meta['csrf']);
+        unset($meta['csrf']);
+        $entry['meta'] = $meta;
+    }
+    @file_put_contents($file, json_encode($entry, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+}
+
 // recursive merge: values from $b overwrite or merge into $a
 function array_recursive_merge($a, $b) {
     foreach ($b as $k => $v) {
@@ -53,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $raw = file_get_contents('php://input');
         $json = $raw ? json_decode($raw, true) : null;
         if (!is_array($json)) {
+            admin_save_log('invalid_json', ['len' => strlen((string)$raw)]);
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid JSON payload']);
             exit;
@@ -69,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!verify_csrf_token($csrf)) {
+        admin_save_log('csrf_failed', ['csrf' => $csrf]);
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
         exit;
@@ -119,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         elseif (!is_array($qopt)) $val = $qopt;
                                         $qclean = preg_replace('/[^0-9\-]/', '', (string)$val);
                                         if ($qclean === '' || !is_numeric($qclean)) {
+                                            admin_save_log('invalid_quantity_option', ['section'=>$section,'item'=>($item['title']??'unknown')]);
                                             http_response_code(400);
                                             echo json_encode(['success' => false, 'message' => 'Invalid quantity option for item: ' . ($item['title'] ?? 'unknown')]);
                                             exit;
@@ -135,6 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         if (is_array($qopt) && isset($qopt['price'])) {
                                             $raw = preg_replace('/[^0-9\.\-]/', '', (string)$qopt['price']);
                                             if ($raw === '' || !is_numeric($raw)) {
+                                                admin_save_log('invalid_price_quantity_option', ['section'=>$section,'item'=>($item['title']??'unknown')]);
                                                 http_response_code(400);
                                                 echo json_encode(['success' => false, 'message' => 'Invalid price for quantity option in item: ' . ($item['title'] ?? 'unknown')]);
                                                 exit;
@@ -173,6 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         if (!is_array($pentry)) $pentry = ['amount' => (string)$pentry];
                                         $rawAmt = isset($pentry['amount']) ? preg_replace('/[^0-9\.\-]/', '', (string)$pentry['amount']) : '';
                                         if ($rawAmt === '' || !is_numeric($rawAmt)) {
+                                            admin_save_log('invalid_price_amount', ['section'=>$section,'item'=>($item['title']??'unknown')]);
                                             http_response_code(400);
                                             echo json_encode(['success' => false, 'message' => 'Invalid price amount for item: ' . ($item['title'] ?? 'unknown')]);
                                             exit;
@@ -189,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     // Backwards compatibility: single price -> prices[ { amount } ]
                                     $clean = preg_replace('/[^0-9\.\-]/', '', (string)$item['price']);
                                     if ($clean === '' || !is_numeric($clean)) {
+                                        admin_save_log('invalid_price_single', ['section'=>$section,'item'=>($item['title']??'unknown')]);
                                         http_response_code(400);
                                         echo json_encode(['success' => false, 'message' => 'Invalid price for item: ' . ($item['title'] ?? 'unknown')]);
                                         exit;
@@ -227,6 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $json = json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     if ($json === false) {
+        admin_save_log('json_encode_failed', ['section'=>$section]);
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Failed to encode content to JSON']);
         exit;
@@ -234,9 +261,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tmp = $contentFile . '.tmp';
     if (file_put_contents($tmp, $json, LOCK_EX) !== false && @rename($tmp, $contentFile)) {
         @chmod($contentFile, 0640);
+        admin_save_log('save_success', ['section'=>$section, 'timestamp'=>$content['last_updated']]);
         echo json_encode(['success' => true, 'message' => 'Content saved successfully!', 'timestamp' => $content['last_updated']]);
     } else {
         @unlink($tmp);
+        admin_save_log('save_failed', ['section'=>$section]);
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Failed to save content. Check file permissions.']);
     }

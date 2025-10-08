@@ -104,10 +104,15 @@ header('Content-Type: text/html; charset=utf-8');
               <button type="submit" class="btn">Filter</button>
             </form>
 
-            <div class="ml-auto">
-              <a class="btn btn-ghost" href="upload-audit.php?download=csv">Download CSV</a>
-              <a class="btn btn-ghost" href="upload-audit.php?download=json">Download JSON</a>
-            </div>
+              <div class="ml-auto">
+  <?php if ($total > 0): ?>
+                <a class="btn btn-ghost" href="upload-audit.php?download=csv">Download CSV <span class="small muted">(<?php echo (int)$total; ?>)</span></a>
+                <a class="btn btn-ghost" href="upload-audit.php?download=json">Download JSON <span class="small muted">(<?php echo (int)$total; ?>)</span></a>
+  <?php else: ?>
+                <span class="btn btn-ghost" aria-disabled="true" title="No entries">Download CSV <span class="small muted">(0)</span></span>
+                <span class="btn btn-ghost" aria-disabled="true" title="No entries">Download JSON <span class="small muted">(0)</span></span>
+  <?php endif; ?>
+              </div>
           </div>
 
     <?php if (empty($filtered)): ?>

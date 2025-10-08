@@ -15,6 +15,9 @@ if (file_exists($auditFile)) {
     if (!is_array($entries)) $entries = [];
 }
 
+// counts for server-side rendering
+$quote_count = is_array($entries) ? count($entries) : 0;
+
 // downloads
 if (isset($_GET['download']) && $_GET['download'] === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
@@ -70,8 +73,13 @@ header('Content-Type: text/html; charset=utf-8');
         <div class="admin-card-body">
           <div class="top-actions">
             <div class="ml-auto">
-              <a class="btn btn-ghost" href="quote-audit.php?download=csv">Download CSV</a>
-              <a class="btn btn-ghost" href="quote-audit.php?download=json">Download JSON</a>
+<?php if ($quote_count > 0): ?>
+              <a class="btn btn-ghost" href="quote-audit.php?download=csv">Download CSV <span class="small muted">(<?php echo $quote_count; ?>)</span></a>
+              <a class="btn btn-ghost" href="quote-audit.php?download=json">Download JSON <span class="small muted">(<?php echo $quote_count; ?>)</span></a>
+<?php else: ?>
+              <span class="btn btn-ghost" aria-disabled="true" title="No audit entries">Download CSV <span class="small muted">(0)</span></span>
+              <span class="btn btn-ghost" aria-disabled="true" title="No audit entries">Download JSON <span class="small muted">(0)</span></span>
+<?php endif; ?>
             </div>
           </div>
 

@@ -118,6 +118,9 @@
 
   const siteContent = window.__siteContent || {};
   const schemaUrl = window.__schemaUrl || 'content-schemas.json';
+  const adminPreview = document.getElementById('admin-content-preview');
+  const previewLastUpdated = document.getElementById('preview-last-updated');
+  const togglePreviewBtn = document.getElementById('toggle-preview');
 
   let schemas = {};
 
@@ -251,7 +254,48 @@
       const fld = renderField(f, val);
       schemaFields.appendChild(fld);
     });
+    // After rendering fields, wire live preview updates from inputs
+    updatePreviewFromForm(sec);
   }
+
+  function renderAdminPreview(sec, values){
+    if (!adminPreview) return;
+    // Simple render for common fields (heading/body). Fallback to JSON dump.
+    let html = '';
+    if (sec === 'about') {
+      const heading = (values && values.heading) ? values.heading : (siteContent.about && siteContent.about.heading ? siteContent.about.heading : '');
+      const body = (values && values.body) ? values.body : (siteContent.about && siteContent.about.body ? siteContent.about.body : '');
+      html += '<h4>' + (heading ? escapeHtml(heading) : '') + '</h4>';
+      if (body) {
+        if (body.indexOf('<') !== -1) html += '<div>' + body + '</div>'; else html += '<div>' + nl2br(escapeHtml(body)) + '</div>';
+      } else html += '<div class="muted small">No content</div>';
+    } else {
+      html = '<pre class="small">' + escapeHtml(JSON.stringify(values || siteContent[sec] || {}, null, 2)) + '</pre>';
+    }
+    adminPreview.innerHTML = html;
+    // update last-updated if available
+    if (previewLastUpdated && window.__siteContent && window.__siteContent.last_updated) {
+      previewLastUpdated.textContent = 'Last updated: ' + window.__siteContent.last_updated;
+    }
+  }
+
+  function updatePreviewFromForm(sec){
+    if (!schemaFields) return;
+    const inputs = schemaFields.querySelectorAll('[name]');
+    function gather(){
+      const out = {};
+      inputs.forEach(inp=>{ out[inp.name] = inp.value; });
+      renderAdminPreview(sec, out);
+    }
+    inputs.forEach(i=> i.addEventListener('input', gather));
+    // initial render
+    gather();
+  }
+
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function nl2br(s){ return String(s).replace(/\r?\n/g, '<br>'); }
+
+  if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', function(){ const wrap = document.getElementById('admin-preview-wrap'); if (!wrap) return; if (wrap.classList.contains('hidden')){ wrap.classList.remove('hidden'); this.textContent='Hide Preview'; } else { wrap.classList.add('hidden'); this.textContent='Show Preview'; } });
 
   function populateSections(){
     if (!sectionSelect) return;
@@ -285,10 +329,15 @@
       });
       const csrf = (document.querySelector('input[name="csrf_token"]') || {}).value || window.__csrfToken || '';
       const body = { section: sec, content: out, csrf_token: csrf };
-      fetch('save-content.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      fetch('save-content.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify(body) })
         .then(r=>r.json()).then(j=>{
-          if (j && j.success) { showToast('Saved', 'success'); window.__siteContent[sec] = out; }
-          else showToast('Save failed: '+(j.message||'unknown'),'error');
+          if (j && j.success) {
+            showToast('Saved', 'success');
+            window.__siteContent = window.__siteContent || {};
+            window.__siteContent[sec] = out;
+            if (j.timestamp) window.__siteContent.last_updated = j.timestamp;
+            renderAdminPreview(sec, out);
+          } else showToast('Save failed: '+(j.message||'unknown'),'error');
         }).catch(err=> showToast('Save error: '+err.message,'error'));
     });
   }
@@ -1286,7 +1335,7 @@
           }
         }
         const body = { section: 'menu', content: menuData, csrf_token: csrf };
-        const res = await fetch('save-content.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const res = await fetch('save-content.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify(body) });
         const j = await res.json();
         if (j && j.success) { window.__siteContent = window.__siteContent || {}; window.__siteContent.menu = JSON.parse(JSON.stringify(menuData)); showToast('Menu saved', 'success'); }
         else showToast('Save failed: '+(j && j.message ? j.message : 'unknown'),'error');

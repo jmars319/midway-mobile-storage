@@ -531,9 +531,26 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             ?>
             <div class="about-grid">
                 <div>
-                    <h2 class="section-title">About Midway Mobile Storage</h2>
-                    <p class="mb-4">Midway Mobile Storage provides secure, convenient mobile storage solutions for residents and businesses in the Midway area.</p>
-                    <p>We offer flexible unit sizes, month-to-month rentals, and friendly local service. If you'd like to see our location or get directions, use the map to the right or click "Open map" below.</p>
+                    <?php
+                        // Render About content from the editable content store when available.
+                        $aboutHeading = getContent($content, 'about.heading', 'About Midway Mobile Storage');
+                        $aboutBody = getContent($content, 'about.body', '');
+                    ?>
+                    <h2 class="section-title"><?php echo htmlspecialchars($aboutHeading); ?></h2>
+                    <?php
+                        if (is_string($aboutBody) && trim($aboutBody) !== '') {
+                            // If admin provided HTML (contains a '<'), render raw HTML. Otherwise escape and preserve line breaks.
+                            if (strpos($aboutBody, '<') !== false) {
+                                echo $aboutBody;
+                            } else {
+                                echo '<p class="mb-4">' . nl2br(htmlspecialchars($aboutBody)) . '</p>';
+                            }
+                        } else {
+                            // Fallback copy if no content provided
+                            echo '<p class="mb-4">Midway Mobile Storage provides secure, convenient mobile storage solutions for residents and businesses in the Midway area.</p>';
+                            echo '<p>We offer flexible unit sizes, month-to-month rentals, and friendly local service. If you\'d like to see our location or get directions, use the map to the right or click "Open map" below.</p>';
+                        }
+                    ?>
                     <?php
                         // Prepare map links (open map and directions)
                         if ($bizAddress) {

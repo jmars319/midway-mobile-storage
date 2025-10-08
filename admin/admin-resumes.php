@@ -128,6 +128,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
+// Support downloads via GET: csv or json list of archived resumes
+if (isset($_GET['download'])) {
+  $fmt = $_GET['download'];
+  $files = [];
+  $glob = glob($archDir . '*');
+  if ($glob) {
+    foreach ($glob as $f) {
+      if (!is_file($f)) continue;
+      $name = basename($f);
+      if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $name)) continue;
+      $files[] = [ 'name' => $name, 'size' => filesize($f), 'mtime' => filemtime($f) ];
+    }
+  }
+  // If there are no archived resumes, redirect back with a friendly message
+  if (empty($files)) {
+    header('Location: admin-resumes.php?msg=no_resumes');
+    exit;
+  }
+  if ($fmt === 'csv') {
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="archived-resumes.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['filename','size_bytes','archived_at']);
+    foreach ($files as $r) { fputcsv($out, [$r['name'], $r['size'], date('c', $r['mtime'])]); }
+    fclose($out); exit;
+  }
+  if ($fmt === 'json') {
+    header('Content-Type: application/json');
+    echo json_encode(array_values($files), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    exit;
+  }
+}
+
+// Handle purge-old (move archived files older than N days to trash)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'purge_old') {
+  $token = $_POST['csrf_token'] ?? '';
+  if (!verify_csrf($token)) { header('HTTP/1.1 400 Bad Request'); echo 'Invalid CSRF token'; exit; }
+  $days = isset($_POST['days']) ? max(1, (int)$_POST['days']) : 30;
+  $now = time();
+  $trashDir = dirname(__DIR__) . '/../private_data/resumes/trashed/';
+  if (!is_dir($trashDir)) @mkdir($trashDir, 0755, true);
+  $moved = 0;
+  $glob = glob($archDir . '*');
+  if ($glob) {
+    foreach ($glob as $f) {
+      if (!is_file($f)) continue;
+      if (($now - filemtime($f)) > ($days * 86400)) {
+        $name = basename($f);
+        $uniq = time() . '_' . bin2hex(random_bytes(6));
+        $trashName = $uniq . '__' . $name;
+        $trashPath = rtrim($trashDir, '/') . '/' . $trashName;
+        if (@rename($f, $trashPath)) {
+          append_resume_audit([
+            'timestamp' => function_exists('eastern_now') ? eastern_now('c') : date('c'),
+            'admin' => $_SESSION['admin_user'] ?? ($_SESSION['admin_logged_in'] ? 'admin' : 'unknown'),
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'action' => 'purge_old',
+            'archived_filename' => $name,
+            'trash_name' => $trashName,
+            'trash_path' => $trashPath,
+          ]);
+          $moved++;
+        }
+      }
+    }
+  }
+  // redirect back with a simple query message
+  header('Location: admin-resumes.php?purged=' . $moved); exit;
+}
+
 $files = [];
 $glob = glob($archDir . '*');
 if ($glob) {
@@ -175,9 +245,19 @@ $page_files = array_slice($files, $offset, $per_page);
   <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body class="admin-resumes-page admin">
-  <main class="container">
-    <h1>Archived Resumes</h1>
-    <p class="small-path">Archive directory: <?php echo htmlspecialchars($archDir); ?></p>
+  <div class="page-wrap">
+    <div class="admin-card">
+      <div class="admin-card-header header-row">
+        <div class="header-left">
+          <h1 class="admin-card-title m-0">Archived Resumes</h1>
+          <p class="muted small">Archive directory: <?php echo htmlspecialchars($archDir); ?></p>
+        </div>
+        <div class="top-actions">
+          <a href="index.php" class="btn btn-ghost">Back to dashboard</a>
+        </div>
+      </div>
+      <div class="admin-card-body">
+        <main class="container">
 
     <form method="get" class="search-form" style="margin-top:.6rem;display:flex;gap:.5rem;align-items:center;">
       <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search filename..." class="field-input">
@@ -260,8 +340,53 @@ $page_files = array_slice($files, $offset, $per_page);
         </div>
       </div>
     <?php endif; ?>
-
-    <p><a href="index.php">Back to admin</a></p>
-  </main>
+        </main>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
+
+  <script>
+    (function(){
+      try{
+        var params = new URLSearchParams(window.location.search);
+        var msgs = [];
+        if (params.has('purged')) {
+          var n = parseInt(params.get('purged')||'0',10);
+          msgs.push(n ? (n + ' archived resume' + (n===1? '' : 's') + ' moved to trash') : 'No archived resumes were moved');
+        }
+        if (params.has('restored')) {
+          var r = parseInt(params.get('restored')||'0',10);
+          msgs.push(r ? (r + ' trashed resume' + (r===1? '' : 's') + ' restored') : 'No resumes restored');
+        }
+        if (msgs.length === 0) return;
+        var container = document.getElementById('toast-container');
+        if (!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+        var el = document.createElement('div'); el.className = 'toast success'; el.textContent = msgs.join(' — ');
+        container.appendChild(el);
+        setTimeout(function(){ el.classList.add('fade-out'); setTimeout(function(){ el.remove(); }, 350); }, 3500);
+        // remove query params without reloading
+        var url = new URL(window.location.href);
+        url.searchParams.delete('purged'); url.searchParams.delete('restored');
+        history.replaceState({}, '', url.toString());
+      } catch(e){ /* no-op */ }
+    })();
+  </script>
+
+      <script>
+        // show a friendly message when redirected back due to no resumes being available
+        (function(){
+          try {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('msg') === 'no_resumes') {
+              var c = document.getElementById('toast-container');
+              if (!c) { c = document.createElement('div'); c.id = 'toast-container'; document.body.appendChild(c); }
+              var el = document.createElement('div'); el.className = 'toast error'; el.textContent = 'No archived resumes found.';
+              c.appendChild(el);
+              setTimeout(function(){ el.classList.add('fade-out'); setTimeout(function(){ el.remove(); }, 350); }, 3500);
+              var url = new URL(window.location.href); url.searchParams.delete('msg'); history.replaceState({}, '', url.toString());
+            }
+          } catch(e) { /* no-op */ }
+        })();
+      </script>
