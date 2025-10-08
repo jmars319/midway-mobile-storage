@@ -19,8 +19,39 @@
     const c = document.getElementById('toast-container');
     if (!c) return;
     const el = document.createElement('div'); el.className='toast '+(type==='success'? 'success': type==='error' ? 'error':''); el.textContent=msg;
-  c.appendChild(el);
-  setTimeout(()=>{ el.classList.add('fade-out'); setTimeout(()=>el.remove(),350) }, timeout);
+    c.appendChild(el);
+    setTimeout(()=>{ el.classList.add('fade-out'); setTimeout(()=>el.remove(),350) }, timeout);
+  }
+
+  // Show a toast with an Undo action that restores a trashed image if clicked.
+  // `trashName` is the filename returned by delete-image.php as `trash`.
+  function showUndoToast(msg, trashName, timeout=8000){
+    const c = document.getElementById('toast-container'); if (!c) return;
+    const el = document.createElement('div'); el.className='toast success';
+    const span = document.createElement('span'); span.textContent = msg + ' ';
+    el.appendChild(span);
+    const undo = document.createElement('button'); undo.type='button'; undo.className='btn btn-ghost small'; undo.textContent='Undo';
+    el.appendChild(undo);
+    c.appendChild(el);
+
+    let undone = false;
+    const doRestore = async () => {
+      if (undone) return;
+      undone = true;
+      const fd = new FormData(); fd.append('trash_name', trashName); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
+      try {
+        const r = await fetch('restore-image.php', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (j && j.success) { showToast('Restored', 'success'); refreshPerSectionLists(); refreshImageList(); }
+        else { showToast('Restore failed: ' + (j && j.message ? j.message : 'unknown'), 'error'); }
+      } catch (e) { showToast('Restore failed','error'); }
+      // fade out immediately after action
+      el.classList.add('fade-out'); setTimeout(()=>el.remove(),350);
+    };
+
+    undo.addEventListener('click', doRestore);
+    // auto-dismiss after timeout if no action
+    setTimeout(()=>{ if (!undone) { el.classList.add('fade-out'); setTimeout(()=>el.remove(),350); } }, timeout);
   }
   function showConfirm(message){
     return new Promise((resolve)=>{
@@ -412,10 +443,10 @@
     img.onerror = function(){ this.onerror=null; this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
   const name = document.createElement('div'); name.textContent = rel; name.className = 'flex-1 text-ellipsis';
         const del = document.createElement('button'); del.type='button'; del.textContent='Move to Trash'; del.className='btn btn-danger-muted'; del.addEventListener('click', async ()=>{
-          if (!await showConfirm('Delete '+rel+'?')) return;
+          if (!await showConfirm('Move to Trash: '+rel+'?')) return;
           const fd = new FormData(); fd.append('filename', rel); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
           fetch('delete-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(res=>{
-            if (res && res.success) { refreshImageList(); showToast('Moved to trash','success'); }
+            if (res && res.success) { refreshImageList(); showUndoToast('Moved to trash', res && res.trash ? res.trash : '', 8000); }
             else showToast('Delete failed: '+(res && res.message ? res.message : 'unknown'),'error');
           }).catch(()=>{ showToast('Delete failed','error'); });
         });
@@ -509,10 +540,10 @@
             const name = document.createElement('div'); name.textContent = rel; name.className = 'meta-name';
             meta.appendChild(name);
             const del = document.createElement('button'); del.type='button'; del.className='btn btn-danger-muted'; del.textContent='Delete'; del.addEventListener('click', async (ev)=>{
-              ev.preventDefault(); ev.stopPropagation(); if (!await showConfirm('Delete '+rel+'?')) return;
+              ev.preventDefault(); ev.stopPropagation(); if (!await showConfirm('Move to Trash: '+rel+'?')) return;
               const fd = new FormData(); fd.append('filename', rel); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
               fetch('delete-image.php', { method: 'POST', body: fd }).then(r=>r.json()).then(res=>{
-                if (res && res.success) { showToast('Moved to trash','success'); refreshPerSectionLists(); refreshImageList(); }
+                if (res && res.success) { showUndoToast('Moved to trash', res && res.trash ? res.trash : '', 8000); refreshPerSectionLists(); refreshImageList(); }
                 else showToast('Delete failed: '+(res && res.message ? res.message : 'unknown'),'error');
               }).catch(()=>{ showToast('Delete failed','error'); });
             });
@@ -739,11 +770,11 @@
   const row = document.createElement('div'); row.className = 'flex-row-sm';
   const img = document.createElement('img'); img.src = f.url; img.className = 'img-120x80'; img.onerror = function(){ this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
   const meta = document.createElement('div'); meta.className = 'image-meta'; meta.textContent = f.relative;
-        const del = document.createElement('button'); del.type='button'; del.className='btn btn-danger-muted'; del.textContent='Delete'; del.addEventListener('click', async ()=>{
-          if (!await showConfirm('Delete '+f.relative+'?')) return;
+        const del = document.createElement('button'); del.type='button'; del.className='btn btn-danger-muted'; del.textContent='Move to Trash'; del.addEventListener('click', async ()=>{
+          if (!await showConfirm('Move to Trash: '+f.relative+'?')) return;
           const fd = new FormData(); fd.append('filename', f.relative); fd.append('csrf_token', (document.querySelector('input[name="csrf_token"]')||{}).value || window.__csrfToken || '');
           fetch('delete-image.php', { method:'POST', body: fd }).then(r=>r.json()).then(res=>{
-            if (res && res.success) { showToast('Moved to trash','success'); refreshPerSectionLists(); refreshImageList(); refreshGalleryFullList(); }
+            if (res && res.success) { showUndoToast('Moved to trash', res && res.trash ? res.trash : '', 8000); refreshPerSectionLists(); refreshImageList(); refreshGalleryFullList(); }
             else showToast('Delete failed: '+(res && res.message ? res.message : 'unknown'),'error');
           }).catch(()=>{ showToast('Delete failed','error'); });
         });
