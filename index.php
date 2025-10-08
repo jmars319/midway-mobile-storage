@@ -137,15 +137,20 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             $heroBtn2 = getContent($content, 'hero.btn2_text', 'Get a Quote');
             $heroBtn2Link = getContent($content, 'hero.btn2_link', '#storage-quote');
             $heroBackgroundStyleTag = '';
-                if ($heroImage) {
+            $heroBgInline = '';
+            if ($heroImage) {
                 // prefer full URL when provided
                 $imgUrl = preg_match('#^https?://#i', $heroImage) ? $heroImage : '/uploads/images/'.ltrim($heroImage, '/');
-                // emit a small style block to avoid inline style attributes on the section element
-                $heroBackgroundStyleTag = '<style>.hero{background-image: url("' . htmlspecialchars((string)$imgUrl, ENT_QUOTES, 'UTF-8') . '"); background-size: cover; background-position: center;}</style>';
+                // Use inline style on the .hero-bg element so the background is applied reliably
+                $heroBgInline = 'style="background-image: url(\'' . htmlspecialchars((string)$imgUrl, ENT_QUOTES, 'UTF-8') . '\'); background-size: cover; background-position: center 42%;"';
             }
         ?>
         <?php echo $heroBackgroundStyleTag; ?>
         <section class="hero" aria-label="Hero">
+            <?php if ($heroImage): ?>
+                <!-- Background container for hero image; animation uses transform to avoid background-size blurring -->
+                <div class="hero-bg" aria-hidden="true" <?php echo $heroBgInline; ?>></div>
+            <?php endif; ?>
             <div class="container">
                 <h1 class="hero-title"><?php echo htmlspecialchars($heroTitle); ?></h1>
                 <?php if ($heroSubtitle): ?><p class="hero-subtitle"><?php echo htmlspecialchars($heroSubtitle); ?></p><?php endif; ?>
@@ -202,7 +207,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                             }
                             // Expand / collapse control and items
                             echo '<div class="menu-actions">';
-                            echo '<button class="expand-btn" aria-expanded="false"><span class="expand-label">View All</span></button>';
+                            echo '<button class="expand-btn" aria-expanded="false"><span class="expand-label">See all units</span></button>';
                             echo '</div>';
                             // Items (hidden until expanded)
                             echo '<div class="menu-details">';
@@ -648,7 +653,65 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                             <option value="manager" <?php if(fv('position_desired')==='manager') echo 'selected'; ?>>Manager</option>
                         </select>
                     </div>
+                    <div>
+                        <label for="employment-type" class="form-label">Employment Type</label>
+                        <select id="employment-type" name="employment_type" class="form-input">
+                            <option value="">Select</option>
+                            <option value="full-time" <?php if(fv('employment_type')==='full-time') echo 'selected'; ?>>Full-time</option>
+                            <option value="part-time" <?php if(fv('employment_type')==='part-time') echo 'selected'; ?>>Part-time</option>
+                            <option value="seasonal" <?php if(fv('employment_type')==='seasonal') echo 'selected'; ?>>Seasonal</option>
+                            <option value="temporary" <?php if(fv('employment_type')==='temporary') echo 'selected'; ?>>Temporary</option>
+                            <option value="contract" <?php if(fv('employment_type')==='contract') echo 'selected'; ?>>Contract</option>
+                        </select>
                     </div>
+                </div>
+
+                <!-- Availability & Certifications -->
+                <?php $vals = $form_flash['values'] ?? []; ?>
+                <div class="grid grid-2">
+                    <div>
+                        <label class="form-label">Availability</label>
+                        <div class="form-note small">(select all that apply)</div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="availability[]" value="Weekdays" <?php if(!empty($vals['availability']) && is_array($vals['availability']) && in_array('Weekdays',$vals['availability'])) echo 'checked'; ?>> Weekdays</label>
+                            <label><input type="checkbox" name="availability[]" value="Weekends" <?php if(!empty($vals['availability']) && is_array($vals['availability']) && in_array('Weekends',$vals['availability'])) echo 'checked'; ?>> Weekends</label>
+                            <label><input type="checkbox" name="availability[]" value="Mornings" <?php if(!empty($vals['availability']) && is_array($vals['availability']) && in_array('Mornings',$vals['availability'])) echo 'checked'; ?>> Mornings</label>
+                            <label><input type="checkbox" name="availability[]" value="Afternoons" <?php if(!empty($vals['availability']) && is_array($vals['availability']) && in_array('Afternoons',$vals['availability'])) echo 'checked'; ?>> Afternoons</label>
+                            <label><input type="checkbox" name="availability[]" value="Evenings" <?php if(!empty($vals['availability']) && is_array($vals['availability']) && in_array('Evenings',$vals['availability'])) echo 'checked'; ?>> Evenings</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label">Certifications / Licenses</label>
+                        <div class="form-note small">(optional)</div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="certifications[]" value="Forklift" <?php if(!empty($vals['certifications']) && is_array($vals['certifications']) && in_array('Forklift',$vals['certifications'])) echo 'checked'; ?>> Forklift</label>
+                            <label><input type="checkbox" name="certifications[]" value="CDL" <?php if(!empty($vals['certifications']) && is_array($vals['certifications']) && in_array('CDL',$vals['certifications'])) echo 'checked'; ?>> CDL</label>
+                            <label><input type="checkbox" name="certifications[]" value="FirstAid" <?php if(!empty($vals['certifications']) && is_array($vals['certifications']) && in_array('FirstAid',$vals['certifications'])) echo 'checked'; ?>> First Aid / CPR</label>
+                            <label><input type="checkbox" name="certifications[]" value="Other" <?php if(!empty($vals['certifications']) && is_array($vals['certifications']) && in_array('Other',$vals['certifications'])) echo 'checked'; ?>> Other</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resume upload and experience -->
+                <div class="grid grid-2">
+                    <div>
+                        <label for="resume" class="form-label">Upload Resume (PDF or Word, max 2MB)</label>
+                        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" class="form-input">
+                    </div>
+                    <div>
+                        <label for="why-work-here" class="form-label">Tell us why you want to work here *</label>
+                        <textarea id="why-work-here" name="why_work_here" rows="4" required class="form-input"><?php echo fv('why_work_here'); ?></textarea>
+                    </div>
+                </div>
+
+                <div class="grid grid-1">
+                    <label for="experience" class="form-label">Additional Experience / Comments</label>
+                    <textarea id="experience" name="message" rows="4" class="form-input"><?php echo fv('message'); ?></textarea>
+                </div>
+
+                <div class="grid grid-1 mt-1rem">
+                    <button type="submit" class="btn btn-primary">Submit Application</button>
+                </div>
                 </form>
 
             </div>

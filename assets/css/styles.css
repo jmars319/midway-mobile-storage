@@ -668,8 +668,24 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 .menu-card .menu-details { max-height:0; overflow:hidden; transition:max-height .4s cubic-bezier(.2,.9,.2,1), padding .25s ease, opacity .25s ease; padding:0 var(--spacing-md); opacity:0 }
 .menu-card.expanded .menu-details { padding: var(--spacing-md); max-height: 1200px; opacity:1 }
 .menu-card .menu-actions { padding: var(--spacing-md); display:flex; justify-content:space-between; align-items:center; gap:.5rem }
-.menu-card .expand-btn { background:transparent; border:1px solid var(--border-color); color:var(--text-primary); padding:.4rem .6rem; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:.5rem }
-.menu-card .expand-btn .expand-icon { transition: transform .28s cubic-bezier(.2,.9,.2,1); transform-origin:center; }
+.menu-card .expand-btn {
+    /* Prominent filled CTA using semi-transparent brand orange (~65% opacity) */
+    background: rgba(234,88,12,0.65); /* fallback: semi-transparent orange */
+    border: none;
+    color: var(--text-inverse);
+    padding: .4rem .6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    box-shadow: 0 6px 12px rgba(234,88,12,0.06);
+    transition: background .18s ease, transform .12s ease, box-shadow .18s ease;
+}
+.menu-card .expand-btn:hover { background: rgba(200,75,7,0.85); transform: translateY(-1px); }
+.menu-card .expand-btn:active { transform: translateY(0); }
+.menu-card .expand-btn:focus { outline: 3px solid rgba(234,88,12,0.18); outline-offset: 3px; }
+.menu-card .expand-btn .expand-icon { transition: transform .28s cubic-bezier(.2,.9,.2,1); transform-origin: center; }
 .menu-card.expanded .expand-btn .expand-icon { transform: rotate(180deg); }
 
 /* Improve contrast and legibility for text inside menu cards */
@@ -945,7 +961,7 @@ a.btn.btn-primary:focus {
 .hero {
     background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 65%, white 35%));
     color: var(--text-inverse);
-    padding: var(--spacing-2xl) 0;
+    padding: calc(var(--spacing-2xl) * 1.15) 0; /* slightly taller hero */
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -969,11 +985,35 @@ a.btn.btn-primary:focus {
     position: absolute;
     inset: 0;
     background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.35));
-    z-index: 0;
+    z-index: 1; /* overlay above hero-bg but below content */
     pointer-events: none;
 }
 
-.hero > .container { z-index: 1; }
+/* Hero background container: positioned behind content and animated using transform for crisp scaling */
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0; /* sit above the element background but below the overlay */
+    transform-origin: center center;
+    will-change: transform;
+    /* ensure it sits beneath the overlay pseudo element which lives on .hero::after */
+}
+
+@keyframes heroBgZoom {
+    0% { transform: scale(1.03) translateY(-2%); }
+    50% { transform: scale(1.08) translateY(-4%); }
+    100% { transform: scale(1.03) translateY(-2%); }
+}
+
+/* Play animation only when .hero-bg has an inline background-image set */
+.hero .hero-bg[style*="background-image"] {
+    animation: heroBgZoom 18s ease-in-out infinite;
+}
+
+.hero > .container { z-index: 2; }
 
 /* Mobile-specific subtle vignette: darker top/bottom edges for small screens
    so hero text remains readable when images are busy or small. This is
@@ -995,7 +1035,7 @@ a.btn.btn-primary:focus {
 
 .hero > .container {
     position: relative;
-    z-index: 1;
+    z-index: 2; /* ensure content sits above overlay and hero-bg */
 }
 
 .hero-title {
@@ -1006,6 +1046,11 @@ a.btn.btn-primary:focus {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Ensure hero image feels larger on wider screens by slightly increasing vertical focus */
+@media (min-width: 900px) {
+    .hero .hero-bg[style*="background-image"] { background-position: center 42%; }
+}
+
 .hero-subtitle {
     font-size: var(--font-size-xl);
     opacity: 0.9;
@@ -1014,6 +1059,19 @@ a.btn.btn-primary:focus {
     margin-left: auto;
     margin-right: auto;
     line-height: 1.4;
+}
+
+/* Hero-specific outline button: subtle 30% opaque fill to sit over images */
+.hero .btn.btn-outline {
+    background-color: rgba(30, 64, 175, 0.30); /* var(--primary-color) @ 30% */
+    border-color: rgba(30, 64, 175, 0.45);
+    color: #ffffff;
+    -webkit-text-fill-color: #ffffff;
+}
+.hero .btn.btn-outline:hover,
+.hero .btn.btn-outline:focus {
+    background-color: rgba(30, 64, 175, 0.45);
+    border-color: rgba(30, 64, 175, 0.65);
 }
 
 /* Section Component */
