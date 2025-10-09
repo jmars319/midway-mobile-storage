@@ -201,6 +201,44 @@ function eastern_now($format = 'c') {
     }
 }
 
+/**
+ * Format a stored timestamp into a human-friendly date/time string
+ * normalized to a target timezone. Accepts ISO timestamp strings or
+ * Unix epoch seconds.
+ *
+ * @param string|int|null $input
+ * @param string $format PHP date() / DateTime format string (default: 'Y-m-d H:i:s')
+ * @param string $targetTz IANA timezone identifier (default: 'America/New_York')
+ * @return string Formatted date/time or original input on parse failure
+ */
+function admin_format_datetime($input, $format = 'Y-m-d H:i:s', $targetTz = 'America/New_York') {
+    if (empty($input) && $input !== '0' && $input !== 0) return '';
+    try {
+        // numeric (epoch) timestamps
+        if (is_numeric($input)) {
+            $dt = new DateTimeImmutable('@' . (int)$input);
+            $dt = $dt->setTimezone(new DateTimeZone($targetTz));
+            return $dt->format($format);
+        }
+
+        // strings: try parsing. If the string includes a timezone/offset
+        // DateTime will honor it. If not, assume UTC as the source timezone
+        // so that naive timestamps are normalized consistently.
+        $hasTz = preg_match('/[Zz]|[+-]\d{2}(:?\d{2})?$/', (string)$input);
+        if ($hasTz) {
+            $dt = new DateTimeImmutable((string)$input);
+        } else {
+            $dt = new DateTimeImmutable((string)$input, new DateTimeZone('UTC'));
+        }
+        $dt = $dt->setTimezone(new DateTimeZone($targetTz));
+        return $dt->format($format);
+    } catch (Exception $e) {
+        // If parsing fails, return the input as a string so callers can
+        // still render something meaningful.
+        return (string)$input;
+    }
+}
+
 // -- Admin auth storage helpers -------------------------------------------------
 // Path to optional JSON-backed auth file (untracked in reposafe setups)
 function admin_auth_file_path() {

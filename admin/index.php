@@ -792,7 +792,7 @@ header('Content-Type: text/html; charset=utf-8');
       <table>
         <thead>
           <tr>
-            <th>Time</th>
+            <th>Date / Time</th>
             <th>Name</th>
             <th>Email</th>
             <th>Phone</th>
@@ -805,7 +805,7 @@ header('Content-Type: text/html; charset=utf-8');
         <tbody>
         <?php foreach ($paged_entries as $e): ?>
           <tr>
-            <td><?php echo htmlspecialchars($e['timestamp'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars(admin_format_datetime($e['timestamp'] ?? '')); ?></td>
             <td><?php echo htmlspecialchars(($e['first_name'] ?? '') . ' ' . ($e['last_name'] ?? '')); ?></td>
             <td><?php echo htmlspecialchars($e['email'] ?? ''); ?></td>
             <td><?php echo htmlspecialchars($e['phone'] ?? ''); ?></td>
@@ -912,7 +912,7 @@ header('Content-Type: text/html; charset=utf-8');
         <h3 class="mt-0">Recent quote summary</h3>
         <ul class="small m-0 pl-1">
           <?php foreach ($recentAudit as $a): ?>
-            <li><?php echo htmlspecialchars(($a['timestamp'] ?? '') . ' — ' . ($a['customer_name'] ?? 'Unknown') . ' — ' . ($a['container_size'] ?? '')); ?></li>
+            <li><?php echo htmlspecialchars((admin_format_datetime($a['timestamp'] ?? '')) . ' — ' . ($a['customer_name'] ?? 'Unknown') . ' — ' . ($a['container_size'] ?? '')); ?></li>
           <?php endforeach; ?>
         </ul>
       </div>
@@ -936,12 +936,12 @@ header('Content-Type: text/html; charset=utf-8');
     <?php else: ?>
       <table class="admin-table">
         <thead>
-          <tr><th>Time</th><th>Name</th><th>Phone</th><th>Container</th><th>Quantity</th><th>Duration</th><th></th></tr>
+          <tr><th>Date / Time</th><th>Name</th><th>Phone</th><th>Container</th><th>Quantity</th><th>Duration</th><th></th></tr>
         </thead>
         <tbody>
   <?php foreach ($quotes as $i => $r): ?>
           <tr>
-            <td><?php echo htmlspecialchars($r['timestamp'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars(admin_format_datetime($r['timestamp'] ?? '')); ?></td>
             <td><?php echo htmlspecialchars($r['customer_name'] ?? ''); ?></td>
             <td><?php echo htmlspecialchars($r['phone'] ?? ''); ?></td>
             <td><?php echo htmlspecialchars($r['container_size'] ?? ''); ?></td>

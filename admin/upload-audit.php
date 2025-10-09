@@ -122,7 +122,7 @@ header('Content-Type: text/html; charset=utf-8');
       <table>
         <thead>
           <tr>
-            <th>Time</th>
+            <th>Date / Time</th>
             <th>Admin</th>
             <th>Original</th>
             <th>Saved filename</th>
@@ -136,7 +136,7 @@ header('Content-Type: text/html; charset=utf-8');
         <tbody>
         <?php foreach ($paged as $row): ?>
           <tr>
-            <td class="mono"><?php echo htmlspecialchars($row['timestamp'] ?? ''); ?></td>
+            <td class="mono"><?php echo htmlspecialchars(admin_format_datetime($row['timestamp'] ?? '')); ?></td>
             <td><?php echo htmlspecialchars($row['admin'] ?? ''); ?></td>
             <td title="<?php echo htmlspecialchars($row['original_name'] ?? ''); ?>"><?php echo htmlspecialchars(mb_strimwidth($row['original_name'] ?? '', 0, 40, '...')); ?></td>
             <td title="<?php echo htmlspecialchars($row['stored_name'] ?? ''); ?>"><?php echo htmlspecialchars(mb_strimwidth($row['stored_name'] ?? '', 0, 36, '...')); ?></td>

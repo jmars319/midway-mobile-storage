@@ -88,12 +88,12 @@ header('Content-Type: text/html; charset=utf-8');
           <?php else: ?>
       <table>
         <thead>
-          <tr><th>Time</th><th>Name</th><th>Phone</th><th>Container</th><th>Quantity</th><th>Duration</th><th>IP</th></tr>
+          <tr><th>Date / Time</th><th>Name</th><th>Phone</th><th>Container</th><th>Quantity</th><th>Duration</th><th>IP</th></tr>
         </thead>
         <tbody>
         <?php foreach (array_reverse($entries) as $r): ?>
           <tr>
-            <td class="mono"><?php echo htmlspecialchars($r['timestamp'] ?? ''); ?></td>
+            <td class="mono"><?php echo htmlspecialchars(admin_format_datetime($r['timestamp'] ?? '')); ?></td>
             <td><?php echo htmlspecialchars($r['customer_name'] ?? ''); ?></td>
             <td><?php echo htmlspecialchars($r['phone'] ?? ''); ?></td>
             <td><?php echo htmlspecialchars($r['container_size'] ?? ''); ?></td>
