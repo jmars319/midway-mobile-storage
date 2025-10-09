@@ -44,7 +44,7 @@
             "price": "110"
         }
     ],
-    "last_updated": "2025-10-08 19:41:00",
+    "last_updated": "2025-10-09 20:52:16",
     "hours": {
         "monday": "10:00 AM - 3:00 PM",
         "tuesday": "10:00 AM - 3:00 PM",
@@ -64,6 +64,15 @@
                     "short": "20L x 8W x 8.5H",
                     "description": "",
                     "image": "",
+                    "quantities": [],
+                    "prices": []
+                },
+                {
+                    "title": "40ft Container",
+                    "short": "",
+                    "description": "",
+                    "image": "",
+                    "price": "",
                     "quantities": [],
                     "prices": []
                 }

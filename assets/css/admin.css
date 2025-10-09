@@ -220,7 +220,7 @@ body.admin { overflow-x: hidden; }
 #image-list img { border-radius:6px; border:1px solid var(--admin-border); height:48px; width:64px; object-fit:cover }
 
 /* images modal (used by Show all images) */
-#images-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 9999; }
+#images-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 50000; }
 #images-modal { background: var(--card-bg); border-radius:10px; max-width: 1000px; width: calc(100% - 48px); max-height: 80vh; overflow: auto; box-shadow: 0 12px 40px rgba(2,6,23,0.35); padding: 1rem; }
 #images-modal .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem }
 #images-modal .close-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer }
@@ -262,7 +262,7 @@ body.admin { overflow-x: hidden; }
 /* polished submenu visuals */
 .pm-combo { position: relative }
 .pm-combo-toggle { display:inline-flex; align-items:center; gap:.4rem }
-.pm-combo-menu { display:none; position:absolute; right:0; margin-top:.4rem; background:var(--card-bg); border:1px solid rgba(2,6,23,0.06); border-radius:8px; padding:.35rem; box-shadow:0 10px 30px rgba(2,6,23,0.08); min-width:220px; z-index:30010; }
+.pm-combo-menu { display:none; position:absolute; right:0; margin-top:.4rem; background:var(--card-bg); border:1px solid rgba(2,6,23,0.06); border-radius:8px; padding:.35rem; box-shadow:0 10px 30px rgba(2,6,23,0.08); min-width:160px; z-index:30010; }
 
 /* Styles for admin/resume management page */
 .admin-resumes-page .container{ max-width:1100px; margin:1.25rem auto; padding:1rem; background:var(--admin-surface); border-radius:10px; box-shadow:0 12px 20px rgba(2,6,23,.06); border:1px solid color-mix(in srgb,var(--admin-surface) 85%,black 15%); }
@@ -308,7 +308,7 @@ body.admin { overflow-x: hidden; }
 	from { opacity:0; transform: translateY(-6px); }
 	to { opacity:1; transform: translateY(0); }
 }
-.pm-combo-menu .pm-subitem { display:flex; align-items:center; gap:.45rem; width:100%; padding:.45rem .5rem; text-decoration:none; color:var(--admin-text); border-radius:6px; background:transparent; border:none; text-align:left; font-size:var(--admin-menu-font-size); line-height:var(--admin-menu-line-height); min-height:32px }
+.pm-combo-menu .pm-subitem { display:flex; align-items:center; gap:.35rem; width:100%; padding:.35rem .45rem; text-decoration:none; color:var(--admin-text); border-radius:6px; background:transparent; border:none; text-align:left; font-size:var(--admin-menu-font-size); line-height:var(--admin-menu-line-height); min-height:32px }
 .pm-combo-menu .pm-subitem:hover, .pm-combo-menu .pm-subitem:focus { background: linear-gradient(90deg, rgba(37,99,235,0.06), rgba(37,99,235,0.02)); color:var(--accent); outline:none }
 .pm-combo-menu .pm-subitem + .pm-subitem { border-top:1px solid rgba(2,6,23,0.03); }
 .pm-subitem-full { width:100%; text-align:left; display:flex; align-items:center; gap:.45rem; font-size:var(--admin-menu-font-size); line-height:var(--admin-menu-line-height); min-height:32px }
@@ -463,7 +463,7 @@ body.admin { overflow-x: hidden; }
 .text-success { color: var(--success-color) !important }
 
 /* App modal specific styles (replaces inline styles for #app-modal dialog) */
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:10000 }
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50000 }
 .app-modal-dialog { background:var(--card-bg, #fff); max-width:720px; width:95%; margin:auto; padding:1rem; border-radius:6px; box-shadow:0 10px 30px rgba(0,0,0,.4) }
 .app-modal-close { float:right }
 .app-modal-body { clear:both; max-height:60vh; overflow:auto }
@@ -566,7 +566,7 @@ body.admin { overflow-x: hidden; }
 .admin .top-actions{ margin-bottom:1rem }
 
 /* Toast container used by multiple admin pages */
-#toast-container { position: fixed; right: 1rem; top: 1rem; z-index: 9999; display:flex; flex-direction:column; gap:.5rem; }
+#toast-container { position: fixed; right: 1rem; top: 1rem; z-index: 50010; display:flex; flex-direction:column; gap:.5rem; }
 
 /* Login page specific helpers (moved from admin/login.php) */
 .admin .login-container { background: var(--admin-surface, #f3f4f6); padding: 2.5rem; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); width:100%; max-width:400px }

@@ -78,11 +78,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($action === 'download_csv') {
     $entries = load_entries($APPLICATIONS_FILE, $LEGACY_MESSAGES_FILE);
     header('Content-Type: text/csv; charset=utf-8');
-  header('Content-Disposition: attachment; filename="applications.csv"');
+    header('Content-Disposition: attachment; filename="applications.csv"');
     $out = fopen('php://output', 'w');
-  fputcsv($out, ['timestamp','first_name','last_name','email','phone','address','age','eligible_to_work','position_desired','employment_type','desired_salary','start_date','availability','shift_preference','hours_per_week','restaurant_experience','other_experience','why_work_here','references','certifications','resume_file','mail_sent','ip']);
+    fputcsv($out, ['timestamp','first_name','last_name','email','phone','address','age','eligible_to_work','position_desired','employment_type','desired_salary','start_date','availability','shift_preference','hours_per_week','restaurant_experience','other_experience','why_work_here','references','certifications','resume_file','mail_sent','ip']);
     foreach ($entries as $e) {
-  fputcsv($out, [
+      fputcsv($out, [
         $e['timestamp'] ?? '',
         $e['first_name'] ?? '',
         $e['last_name'] ?? '',
@@ -110,73 +110,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     fclose($out);
     exit;
-  }
-
-  if ($action === 'download_json') {
-    $entries = load_entries($APPLICATIONS_FILE, $LEGACY_MESSAGES_FILE);
-    header('Content-Type: application/json');
-  header('Content-Disposition: attachment; filename="applications.json"');
-    echo json_encode($entries, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    exit;
-  }
-  
-  // Delete an uploaded resume file and clear references in applications.json
-  if ($action === 'delete_resume') {
-    $resume = $_POST['resume_file'] ?? '';
-    $resume = basename((string)$resume);
-    if ($resume && preg_match('/^[a-zA-Z0-9_\-\.]+$/', $resume)) {
-      $candidates = [
-        __DIR__ . '/../private_data/resumes/',
-        dirname(__DIR__) . '/../private_data/resumes/',
-        __DIR__ . '/../../private_data/resumes/',
-      ];
-      $moved = false; $foundAt = null;
-      $archDir = dirname(__DIR__) . '/../private_data/resumes/archived/';
-      if (!is_dir($archDir)) @mkdir($archDir, 0755, true);
-      foreach ($candidates as $cand) {
-        $full = $cand . $resume;
-        if (file_exists($full) && is_file($full)) {
-          $dest = rtrim($archDir, '/') . '/' . $resume;
-          // ensure unique dest name if collision
-          $i = 0; $base = pathinfo($resume, PATHINFO_FILENAME); $ext = pathinfo($resume, PATHINFO_EXTENSION);
-          while (file_exists($dest)) { $i++; $dest = rtrim($archDir, '/') . '/' . $base . '_' . $i . ($ext?'.'.$ext:''); }
-          if (@rename($full, $dest)) { $moved = true; $foundAt = $full; $archivedAs = basename($dest); }
-          break;
-        }
-      }
-      // Audit log for deletions (JSON lines)
-      if ($moved) {
-        $audit = [
-          'timestamp' => function_exists('eastern_now') ? eastern_now('c') : date('c'),
-          'admin' => $_SESSION['admin_user'] ?? ($_SESSION['admin_logged_in'] ? 'admin' : 'unknown'),
-          'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-          'original_path' => $foundAt,
-          'archived_filename' => $archivedAs,
-        ];
-        $logDir = dirname(__DIR__) . '/data';
-        if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
-        $logFile = $logDir . '/resume-deletions.log';
-        @file_put_contents($logFile, json_encode($audit, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
-      }
-      // Clear resume_file references in live applications file
-      $appsPath = $APPLICATIONS_FILE;
-      $apps = [];
-      if (file_exists($appsPath)) {
-        $raw = @file_get_contents($appsPath);
-        $apps = $raw ? json_decode($raw, true) : [];
-        if (!is_array($apps)) $apps = [];
-      }
-      $changed = false;
-      foreach ($apps as &$a) {
-        if (!empty($a['resume_file']) && basename($a['resume_file']) === $resume) { $a['resume_file'] = ''; $changed = true; }
-      }
-      if ($changed) {
-        $tmp = $appsPath . '.tmp';
-        $json = json_encode($apps, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        if ($json !== false) { file_put_contents($tmp, $json, LOCK_EX); @rename($tmp, $appsPath); }
-      }
-    }
-    header('Location: index.php'); exit;
   }
   
   // Permanently delete all files in the archived resumes directory
@@ -388,20 +321,32 @@ $archived_entries = load_archived_entries($archiveDir);
 $applications_archive_count = is_array($archived_entries) ? count($archived_entries) : 0;
 $applications_all_count = $applications_live_count + $applications_archive_count;
 
-// resumes archived count
+// Count resume files across likely candidate directories (both live and archived)
 $resumeCandidates = [
+  // live resumes (where uploads are stored)
+  __DIR__ . '/../private_data/resumes/',
+  dirname(__DIR__) . '/../private_data/resumes/',
+  __DIR__ . '/../../private_data/resumes/',
+  // archived resumes
   __DIR__ . '/../private_data/resumes/archived/',
   dirname(__DIR__) . '/../private_data/resumes/archived/',
   __DIR__ . '/../../private_data/resumes/archived/',
 ];
 $resumes_count = 0;
+$seen_files = [];
 foreach ($resumeCandidates as $rc) {
-  if (is_dir($rc)) {
-    $g = glob(rtrim($rc, '/') . '/*');
-    if ($g) {
-      foreach ($g as $f) { if (is_file($f)) $resumes_count++; }
-    }
-    break;
+  if (!is_dir($rc)) continue;
+  $g = glob(rtrim($rc, '/') . '/*');
+  if (!$g) continue;
+  foreach ($g as $f) {
+    if (!is_file($f)) continue;
+    $real = realpath($f) ?: $f;
+    if (isset($seen_files[$real])) continue; // dedupe identical files reached via different candidate paths
+    $name = basename($f);
+    // only count reasonable filenames (avoid dotfiles, temp files)
+    if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $name)) continue;
+    $seen_files[$real] = true;
+    $resumes_count++;
   }
 }
 
@@ -723,6 +668,7 @@ header('Content-Type: text/html; charset=utf-8');
                       <a href="admin-resumes.php?download=csv" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['resumes']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['resumes']; ?> archived resumes</span></a>
                       <a href="admin-resumes.php?download=json" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['resumes']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['resumes']; ?> archived resumes</span></a>
                       <a href="download-all-resumes.php" class="pm-subitem"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 5h18v14H3z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download all resumes (zip) <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['resumes']; ?></span><span class="sr-only"><?php echo (int)$admin_counts['resumes']; ?> archived resumes</span></a>
+                      <a href="#" id="scan-resumes-btn" class="pm-subitem" title="Scan archived resumes for suspicious or invalid files"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v6l4-2-4-4zM4 10v10h16V10l-8 4-8-4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Scan resumes <span class="count-badge" aria-hidden="true"><?php echo (int)$admin_counts['resumes']; ?></span></a>
 <?php else: ?>
                       <span class="pm-subitem disabled" role="menuitem" aria-disabled="true"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v12H4z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download CSV <span class="count-badge" aria-hidden="true">0</span><span class="sr-only">0 archived resumes</span></span>
                       <span class="pm-subitem disabled" role="menuitem" aria-disabled="true"><span class="pm-icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 7l10 5-10 5V7z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download JSON <span class="count-badge" aria-hidden="true">0</span><span class="sr-only">0 archived resumes</span></span>
@@ -1182,6 +1128,110 @@ header('Content-Type: text/html; charset=utf-8');
         } catch (err) { /* no-op */ }
       })();
     </script>
+
+    <script>
+      // Handler for the "Scan resumes" admin action. Posts CSRF token to the scan endpoint
+      // and shows results in the application modal.
+      (function(){
+        var btn = document.getElementById('scan-resumes-btn');
+        if (!btn) return;
+        btn.addEventListener('click', async function(e){
+          e.preventDefault();
+          // disable while scanning
+          btn.setAttribute('aria-disabled','true');
+          btn.classList && btn.classList.add('disabled');
+          var origText = btn.textContent;
+          btn.textContent = 'Scanning...';
+          try {
+            // obtain CSRF token from a hidden input on the page (csrf_input_field outputs one)
+            var tokenEl = document.querySelector('input[name="csrf_token"]');
+            var token = tokenEl ? tokenEl.value : '';
+
+            var res = await fetch('scan-resumes.php', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: 'csrf_token=' + encodeURIComponent(token || '')
+            });
+            if (!res.ok) {
+              var txt = await res.text();
+              if (window.showAdminToast) window.showAdminToast(txt || 'Scan failed', 'error');
+              else if (typeof toast === 'function') toast(txt || 'Scan failed', 'error');
+              return;
+            }
+            var data = await res.json();
+
+            // build HTML summary
+            var modal = document.getElementById('app-modal');
+            var body = document.getElementById('app-modal-body');
+            var title = document.getElementById('app-modal-title');
+            title.textContent = 'Resume scan results';
+            var html = '';
+            if (!Array.isArray(data.files) || data.files.length === 0) {
+              html = '<p class="small muted">No resume files found.</p>';
+            } else {
+              html += '<table class="small app-modal-table"><tr><th>File</th><th>Size</th><th>Flags</th></tr>';
+              data.files.forEach(function(f){
+                var flags = [];
+                if (f.suspicious) flags.push('suspicious');
+                if (f.missing) flags.push('missing');
+                if (f.invalid_signature) flags.push('invalid signature');
+                if (f.small) flags.push('too small');
+                html += '<tr><td>' + (f.name || '') + '</td><td>' + (f.size||'') + '</td><td>' + (flags.join(', ') || '&nbsp;') + '</td></tr>';
+              });
+              html += '</table>';
+            }
+
+            // Update all visible resume count badges on the page
+            var newCount = Array.isArray(data.files) ? data.files.length : 0;
+            // helper: set only the text node inside the badge so we don't replace the element
+            function setBadgeText(el, txt) {
+              for (var i = 0; i < el.childNodes.length; i++) {
+                if (el.childNodes[i].nodeType === Node.TEXT_NODE) {
+                  el.childNodes[i].nodeValue = txt;
+                  return;
+                }
+              }
+              // no text node present, append one
+              el.appendChild(document.createTextNode(txt));
+            }
+
+            document.querySelectorAll('.count-badge').forEach(function(el){
+              var parent = el.closest && el.closest('a');
+              if (!parent) return;
+              var href = (parent.getAttribute('href')||'').toLowerCase();
+              if (href.indexOf('admin-resumes') !== -1 || href.indexOf('download-all-resumes') !== -1 || parent.textContent.toLowerCase().indexOf('resume') !== -1) {
+                setBadgeText(el, String(newCount));
+                var sr = el.nextElementSibling; if (sr && sr.classList && sr.classList.contains('sr-only')) sr.textContent = newCount + ' archived resumes';
+              }
+            });
+
+            // Close any open admin option submenus so the modal/backdrop appears above them
+            try {
+              document.querySelectorAll('.pm-combo-menu.open').forEach(function(m){
+                m.classList.remove('open');
+                var toggle = m.parentNode && m.parentNode.querySelector && m.parentNode.querySelector('.pm-combo-toggle');
+                if (toggle) toggle.setAttribute('aria-expanded','false');
+              });
+            } catch(e) { /* ignore */ }
+
+            body.innerHTML = html;
+            modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+            if (window.showAdminToast) window.showAdminToast('Scan complete — ' + newCount + ' files found', 'success');
+            else if (typeof toast === 'function') toast('Scan complete — ' + newCount + ' files found');
+
+          } catch (err) {
+            if (window.showAdminToast) window.showAdminToast('Scan failed: ' + (err && err.message ? err.message : 'unknown'), 'error');
+            else if (typeof toast === 'function') toast('Scan failed: ' + (err && err.message ? err.message : 'unknown'), 'error');
+          } finally {
+            // restore button state
+            btn.removeAttribute('aria-disabled');
+            btn.classList && btn.classList.remove('disabled');
+            btn.textContent = origText;
+          }
+        });
+      })();
+    </script>
     <script>
       // admin options submenu toggles for combined CSV/JSON actions with keyboard navigation
       (function(){
@@ -1300,6 +1350,61 @@ header('Content-Type: text/html; charset=utf-8');
         }
         if (params.get('msg') === 'notrash') { toast('No trash folder found', 'error'); }
         if (params.get('error') === 'csrf') { toast('Invalid CSRF token', 'error'); }
+      })();
+    </script>
+
+    <script>
+      // Intercept clicks on resume download links so we can show a friendly toast
+      // when the server reports a corrupted/missing file instead of dumping
+      // raw text to the window. This will fetch the URL and either stream the
+      // file client-side (via blob) or show the returned text as an error toast.
+      (function(){
+        function show(msg, type){
+          if (window.showAdminToast) return window.showAdminToast(msg, type==='error' ? 'error' : 'success');
+          if (typeof toast === 'function') return toast(msg, type==='error' ? 'error' : 'success');
+          alert(msg);
+        }
+
+        document.addEventListener('click', async function(e){
+          var a = e.target.closest && e.target.closest('a');
+          if (!a) return;
+          var href = a.getAttribute('href') || '';
+          if (!href.startsWith('download-resume.php')) return;
+          // Intercept
+          e.preventDefault();
+          try {
+            var res = await fetch(a.href, { credentials: 'same-origin' });
+            var ct = (res.headers.get('Content-Type') || '').toLowerCase();
+            if (!res.ok) {
+              // try to show returned text as friendly message
+              var txt = await res.text();
+              show(txt || 'Failed to download resume', 'error');
+              return;
+            }
+            // If server returned diagnostics as plain text (admin view), show toast
+            if (ct.indexOf('text/plain') !== -1) {
+              var txt = await res.text();
+              show(txt || 'Resume appears invalid or missing', 'error');
+              return;
+            }
+            // Otherwise treat as binary -> download blob
+            var blob = await res.blob();
+            var disposition = res.headers.get('Content-Disposition') || '';
+            var filename = null;
+            var m = disposition.match(/filename\*?=([^;]+)/);
+            if (m) {
+              filename = m[1].replace(/^["']|["']$/g, '').trim();
+            }
+            if (!filename) {
+              // fallback: use URL param file
+              try { var u = new URL(a.href, window.location.href); filename = u.searchParams.get('file') || 'download'; } catch(e){ filename = 'download'; }
+            }
+            var url = URL.createObjectURL(blob);
+            var dl = document.createElement('a'); dl.href = url; dl.download = filename; document.body.appendChild(dl); dl.click(); setTimeout(function(){ URL.revokeObjectURL(url); dl.remove(); }, 3000);
+          } catch (err) {
+            show('Download failed: ' + (err && err.message ? err.message : 'unknown'), 'error');
+          }
+        }, true);
       })();
     </script>
 
