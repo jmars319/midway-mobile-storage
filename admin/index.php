@@ -896,29 +896,8 @@ header('Content-Type: text/html; charset=utf-8');
     
     <hr class="spaced-hr">
     <?php
-  // Compact recent quote summary (last 5 audit entries)
-  $auditFile = __DIR__ . '/../data/quote-audit.json';
-      $recentAudit = [];
-      if (file_exists($auditFile)) {
-        $aj = @file_get_contents($auditFile);
-        $allAudit = $aj ? json_decode($aj, true) : [];
-        if (is_array($allAudit) && count($allAudit)) {
-          $recentAudit = array_slice(array_reverse($allAudit), 0, 5);
-        }
-      }
-    ?>
-    <?php if (!empty($recentAudit)): ?>
-      <div class="card mb-075">
-        <h3 class="mt-0">Recent quote summary</h3>
-        <ul class="small m-0 pl-1">
-          <?php foreach ($recentAudit as $a): ?>
-            <li><?php echo htmlspecialchars((admin_format_datetime($a['timestamp'] ?? '')) . ' — ' . ($a['customer_name'] ?? 'Unknown') . ' — ' . ($a['container_size'] ?? '')); ?></li>
-          <?php endforeach; ?>
-        </ul>
-      </div>
-    <?php else: ?>
-      <p class="small">No recent quote activity.</p>
-    <?php endif; ?>
+  // Compact recent quote summary (last 5 audit entries) (removed - using Quotes table)
+  ?>
 
   <h2>Quotes</h2>
   <p class="small">Review quote requests submitted through the public site.</p>
