@@ -902,6 +902,7 @@ header('Content-Type: text/html; charset=utf-8');
   <h2>Quotes</h2>
   <p class="small">Review quote requests submitted through the public site.</p>
     <?php
+  // Load quotes once and compute a tiny dashboard: latest quote + simple trends
   $resFile = __DIR__ . '/../data/quotes.json';
       $quotes = [];
       if (file_exists($resFile)) {
@@ -909,7 +910,72 @@ header('Content-Type: text/html; charset=utf-8');
         $quotes = $j ? json_decode($j, true) : [];
         if (!is_array($quotes)) $quotes = [];
       }
+
+  // compute latest quote (newest by timestamp string)
+  $latest_quote = null;
+  if (!empty($quotes)) {
+    // sort a shallow copy by timestamp descending without modifying original order
+    $sorted = $quotes;
+    usort($sorted, function($a, $b) {
+      $ta = $a['timestamp'] ?? '';
+      $tb = $b['timestamp'] ?? '';
+      // ISO-like strings compare lexicographically; fall back to strcmp
+      return strcmp($tb, $ta);
+    });
+    $latest_quote = $sorted[0];
+  }
+
+  // simple trends: total quotes, last 7 days, top container size
+  $total_quotes = count($quotes);
+  $container_counts = [];
+  $quotes_last_7 = 0;
+  try {
+    $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+    $sevenAgo = $now->sub(new DateInterval('P7D'));
+  } catch (Exception $e) {
+    $now = null; $sevenAgo = null;
+  }
+  foreach ($quotes as $q) {
+    $size = $q['container_size'] ?? 'Unknown';
+    $container_counts[$size] = ($container_counts[$size] ?? 0) + 1;
+    if (!empty($q['timestamp']) && $sevenAgo instanceof DateTimeImmutable) {
+      try {
+        $dt = new DateTimeImmutable($q['timestamp']);
+        if ($dt >= $sevenAgo) $quotes_last_7++;
+      } catch (Exception $e) {
+        // ignore unparsable timestamps
+      }
+    }
+  }
+  arsort($container_counts);
+  $top_container = null;
+  $top_container_count = 0;
+  if (!empty($container_counts)) {
+    foreach ($container_counts as $k => $v) { $top_container = $k; $top_container_count = $v; break; }
+  }
     ?>
+
+    <div class="cards-row">
+      <div class="card" style="display:inline-block;min-width:260px;max-width:420px;margin-right:12px;vertical-align:top;">
+        <h3 class="mt-0">Latest quote</h3>
+        <?php if ($latest_quote): ?>
+          <div class="small muted"><?php echo htmlspecialchars(admin_format_datetime($latest_quote['timestamp'] ?? '')); ?></div>
+          <div style="margin-top:6px"><strong><?php echo htmlspecialchars($latest_quote['customer_name'] ?? 'Unknown'); ?></strong></div>
+          <div class="small"><?php echo htmlspecialchars($latest_quote['container_size'] ?? ''); ?> — Qty <?php echo htmlspecialchars($latest_quote['quantity'] ?? ''); ?></div>
+          <?php if (!empty($latest_quote['phone'])): ?><div class="small">Phone: <?php echo htmlspecialchars($latest_quote['phone']); ?></div><?php endif; ?>
+          <div style="margin-top:8px"><a href="quote-audit.php" class="btn btn-ghost small">View audit</a></div>
+        <?php else: ?>
+          <div class="small muted">No quotes yet.</div>
+        <?php endif; ?>
+      </div>
+
+      <div class="card" style="display:inline-block;min-width:200px;max-width:320px;vertical-align:top;">
+        <h3 class="mt-0">Trends</h3>
+        <div class="small">Total quotes: <strong><?php echo (int)$total_quotes; ?></strong></div>
+        <div class="small">Last 7 days: <strong><?php echo (int)$quotes_last_7; ?></strong></div>
+        <div class="small">Top container: <strong><?php echo htmlspecialchars($top_container ?? '—'); ?></strong> <?php if ($top_container_count) echo '<span class="muted">(' . (int)$top_container_count . ')</span>'; ?></div>
+      </div>
+    </div>
     <?php if (empty($quotes)): ?>
       <p>No quotes yet.</p>
     <?php else: ?>
