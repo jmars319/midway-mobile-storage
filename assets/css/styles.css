@@ -1645,7 +1645,8 @@ UTILITY CLASSES
 .footer .footer-legal { border-top: 1px solid var(--divider-color); padding-top: .6rem; margin-top: .6rem; }
 
 /* Center the legal links row visually while keeping main nav right-aligned */
-.footer .footer-legal .footer-right { justify-self: center; text-align: center; }
+.footer .footer-legal { grid-template-columns: 1fr 1fr 1fr; }
+.footer .footer-legal > div:last-child { justify-self: center; text-align: center; }
 .footer .footer-legal .footer-legal-links { justify-content: center; }
 
 /* Today badge */
