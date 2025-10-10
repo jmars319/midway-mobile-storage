@@ -256,8 +256,14 @@ h4, h5, h6 { font-weight: var(--font-weight-medium); }
     transform-origin: center top;
     animation: modal-in .22s cubic-bezier(.2,.9,.22,1);
 }
-.modal .modal-close { position: absolute; right: 12px; top: 12px; background: transparent; border: none; font-size: 1.05rem; cursor: pointer; padding: .25rem; border-radius: 6px; color: var(--text-secondary); }
+.modal .modal-close {
+    position: absolute; right: 12px; top: 12px; background: transparent; border: none; font-size: 1.05rem; cursor: pointer;
+    padding: .5rem; border-radius: 10px; color: var(--text-secondary);
+    touch-action: manipulation; /* ensure immediate touch response */
+}
 .modal .modal-close:hover { background: rgba(0,0,0,0.04); color: var(--text-primary); }
+.modal .modal-close:active { background: rgba(0,0,0,0.06); transform: translateY(0.5px); }
+.modal .modal-close:focus { outline: 2px solid color-mix(in srgb, var(--primary-color) 20%, transparent); outline-offset: 2px; }
 .modal h2 { margin: 0 0 .5rem; font-size: 1.25rem; color: var(--primary-color); }
 .modal .card { background: transparent; box-shadow: none; border: none; padding: 0; }
 .modal .form-label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--text-secondary); }
