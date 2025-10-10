@@ -56,6 +56,38 @@
             contactBackdrop && contactBackdrop.addEventListener('click', closeModal);
             closeButtons.forEach(function(btn){ btn.addEventListener('click', closeModal); });
 
+            // Expand/collapse behavior for public unit/menu cards
+            function toggleMenuCard(card, btn) {
+                if (!card) return;
+                var expanded = card.classList.toggle('expanded');
+                if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                var lab = btn ? btn.querySelector('.expand-label') : null;
+                if (lab) lab.textContent = expanded ? 'Show less' : 'See all units';
+            }
+
+            // Button toggles
+            var expandBtns = Array.from(document.querySelectorAll('.menu-grid .expand-btn'));
+            expandBtns.forEach(function(b){
+                b.addEventListener('click', function(e){
+                    e.preventDefault();
+                    var card = b.closest('.menu-card');
+                    toggleMenuCard(card, b);
+                });
+            });
+
+            // Also allow clicking the card body to toggle (but ignore clicks on links/buttons/inputs inside)
+            var cards = Array.from(document.querySelectorAll('.menu-grid .menu-card'));
+            cards.forEach(function(c){
+                c.addEventListener('click', function(e){
+                    var target = e.target;
+                    // ignore interactive elements
+                    if (target.closest('a, button, input, textarea, select')) return;
+                    // only toggle when clicking the card body area (not images)
+                    var btn = c.querySelector('.expand-btn');
+                    toggleMenuCard(c, btn);
+                });
+            });
+
             // small DOM helpers
             function showFieldError(field, message) {
                 var p = field.closest('.form-row') || field.parentNode;
