@@ -885,8 +885,8 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 <div></div>
                 <div class="small footer-right right">
                     <nav class="footer-legal-links" aria-label="Legal">
-                        <a href="/privacy-policy.html">Privacy Policy</a>
-                        <a href="/terms-of-service.html">Terms of Service</a>
+                        <a href="/privacy-policy.html" class="open-legal" data-src="/privacy-policy.html">Privacy Policy</a>
+                        <a href="/terms-of-service.html" class="open-legal" data-src="/terms-of-service.html">Terms of Service</a>
                     </nav>
                 </div>
             </div>
@@ -916,6 +916,15 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     <div class="form-actions"><button type="submit" class="btn btn-primary">Send</button></div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Legal modal (loads Privacy/Terms HTML via fetch and displays in modal) -->
+    <div id="legal-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="legal-modal-title">
+        <div class="modal-backdrop" id="legal-modal-backdrop"></div>
+        <div class="modal-panel" role="document">
+            <button type="button" class="modal-close" aria-label="Close legal">✕</button>
+            <div id="legal-modal-content" class="card"></div>
         </div>
     </div>
 

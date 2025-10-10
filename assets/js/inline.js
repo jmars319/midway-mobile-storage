@@ -29,6 +29,71 @@
         } catch(e) { /* non-fatal */ }
     })();
 
+    // Legal modal loader: fetch privacy/terms and display inside a modal
+    (function(){
+        document.addEventListener('DOMContentLoaded', function(){
+            var legalModal = document.getElementById('legal-modal');
+            var legalBackdrop = legalModal ? legalModal.querySelector('.modal-backdrop') : null;
+            var legalContent = document.getElementById('legal-modal-content');
+            var legalClose = legalModal ? legalModal.querySelector('.modal-close') : null;
+
+            function openLegal(html) {
+                if (!legalModal || !legalContent) return;
+                legalContent.innerHTML = html;
+                // optionally set a heading if missing
+                var h = legalContent.querySelector('h1'); if (h) h.id = 'legal-modal-title';
+                legalModal.setAttribute('aria-hidden','false'); legalModal.classList.add('open'); document.body.classList.add('scroll-lock');
+                if (legalClose && typeof legalClose.focus === 'function') legalClose.focus();
+                // local trapFocus for legal modal (isolated copy)
+                var focusableSelectors = 'a[href], area[href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+                var focusable = Array.from(legalModal.querySelectorAll(focusableSelectors)).filter(function(el){ return el.offsetParent !== null; });
+                var first = focusable.length ? focusable[0] : legalModal;
+                var last = focusable.length ? focusable[focusable.length - 1] : legalModal;
+                var keyHandler = function(e){
+                    if (e.key === 'Tab'){
+                        if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+                        else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+                    }
+                    if (e.key === 'Escape') { closeLegal(); }
+                };
+                document.addEventListener('keydown', keyHandler);
+                // store remover for potential future use (cleanup when closing)
+                legalModal._legalKeyHandler = keyHandler;
+            }
+
+            function closeLegal() {
+                if (!legalModal) return;
+                legalModal.setAttribute('aria-hidden','true'); legalModal.classList.remove('open'); document.body.classList.remove('scroll-lock');
+                if (legalModal._legalKeyHandler) { document.removeEventListener('keydown', legalModal._legalKeyHandler); legalModal._legalKeyHandler = null; }
+                // clear content to reduce memory
+                if (legalContent) legalContent.innerHTML = '';
+            }
+
+            // Handle clicks on links that should open legal pages in modal
+            document.querySelectorAll('.open-legal').forEach(function(a){
+                a.addEventListener('click', function(e){
+                    e.preventDefault();
+                    var src = a.getAttribute('data-src') || a.getAttribute('href');
+                    if (!src) return;
+                    // Fetch the page and extract the main content
+                    fetch(src, { credentials: 'same-origin' }).then(function(res){ return res.text(); }).then(function(text){
+                        try {
+                            var doc = new DOMParser().parseFromString(text, 'text/html');
+                            var main = doc.querySelector('main') || doc.querySelector('.container') || doc.body;
+                            var html = main ? main.innerHTML : text;
+                            openLegal(html, a.textContent || 'Legal');
+                        } catch (e) { openLegal(text, a.textContent || 'Legal'); }
+                    }).catch(function(){ openLegal('<p>Unable to load content. Please visit the page directly.</p><p><a href="'+src+'">Open page</a></p>', a.textContent || 'Legal'); });
+                });
+            });
+
+            if (legalBackdrop) legalBackdrop.addEventListener('click', closeLegal);
+            if (legalClose) legalClose.addEventListener('click', closeLegal);
+            // support Escape key to close
+            document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { if (legalModal && legalModal.classList.contains('open')) closeLegal(); } });
+        });
+    })();
+
     // Menu card expand/collapse
     (function(){
         // menu-card toggle handled elsewhere; helper removed to avoid unused function warnings

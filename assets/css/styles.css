@@ -1636,6 +1636,9 @@ UTILITY CLASSES
 .footer .footer-legal-links a { color: var(--text-secondary); font-size: 0.9rem; padding: .15rem .25rem; }
 .footer .footer-legal-links a:hover { color: var(--primary-color); }
 
+/* Visual separator above the legal row */
+.footer .footer-legal { border-top: 1px solid var(--divider-color); padding-top: .6rem; margin-top: .6rem; }
+
 /* Today badge */
 .hours-list .today-badge { background: var(--accent-color); color: var(--text-primary); padding: 0 .4rem; border-radius: 999px; font-size: .75rem; margin-left:.5rem; font-weight:700 }
 
