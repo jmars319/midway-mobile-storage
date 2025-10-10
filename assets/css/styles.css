@@ -1638,6 +1638,8 @@ UTILITY CLASSES
 @media (max-width: 480px) {
     .biz-contact-row { display: flex; flex-direction: column; align-items: center; gap: .25rem; }
 }
+/* Separator between phone and hours to match muted legal/link style */
+.biz-contact-row .sep { color: var(--text-secondary); padding: 0 .25rem; }
 
 /* Compact footer links */
 .footer .footer-links { display:flex; gap: .5rem; align-items:center; justify-content:flex-end; }

@@ -869,6 +869,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     <div class="small biz-address"><?php echo htmlspecialchars($biz['address'] ?? ''); ?></div>
                     <div class="small biz-contact-row">
                         <div class="biz-contact"><a href="tel:<?php echo preg_replace('/[^0-9+]/','', $biz['phone'] ?? ''); ?>"><?php echo htmlspecialchars($biz['phone'] ?? ''); ?></a></div>
+                        <span class="sep" aria-hidden="true">|</span>
                         <div class="mt-025"><a href="#" id="footer-hours-link">Hours</a></div>
                     </div>
                 </div>
@@ -887,8 +888,8 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 <div></div>
                 <div class="small footer-right right">
                     <nav class="footer-legal-links" aria-label="Legal">
-                        <a href="/privacy-policy.html" class="open-legal" data-src="/privacy-policy.html">Privacy Policy</a>
-                        <a href="/terms-of-service.html" class="open-legal" data-src="/terms-of-service.html">Terms of Service</a>
+                        <a href="/privacy-policy.php" class="open-legal" data-src="/privacy-policy.php">Privacy Policy</a>
+                        <a href="/terms-of-service.php" class="open-legal" data-src="/terms-of-service.php">Terms of Service</a>
                     </nav>
                 </div>
             </div>
