@@ -684,6 +684,40 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 @keyframes menuBackdropIn { from { opacity: 0 } to { opacity: 1 } }
 @keyframes menuPanelIn { from { transform: translateY(8px) scale(.98); opacity: 0 } to { transform: translateY(0) scale(1); opacity: 1 } }
 
+/* Exit animations used when JS adds a .closing class to the backdrop */
+.menu-modal-backdrop.closing { animation: menuBackdropOut .18s ease both; }
+.menu-modal-backdrop.closing .modal-panel { animation: menuPanelOut .18s cubic-bezier(.2,.9,.25,1) both; }
+
+@keyframes menuBackdropOut { from { opacity: 1 } to { opacity: 0 } }
+@keyframes menuPanelOut { from { transform: translateY(0) scale(1); opacity: 1 } to { transform: translateY(8px) scale(.98); opacity: 0 } }
+
+/* Focus styling for accessibility when the modal panel receives focus */
+.menu-modal-backdrop .modal-panel:focus, .menu-modal-backdrop .modal-panel:focus-within {
+    outline: 3px solid rgba(234,88,12,0.18);
+    outline-offset: 4px;
+}
+
+/* Mobile: make the modal panel full-bleed and anchored to the bottom on small screens
+   JS will still apply centering on larger screens; on small screens a full-bleed sheet
+   provides a more native and accessible experience. */
+@media (max-width: 640px) {
+    .menu-modal-backdrop { align-items: flex-end; justify-content: center; }
+    .menu-modal-backdrop .modal-panel,
+    .menu-card.modal-panel {
+        width: 100%;
+        max-width: none;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+        align-self: stretch;
+        display: block;
+    }
+
+    /* Disable the entrance transform on mobile to avoid janky motion when filling the viewport */
+    .menu-modal-backdrop.open .modal-panel { animation: none; transform: none; }
+}
+
 /* When a card is expanded, present it as a centered modal panel */
 .menu-card.expanded { position: relative; }
 .menu-card.expanded.modal-mode { z-index: 1210; }
@@ -1596,6 +1630,11 @@ UTILITY CLASSES
 /* Compact footer links */
 .footer .footer-links { display:flex; gap: .5rem; align-items:center; justify-content:flex-end; }
 .footer .footer-links a { padding: .25rem .4rem; font-size: 0.95rem; display:inline-block; }
+
+/* Legal links row styling: slightly muted and spaced */
+.footer .footer-legal-links { display:flex; gap: .75rem; align-items:center; justify-content:flex-end; }
+.footer .footer-legal-links a { color: var(--text-secondary); font-size: 0.9rem; padding: .15rem .25rem; }
+.footer .footer-legal-links a:hover { color: var(--primary-color); }
 
 /* Today badge */
 .hours-list .today-badge { background: var(--accent-color); color: var(--text-primary); padding: 0 .4rem; border-radius: 999px; font-size: .75rem; margin-left:.5rem; font-weight:700 }
