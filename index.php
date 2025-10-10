@@ -900,11 +900,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
     <div id="contact-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="contact-modal-title">
         <div class="modal-backdrop" id="contact-modal-backdrop"></div>
         <div class="modal-panel" role="document">
-            <button type="button" class="modal-close" aria-label="Close contact">
-                <svg class="icon-close" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M6 6 L18 18 M6 18 L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-                </svg>
-            </button>
+            <?php $modal_close_label = 'Close contact'; include __DIR__ . '/includes/modal-close.php'; ?>
             <div class="modal-header">
                 <?php $biz = $content['business_info'] ?? []; ?>
                 <?php if (!empty($biz['logo'])): ?>
@@ -930,11 +926,12 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
     <div id="legal-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="legal-modal-title">
         <div class="modal-backdrop" id="legal-modal-backdrop"></div>
         <div class="modal-panel" role="document">
-            <button type="button" class="modal-close" aria-label="Close legal">
-                <svg class="icon-close" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M6 6 L18 18 M6 18 L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-                </svg>
-            </button>
+            <?php $modal_close_label = 'Close legal'; include __DIR__ . '/includes/modal-close.php'; ?>
+
+            <!-- Template of close button for JS cloning so fetched content won't overwrite it -->
+            <template id="tmpl-modal-close">
+                <?php $modal_close_label = 'Close'; include __DIR__ . '/includes/modal-close.php'; ?>
+            </template>
             <div id="legal-modal-content" class="card"></div>
         </div>
     </div>

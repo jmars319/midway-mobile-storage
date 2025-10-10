@@ -269,6 +269,14 @@ h4, h5, h6 { font-weight: var(--font-weight-medium); }
 .icon-close { display: inline-block; width: 20px; height: 20px; color: var(--text-secondary); transition: transform .12s ease, opacity .12s ease; }
 .modal .modal-close:active .icon-close { transform: scale(.92); opacity: .9; }
 .modal .modal-close:focus .icon-close { color: var(--text-primary); }
+
+/* Ripple effect for close button */
+.modal .modal-close { position: relative; overflow: hidden; }
+.modal .modal-close .ripple {
+    position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; background: color-mix(in srgb, var(--primary-color) 20%, transparent);
+    border-radius: 999px; transform: translate(-50%, -50%) scale(0); opacity: .85; pointer-events: none;
+}
+.modal .modal-close.ripple-animate .ripple { transform: translate(-50%, -50%) scale(10); opacity: 0; transition: transform .45s cubic-bezier(.22,.9,.3,1), opacity .45s ease; }
 .modal h2 { margin: 0 0 .5rem; font-size: 1.25rem; color: var(--primary-color); }
 .modal .card { background: transparent; box-shadow: none; border: none; padding: 0; }
 .modal .form-label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--text-secondary); }

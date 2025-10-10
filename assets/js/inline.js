@@ -39,7 +39,15 @@
 
             function openLegal(html) {
                 if (!legalModal || !legalContent) return;
+                // ensure the close button exists and is not overwritten by fetched html
                 legalContent.innerHTML = html;
+                // clone close template into the modal-panel if close button missing
+                var tmpl = document.getElementById('tmpl-modal-close');
+                var panel = legalModal.querySelector('.modal-panel');
+                if (panel && tmpl && !panel.querySelector('.modal-close')) {
+                    var clone = tmpl.content.cloneNode(true);
+                    panel.insertBefore(clone, panel.firstChild);
+                }
                 // optionally set a heading if missing
                 var h = legalContent.querySelector('h1'); if (h) h.id = 'legal-modal-title';
                 legalModal.setAttribute('aria-hidden','false'); legalModal.classList.add('open'); document.body.classList.add('scroll-lock');
@@ -93,7 +101,17 @@
             if (legalModal) {
                 legalModal.addEventListener('pointerdown', function(e){
                     var btn = e.target.closest && e.target.closest('.modal-close');
-                    if (btn && legalModal.contains(btn)) { e.preventDefault(); e.stopPropagation(); closeLegal(); }
+                    if (btn && legalModal.contains(btn)) { 
+                        // ripple feedback: create a small element and animate
+                        var ripple = btn.querySelector('.ripple');
+                        if (!ripple) { ripple = document.createElement('span'); ripple.className = 'ripple'; btn.appendChild(ripple); }
+                        // trigger animation
+                        btn.classList.remove('ripple-animate');
+                        // force reflow
+                        void btn.offsetWidth;
+                        btn.classList.add('ripple-animate');
+                        e.preventDefault(); e.stopPropagation(); closeLegal(); 
+                    }
                 });
                 // click fallback for environments where pointer events may not fire
                 legalModal.addEventListener('click', function(e){
