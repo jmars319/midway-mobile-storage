@@ -88,11 +88,18 @@
             });
 
             if (legalBackdrop) legalBackdrop.addEventListener('click', closeLegal);
-            if (legalClose) {
-                // respond to pointerdown for immediate touch feedback, fall back to click
-                var legalCloseHandler = function(e){ e.stopPropagation(); e.preventDefault(); closeLegal(); };
-                legalClose.addEventListener('pointerdown', legalCloseHandler, { passive: true });
-                legalClose.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); /* fallback if pointerdown not fired */ closeLegal(); });
+            // Delegate close handling to the modal container so the handler works
+            // even if the close button is replaced or the DOM mutates.
+            if (legalModal) {
+                legalModal.addEventListener('pointerdown', function(e){
+                    var btn = e.target.closest && e.target.closest('.modal-close');
+                    if (btn && legalModal.contains(btn)) { e.preventDefault(); e.stopPropagation(); closeLegal(); }
+                });
+                // click fallback for environments where pointer events may not fire
+                legalModal.addEventListener('click', function(e){
+                    var btn = e.target.closest && e.target.closest('.modal-close');
+                    if (btn && legalModal.contains(btn)) { e.preventDefault(); e.stopPropagation(); closeLegal(); }
+                });
             }
             // support Escape key to close
             document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { if (legalModal && legalModal.classList.contains('open')) closeLegal(); } });
