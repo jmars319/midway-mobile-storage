@@ -1,19 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>
+    <loc>https://midwaymobilestorage.com/</loc>\n    <lastmod>2025-10-10T05:32:16+00:00</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>
   <url>
-  <loc>https://midwaymobilestorage.com/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-    <lastmod>2025-10-10</lastmod>
-  </url>
+    <loc>https://midwaymobilestorage.com/privacy-policy.html</loc>\n    <lastmod>2025-10-10T05:32:16+00:00</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>
   <url>
-  <loc>https://midwaymobilestorage.com/privacy-policy.html</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
+    <loc>https://midwaymobilestorage.com/terms-of-service.html</loc>\n    <lastmod>2025-10-10T05:32:16+00:00</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>
   <url>
-  <loc>https://midwaymobilestorage.com/terms-of-service.html</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-</urlset>
+    <loc>https://midwaymobilestorage.com/order.php</loc>\n    <lastmod>2025-10-10T05:32:16+00:00</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>
+  <url>
+    <loc>https://midwaymobilestorage.com/#small-units</loc>\n    <lastmod>2025-10-10T05:32:16+00:00</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>
+  <url>
+    <loc>https://midwaymobilestorage.com/#medium-units</loc>\n    <lastmod>2025-10-10T05:32:16+00:00</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>
+  <url>
+    <loc>https://midwaymobilestorage.com/#large-units</loc>\n    <lastmod>2025-10-10T05:32:16+00:00</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>
+</urlset>\n
