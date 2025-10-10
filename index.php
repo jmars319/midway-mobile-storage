@@ -867,8 +867,10 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     <?php $biz = $content['business_info'] ?? []; ?>
                     <div class="biz-name"><?php echo htmlspecialchars($biz['name'] ?? 'Midway Mobile Storage'); ?></div>
                     <div class="small biz-address"><?php echo htmlspecialchars($biz['address'] ?? ''); ?></div>
-                    <div class="small biz-contact"><a href="tel:<?php echo preg_replace('/[^0-9+]/','', $biz['phone'] ?? ''); ?>"><?php echo htmlspecialchars($biz['phone'] ?? ''); ?></a> &nbsp;|&nbsp; <a href="mailto:<?php echo htmlspecialchars($biz['email'] ?? ''); ?>"><?php echo htmlspecialchars($biz['email'] ?? ''); ?></a></div>
-                    <div class="small mt-025"><a href="#" id="footer-hours-link">Hours</a></div>
+                    <div class="small biz-contact-row">
+                        <div class="biz-contact"><a href="tel:<?php echo preg_replace('/[^0-9+]/','', $biz['phone'] ?? ''); ?>"><?php echo htmlspecialchars($biz['phone'] ?? ''); ?></a></div>
+                        <div class="mt-025"><a href="#" id="footer-hours-link">Hours</a></div>
+                    </div>
                 </div>
                 <div class="small footer-right right">
                     <nav class="footer-links" aria-label="Footer navigation">

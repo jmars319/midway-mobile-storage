@@ -81,6 +81,10 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
         <div class="small footer-left">&copy; <?php echo date('Y'); ?> Midway Mobile Storage. All rights reserved.</div>
         <div class="small footer-center center">
           <div class="biz-name">Midway Mobile Storage</div>
+          <div class="small biz-contact-row">
+            <div class="biz-contact"><a href="tel:<?php echo preg_replace('/[^0-9+]/','', $content['business_info']['phone'] ?? ''); ?>"><?php echo htmlspecialchars($content['business_info']['phone'] ?? ''); ?></a></div>
+            <div class="mt-025"><a href="#" id="footer-hours-link">Hours</a></div>
+          </div>
         </div>
         <div class="small footer-right right">
           <nav class="footer-links" aria-label="Footer navigation">

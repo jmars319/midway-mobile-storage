@@ -1632,6 +1632,13 @@ UTILITY CLASSES
 .footer .biz-name { font-size: 1rem; }
 .footer .biz-address, .footer .biz-contact { font-size: 0.9rem; color: var(--text-secondary); }
 
+/* Inline row for phone + Hours link in footer center column */
+.biz-contact-row { display: inline-flex; gap: .6rem; align-items: center; }
+.biz-contact-row .biz-contact a { color: var(--text-primary); }
+@media (max-width: 480px) {
+    .biz-contact-row { display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+}
+
 /* Compact footer links */
 .footer .footer-links { display:flex; gap: .5rem; align-items:center; justify-content:flex-end; }
 .footer .footer-links a { padding: .25rem .4rem; font-size: 0.95rem; display:inline-block; }
