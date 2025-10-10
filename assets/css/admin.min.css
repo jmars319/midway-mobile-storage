@@ -1,82 +1,29 @@
-/* admin.min.css disabled
-	The canonical development CSS `admin.css` will be used instead.
-	A full backup was created at `assets/css/admin.min.css.disabled`.
+/* Regenerated admin.min.css — built from canonical admin CSS modules
+   Contains admin.base.css + admin.menu.css + admin.modal.css + admin.css
+   Important fixes applied: submenu min-width reduced to 160px, modal/backdrop z-index set to 50000, #toast-container z-index set to 50010.
 */
-/* Admin base (variables, layout, cards, header, image sections, image list) */
-:root{
-	/* admin palette (mapped to site tokens where appropriate) */
-	--admin-grad-1: var(--primary-300, #667eea);
-	--admin-grad-2: var(--primary-600, #764ba2);
-	--card-bg: var(--surface-color, #ffffff);
-	--muted: var(--text-muted, #64748b);
-	--accent: var(--primary-color, #2563eb);
-	--admin-menu-font-size: 0.88rem;
-	--admin-menu-line-height: 1.25;
+:root{--admin-grad-1:var(--primary-300,#667eea);--admin-grad-2:var(--primary-600,#764ba2);--card-bg:var(--surface-color,#ffffff);--muted:var(--text-muted,#64748b);--accent:var(--primary-color,#2563eb);--admin-menu-font-size:0.88rem;--admin-menu-line-height:1.25;--admin-text:var(--text-primary);--admin-border:var(--border-color,#eef2ff);--admin-divider-weak:var(--divider-color,#f3f6ff);--admin-danger:var(--error-color,#ef4444);--admin-success:var(--success-color,#16a34a);--admin-surface:color-mix(in srgb,var(--card-bg) 90%,black 10%)}html,body{height:100%}.admin *{box-sizing:border-box}body.admin{background:linear-gradient(135deg,var(--admin-grad-1) 0%,var(--admin-grad-2) 100%);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text-on-dark);--text-inverse:var(--admin-text)}.admin .page-wrap{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem .75rem}.admin .admin-card{width:100%;max-width:calc(100% - 2rem);background:var(--admin-surface);border-radius:10px;box-shadow:0 12px 20px rgba(2,6,23,.18);padding:1rem;border:1px solid color-mix(in srgb,var(--admin-surface) 85%,black 15%);box-sizing:border-box;color:var(--admin-text)}
 
-	/* helper tokens for admin (use site variables where applicable) */
-	--admin-text: var(--text-primary);
-	--admin-border: var(--border-color, #eef2ff);
-	--admin-divider-weak: var(--divider-color, #f3f6ff);
-	--admin-danger: var(--error-color, #ef4444);
-	--admin-success: var(--success-color, #16a34a);
-	/* slightly darker surface for admin panels so light text remains readable */
-	--admin-surface: color-mix(in srgb, var(--card-bg) 90%, black 10%);
-}
-html, body { height: 100%; }
-/* make sure elements size predictably */
-.admin * { box-sizing: border-box; }
-/* ensure readable text on the dark admin backdrop */
-body.admin { background: linear-gradient(135deg, var(--admin-grad-1) 0%, var(--admin-grad-2) 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text-on-dark); /* map any inverse text usages to dark admin text in the admin UI */
-	--text-inverse: var(--admin-text);
-}
-.admin .page-wrap { min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:2rem 0.75rem; }
-.admin .admin-card { width:100%; max-width:1100px; max-width: calc(100% - 2rem); background: var(--admin-surface); border-radius:10px; box-shadow:0 12px 20px rgba(2,6,23,0.18); padding:1rem; border:1px solid color-mix(in srgb, var(--admin-surface) 85%, black 15%); box-sizing:border-box; color: var(--admin-text); }
+/* Menu (compact submenu width to avoid covering modals) */
+.menu-admin-wrap{gap:1rem;display:flex;align-items:flex-start;margin-top:.5rem}.pm-combo{position:relative}.pm-combo-toggle{display:inline-flex;align-items:center;gap:.4rem}.pm-combo-menu{display:none;position:absolute;right:0;margin-top:.4rem;background:var(--card-bg);border:1px solid rgba(2,6,23,.06);border-radius:8px;padding:.35rem;box-shadow:0 10px 30px rgba(2,6,23,.08);min-width:160px;z-index:30010}.pm-combo-menu.open{display:block;animation:submenuOpen .18s ease both}@keyframes submenuOpen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}.pm-combo-menu .pm-subitem{display:flex;align-items:center;gap:.35rem;width:100%;padding:.35rem .45rem;text-decoration:none;color:var(--admin-text);border-radius:6px;background:transparent;border:none;text-align:left;font-size:var(--admin-menu-font-size);line-height:var(--admin-menu-line-height);min-height:32px}.pm-combo-menu .pm-subitem:hover,.pm-combo-menu .pm-subitem:focus{background:linear-gradient(90deg,rgba(37,99,235,.06),rgba(37,99,235,.02));color:var(--accent);outline:none}.pm-combo-menu .pm-subitem+.pm-subitem{border-top:1px solid rgba(2,6,23,.03)}.pm-subitem-full{width:100%;text-align:left;display:flex;align-items:center;gap:.45rem;font-size:var(--admin-menu-font-size);line-height:var(--admin-menu-line-height);min-height:32px}.pm-combo-menu .pm-subitem.disabled,.pm-subitem.disabled{pointer-events:none;opacity:.6;cursor:not-allowed;color:var(--muted)}.pm-combo-menu .pm-subitem.disabled .pm-icon{color:var(--muted)}.pm-form-condensed{margin:0 0 .25rem 0}
 
-/* Ensure readable text on light admin surfaces (cards, previews, sections, modals, menus) */
-.admin .admin-card,
-.admin .admin-card h1,
-.admin .admin-card h2,
-.admin .admin-card h3,
-.admin .admin-card h4,
-.admin .admin-card h5,
-.admin .admin-card h6,
-.admin .admin-card p,
-.admin .admin-card a,
-.admin .admin-card label,
-.admin .preview-area,
-.admin .section-wrap,
-.admin .menu-admin-wrap,
-.admin .pm-combo-menu,
-.admin table.admin-table,
-.admin .content-editor,
-.admin #modal,
-.admin .modal,
-.admin .preview-section,
-.admin .preview-item,
-.admin .upload-wrap {
-	color: var(--admin-text);
-}
+/* Compact count badge */
+.count-badge{display:inline-block;min-width:28px;padding:2px 6px;font-size:.78rem;font-weight:700;border-radius:999px;text-align:center;color:#000;background:var(--secondary-color,#ea580c);margin-left:.5rem;box-shadow:0 2px 6px rgba(2,6,23,.08)}.pm-combo-menu .pm-subitem .count-badge{box-shadow:0 2px 6px rgba(2,6,23,.08)}.pm-combo-menu .pm-subitem.disabled .count-badge,.pm-subitem.disabled .count-badge{background:color-mix(in srgb,var(--secondary-color,#ea580c) 14%,var(--card-bg) 86%);color:#000;box-shadow:none}
 
-/* Ensure semantic text elements (non-form) are readable on admin surfaces.
-   Exclude form controls and buttons so their internal text remains unchanged. */
-.admin h1, .admin h2, .admin h3, .admin h4, .admin h5, .admin h6,
-.admin p, .admin label, .admin td, .admin th, .admin li, .admin small,
-.admin strong, .admin b, .admin em, .admin code, .admin pre {
-	color: var(--admin-text);
-}
+/* Modal & Backdrop — ensure these overlay option menus */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50000}.modal-backdrop.open{display:flex!important;align-items:center;justify-content:center}.app-modal-dialog{background:var(--card-bg,#fff);max-width:720px;width:95%;margin:auto;padding:1rem;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.4)}.app-modal-body{clear:both;max-height:60vh;overflow:auto}.app-modal-table{width:100%;border-collapse:collapse}.app-modal-table th{text-align:left;padding:.25rem .5rem}.app-modal-table td{padding:.25rem .5rem}#modal{background:white;padding:0;border-radius:10px;max-width:520px;width:92%;box-shadow:0 12px 36px rgba(2,6,23,.18);overflow:hidden}#modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid rgba(0,0,0,.04)}#modal-title{margin:0;font-size:1rem}#modal-close{background:transparent;border:none;font-size:1.05rem;cursor:pointer}#modal-title{color:var(--text-primary)}#modal-close{color:var(--text-primary);opacity:.95}#modal-close:hover,#modal-close:focus{color:var(--primary-color);opacity:1;outline:none}.admin #modal .actions .btn-ghost{color:var(--admin-modal-text);-webkit-text-fill-color:var(--admin-modal-text);border-color:rgba(15,23,42,.06)}.modal .actions{padding:.75rem 1.25rem;display:flex;justify-content:flex-end;gap:.5rem;border-top:1px solid rgba(0,0,0,.04);background:var(--card-bg)}
 
-/* Ensure links inside light surfaces use the brand primary for affordance */
-.admin .admin-card a, .admin .preview-area a { color: var(--primary-color); text-decoration:underline }
+/* Images modal */
+#images-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50000}#images-modal-backdrop.images-modal-open{display:flex}#images-modal{background:var(--card-bg);border-radius:10px;max-width:1000px;width:calc(100% - 48px);max-height:80vh;overflow:auto;box-shadow:0 12px 40px rgba(2,6,23,.35);padding:1rem;box-sizing:border-box;position:relative}#images-modal{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important}#images-modal .close-btn{background:color-mix(in srgb,var(--card-bg,#fff) 92%,black 8%);color:var(--text-primary,#0b1220);padding:6px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.06);font-size:1.15rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(2,6,23,.12)}#images-modal .close-btn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(2,6,23,.14)}#images-modal .close-btn:focus{outline:3px solid color-mix(in srgb,var(--primary-color,#2563eb) 12%,var(--card-bg,#fff) 88%)}
 
-/* Login container and alerts are explicit light surfaces that must use dark text */
-.admin .login-container,
-.admin .login-container h1,
-.admin .login-container p,
-.admin .login-container label,
-.admin .login-container .form-label,
-.admin .login-container .alert {
-	color: var(--admin-text);
-}
+/* Toasts */
+#toast-container{position:fixed;right:1rem;top:1rem;z-index:50010;display:flex;flex-direction:column;gap:.5rem}#toast-container .toast{border-radius:8px;font-weight:600;box-shadow:0 8px 18px rgba(2,6,23,.12);background:var(--surface-dark);color:var(--text-on-dark);padding:.6rem .8rem;opacity:.95}.toast.success{background:var(--admin-success);color:var(--card-bg)}.toast.error{background:var(--admin-danger);color:var(--card-bg)}.toast.fade-out{opacity:0;transition:opacity .3s}
+
+/* Utilities & helpers (condensed) */
+.muted{color:var(--muted)!important}.muted-text{color:var(--text-muted,#94a3b8)!important}.section-wrap{border:1px solid var(--admin-border);padding:.6rem;margin-bottom:.8rem;border-radius:6px;background:var(--card-bg)}.preview-area{border:1px solid var(--admin-border);border-radius:8px;padding:.6rem;background:var(--card-bg);min-height:240px;overflow:auto}.btn{transition:transform .18s ease,box-shadow .18s ease}.btn:hover,.btn:focus{transform:translateY(-2px) scale(1.02)}.card{transition:transform .22s cubic-bezier(.2,.9,.22,1)}.card:hover{transform:translateY(-8px) rotateX(2deg)}
+
+/* Final fallback to ensure submenu visibility toggles are respected */
+.pm-combo-menu{display:none!important}.pm-combo-menu.open{display:block!important}
 
 /* Make alert background stand out on light surfaces */
 .admin .login-container .alert { background: color-mix(in srgb, var(--admin-danger) 10%, var(--card-bg) 90%); border:1px solid color-mix(in srgb, var(--admin-danger) 16%, var(--card-bg) 84%); }
