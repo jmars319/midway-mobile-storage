@@ -769,6 +769,15 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
         <div class="modal-backdrop" id="contact-modal-backdrop"></div>
         <div class="modal-panel" role="document">
             <button type="button" class="modal-close" aria-label="Close contact">✕</button>
+            <div class="modal-header">
+                <?php $biz = $content['business_info'] ?? []; ?>
+                <?php if (!empty($biz['logo'])): ?>
+                    <img src="<?php echo htmlspecialchars('/uploads/images/' . ltrim($biz['logo'], '/')); ?>" alt="<?php echo htmlspecialchars($biz['name'] ?? ''); ?>" class="modal-logo">
+                <?php else: ?>
+                    <div class="modal-logo-text"><?php echo htmlspecialchars($biz['name'] ?? ''); ?></div>
+                <?php endif; ?>
+                <div class="modal-subtitle small muted">Send us a message &mdash; we typically reply within 1 business day.</div>
+            </div>
             <h2 id="contact-modal-title">Contact Us</h2>
             <div class="card">
                 <form id="footer-contact-form" action="/contact.php" method="post">

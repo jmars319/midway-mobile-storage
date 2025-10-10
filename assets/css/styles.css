@@ -273,6 +273,18 @@ h4, h5, h6 { font-weight: var(--font-weight-medium); }
     .modal-panel { padding: 1.5rem 1.5rem 1.75rem 1.5rem; }
 }
 
+/* Modal header/branding */
+.modal-header { display:flex; align-items:center; gap:.75rem; margin-bottom:.5rem; }
+.modal-logo { height:44px; width:auto; border-radius:6px; box-shadow: 0 4px 14px rgba(16,24,80,0.06); }
+.modal-logo-text { font-weight:700; color:var(--primary-color); font-size:1.05rem; }
+.modal-subtitle { color:var(--text-secondary); margin-left: .25rem; }
+
+/* Form message styles */
+.form-message { margin-top:.6rem; padding:.6rem .75rem; border-radius:8px; box-shadow: 0 6px 18px rgba(2,6,23,0.06); }
+.form-success { background: color-mix(in srgb, var(--success-color) 10%, var(--surface-color) 90%); border: 1px solid color-mix(in srgb, var(--success-color) 18%, var(--surface-color) 82%); color: var(--success-color); }
+.form-error { background: color-mix(in srgb, var(--error-color) 8%, var(--surface-color) 92%); border: 1px solid color-mix(in srgb, var(--error-color) 14%, var(--surface-color) 86%); color: var(--error-color); }
+.form-message.fade-out { opacity: 0; transform: translateY(-6px); transition: opacity .28s, transform .28s; }
+
 p { margin: 0; line-height: 1.6; }
 
 a {

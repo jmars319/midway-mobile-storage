@@ -175,6 +175,30 @@
 
             if (form) form.setAttribute('action', '/contact.php');
 
+            // AJAX submit for modal contact form (uses same endpoint but stays in modal)
+            if (form) {
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    var submitBtn = form.querySelector('button[type="submit"]');
+                    var originalText = submitBtn ? submitBtn.textContent : null;
+                    if (submitBtn) { submitBtn.textContent = 'Sending...'; submitBtn.disabled = true; }
+                    var fd = new FormData(form);
+                    fetch(form.getAttribute('action') || '/contact.php', { method: 'POST', body: fd, credentials: 'same-origin', headers: { 'Accept': 'application/json' } }).then(function(res){ return res.text(); }).then(function(text){
+                        var data = null; try { data = text ? JSON.parse(text) : null; } catch(e){ data = null; }
+                        var container = form.parentNode;
+                        // remove previous messages
+                        var prev = container.querySelector('.form-message'); if (prev) prev.remove();
+                        if (data && data.success) {
+                            var ok = document.createElement('div'); ok.className = 'form-message form-success'; ok.textContent = data.message || 'Thanks — your message was sent.'; container.insertBefore(ok, form.nextSibling);
+                            form.reset(); setTimeout(function(){ closeModal(); ok.classList.add('fade-out'); setTimeout(function(){ ok.remove(); }, 350); }, 1400);
+                        } else {
+                            var err = document.createElement('div'); err.className = 'form-message form-error'; err.textContent = (data && data.message) ? data.message : 'Submission failed. Please try again.'; container.insertBefore(err, form.nextSibling);
+                            setTimeout(function(){ try { err.classList.add('fade-out'); setTimeout(function(){ err.remove(); }, 350); } catch(e){} }, 5000);
+                        }
+                    }).catch(function(err){ var container = form.parentNode; var errEl = document.createElement('div'); errEl.className='form-message form-error'; errEl.textContent = 'Network error: ' + err.message; container.insertBefore(errEl, form.nextSibling); setTimeout(function(){ errEl.classList.add('fade-out'); setTimeout(function(){ errEl.remove(); }, 350); }, 5000); }).finally(function(){ if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalText; } });
+                });
+            }
+
             const trapFocus = function(modalEl) {
                 var focusableSelectors = 'a[href], area[href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
                 var focusable = Array.from(modalEl.querySelectorAll(focusableSelectors)).filter(function(el){ return el.offsetParent !== null; });
