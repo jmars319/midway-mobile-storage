@@ -263,6 +263,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         @chmod($contentFile, 0640);
         admin_save_log('save_success', ['section'=>$section, 'timestamp'=>$content['last_updated']]);
         echo json_encode(['success' => true, 'message' => 'Content saved successfully!', 'timestamp' => $content['last_updated']]);
+        // Regenerate sitemap in background (best-effort). Non-fatal if it fails.
+        $siteroot = dirname(__DIR__);
+        $generator = $siteroot . '/scripts/generate-sitemap.php';
+        if (is_readable($generator)) {
+            // Try PHP CLI if available
+            $php = (defined('PHP_BINARY') ? PHP_BINARY : 'php');
+            @exec(escapeshellcmd($php) . ' ' . escapeshellarg($generator) . ' > /dev/null 2>&1 &');
+        }
     } else {
         @unlink($tmp);
         admin_save_log('save_failed', ['section'=>$section]);
