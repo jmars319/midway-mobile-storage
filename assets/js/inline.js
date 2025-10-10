@@ -57,12 +57,100 @@
             closeButtons.forEach(function(btn){ btn.addEventListener('click', closeModal); });
 
             // Expand/collapse behavior for public unit/menu cards
+            // When expanded we present the card centered in a modal-like backdrop
+            var menuModalState = { openCard: null, origParent: null, origNext: null, backdrop: null, keyHandler: null };
+
+            function openMenuModal(card, btn) {
+                if (!card) return;
+                // if already open, no-op
+                if (menuModalState.openCard) return;
+                var lab = btn ? btn.querySelector('.expand-label') : null;
+                if (lab) lab.textContent = 'Show less';
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+
+                // store original position so we can restore later
+                menuModalState.origParent = card.parentNode;
+                menuModalState.origNext = card.nextSibling;
+
+                // create backdrop if missing
+                var backdrop = document.querySelector('.menu-modal-backdrop');
+                if (!backdrop) {
+                    backdrop = document.createElement('div');
+                    backdrop.className = 'menu-modal-backdrop';
+                    var panel = document.createElement('div'); panel.className = 'modal-panel';
+                    backdrop.appendChild(panel);
+                    document.body.appendChild(backdrop);
+                }
+                menuModalState.backdrop = backdrop;
+
+                // move the card into the modal panel
+                var panelEl = backdrop.querySelector('.modal-panel');
+                panelEl.appendChild(card);
+                // mark modal mode and expanded
+                card.classList.add('expanded');
+                card.classList.add('modal-mode');
+                card.classList.add('modal-panel');
+                // show backdrop
+                backdrop.classList.add('open');
+                document.body.classList.add('scroll-lock');
+                menuModalState.openCard = card;
+
+                // clicking backdrop (outside panel) should close
+                backdrop.addEventListener('click', backdropClickHandler);
+
+                // key handler (Escape)
+                menuModalState.keyHandler = function(e){ if (e.key === 'Escape') closeMenuModal(); };
+                document.addEventListener('keydown', menuModalState.keyHandler);
+            }
+
+            function backdropClickHandler(e) {
+                // if click outside the modal-panel, close
+                var panel = menuModalState.backdrop && menuModalState.backdrop.querySelector('.modal-panel');
+                if (!panel) return;
+                if (!panel.contains(e.target)) closeMenuModal();
+            }
+
+            function closeMenuModal() {
+                var card = menuModalState.openCard;
+                if (!card) return;
+                var backdrop = menuModalState.backdrop;
+                // remove modal classes
+                card.classList.remove('modal-mode');
+                card.classList.remove('modal-panel');
+                card.classList.remove('expanded');
+                // restore to original location
+                if (menuModalState.origParent) {
+                    if (menuModalState.origNext && menuModalState.origNext.parentNode === menuModalState.origParent) {
+                        menuModalState.origParent.insertBefore(card, menuModalState.origNext);
+                    } else {
+                        menuModalState.origParent.appendChild(card);
+                    }
+                }
+                // update button aria/label if present
+                var btn = card.querySelector('.expand-btn');
+                if (btn) { btn.setAttribute('aria-expanded', 'false'); var lab = btn.querySelector('.expand-label'); if (lab) lab.textContent = 'See all units'; }
+
+                // hide and cleanup backdrop
+                if (backdrop) {
+                    backdrop.classList.remove('open');
+                    backdrop.removeEventListener('click', backdropClickHandler);
+                    // optional: don't fully remove backdrop to keep future reuse
+                }
+                document.body.classList.remove('scroll-lock');
+                if (menuModalState.keyHandler) {
+                    document.removeEventListener('keydown', menuModalState.keyHandler);
+                    menuModalState.keyHandler = null;
+                }
+                menuModalState.openCard = null;
+            }
+
             function toggleMenuCard(card, btn) {
                 if (!card) return;
-                var expanded = card.classList.toggle('expanded');
-                if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-                var lab = btn ? btn.querySelector('.expand-label') : null;
-                if (lab) lab.textContent = expanded ? 'Show less' : 'See all units';
+                if (menuModalState.openCard) {
+                    closeMenuModal();
+                } else {
+                    openMenuModal(card, btn);
+                }
             }
 
             // Button toggles
