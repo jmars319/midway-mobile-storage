@@ -264,6 +264,11 @@ h4, h5, h6 { font-weight: var(--font-weight-medium); }
 .modal .modal-close:hover { background: rgba(0,0,0,0.04); color: var(--text-primary); }
 .modal .modal-close:active { background: rgba(0,0,0,0.06); transform: translateY(0.5px); }
 .modal .modal-close:focus { outline: 2px solid color-mix(in srgb, var(--primary-color) 20%, transparent); outline-offset: 2px; }
+
+/* Close icon styling and press animation */
+.icon-close { display: inline-block; width: 20px; height: 20px; color: var(--text-secondary); transition: transform .12s ease, opacity .12s ease; }
+.modal .modal-close:active .icon-close { transform: scale(.92); opacity: .9; }
+.modal .modal-close:focus .icon-close { color: var(--text-primary); }
 .modal h2 { margin: 0 0 .5rem; font-size: 1.25rem; color: var(--primary-color); }
 .modal .card { background: transparent; box-shadow: none; border: none; padding: 0; }
 .modal .form-label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--text-secondary); }

@@ -524,7 +524,11 @@
                 '<div id="hours-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="hours-modal-title">'+
                     '<div class="modal-backdrop" id="hours-modal-backdrop"></div>'+
                     '<div class="modal-panel" role="document">'+
-                        '<button type="button" class="modal-close" aria-label="Close hours">✕</button>'+
+                        '<button type="button" class="modal-close" aria-label="Close hours">'+
+                            '<svg class="icon-close" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+
+                                '<path d="M6 6 L18 18 M6 18 L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />'+
+                            '</svg>'+
+                        '</button>'+
                         '<h2 id="hours-modal-title">Hours</h2>'+
                         '<div class="card">'+
                             '<div class="hours-list">';
