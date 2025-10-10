@@ -115,7 +115,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 <li><a class="nav-link" href="#storage-quote">Get a Quote</a></li>
                 <li><a class="nav-link" href="#about">About</a></li>
                 <li><a class="nav-link" href="#job-application">Careers</a></li>
-                <li><a class="nav-link" href="#contact">Contact</a></li>
+                <li><a class="nav-link open-contact" href="#contact">Contact</a></li>
             </ul>
 
                 </div>
@@ -757,12 +757,29 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                         <a href="#storage-quote">Quotes</a>
                         <a href="#about">About</a>
                         <a href="#job-application">Careers</a>
-                        <a href="#contact">Contact</a>
+                        <a href="#contact" id="footer-contact-link">Contact</a>
                     </nav>
                 </div>
             </div>
         </div>
     </footer>
+
+    <!-- Contact modal (used on small screens and when footer contact is clicked) -->
+    <div id="contact-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="contact-modal-title">
+        <div class="modal-backdrop" id="contact-modal-backdrop"></div>
+        <div class="modal-panel" role="document">
+            <button type="button" class="modal-close" aria-label="Close contact">✕</button>
+            <h2 id="contact-modal-title">Contact Us</h2>
+            <div class="card">
+                <form id="footer-contact-form" action="/contact.php" method="post">
+                    <label class="form-label">Name <input type="text" name="first_name" class="form-input" required></label>
+                    <label class="form-label">Email <input type="email" name="email" class="form-input" required></label>
+                    <label class="form-label">Message <textarea name="message" class="form-input" rows="4" required></textarea></label>
+                    <div class="form-actions"><button type="submit" class="btn btn-primary">Send</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>window.__HOURS_DATA = <?php echo json_encode($content['hours'] ?? new stdClass()); ?>;</script>
     <script src="assets/js/inline.js" defer></script>
