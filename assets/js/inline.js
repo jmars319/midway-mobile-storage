@@ -58,7 +58,7 @@
 
             // Expand/collapse behavior for public unit/menu cards
             // When expanded we present the card centered in a modal-like backdrop
-            var menuModalState = { openCard: null, origParent: null, origNext: null, backdrop: null, keyHandler: null };
+            var menuModalState = { openCard: null, origParent: null, origNext: null, backdrop: null, keyHandler: null, opener: null };
 
             function openMenuModal(card, btn) {
                 if (!card) return;
@@ -72,14 +72,32 @@
                 menuModalState.origParent = card.parentNode;
                 menuModalState.origNext = card.nextSibling;
 
+                // remember what element opened the modal so we can return focus on close
+                menuModalState.opener = btn || document.activeElement;
+
                 // create backdrop if missing
                 var backdrop = document.querySelector('.menu-modal-backdrop');
                 if (!backdrop) {
                     backdrop = document.createElement('div');
                     backdrop.className = 'menu-modal-backdrop';
-                    var panel = document.createElement('div'); panel.className = 'modal-panel';
+                    // mark initial accessibility attributes on the backdrop
+                    backdrop.setAttribute('aria-hidden', 'true');
+                    var panel = document.createElement('div');
+                    panel.className = 'modal-panel';
+                    // provide dialog semantics on the panel for assistive tech
+                    panel.setAttribute('role', 'dialog');
+                    panel.setAttribute('aria-modal', 'true');
+                    panel.setAttribute('tabindex', '-1');
                     backdrop.appendChild(panel);
                     document.body.appendChild(backdrop);
+                } else {
+                    // ensure panel has the proper ARIA attributes if backdrop existed
+                    var existingPanel = backdrop.querySelector('.modal-panel');
+                    if (existingPanel && !existingPanel.getAttribute('role')) {
+                        existingPanel.setAttribute('role', 'dialog');
+                        existingPanel.setAttribute('aria-modal', 'true');
+                        existingPanel.setAttribute('tabindex', '-1');
+                    }
                 }
                 menuModalState.backdrop = backdrop;
 
@@ -90,16 +108,34 @@
                 card.classList.add('expanded');
                 card.classList.add('modal-mode');
                 card.classList.add('modal-panel');
-                // show backdrop
+                // show backdrop (and expose to AT) 
                 backdrop.classList.add('open');
+                backdrop.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('scroll-lock');
                 menuModalState.openCard = card;
 
                 // clicking backdrop (outside panel) should close
                 backdrop.addEventListener('click', backdropClickHandler);
 
-                // key handler (Escape)
-                menuModalState.keyHandler = function(e){ if (e.key === 'Escape') closeMenuModal(); };
+                // focus trap: keep keyboard navigation inside the modal panel
+                var focusableSelectors = 'a[href], area[href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+                var focusable = Array.from(panelEl.querySelectorAll(focusableSelectors)).filter(function(el){ return el.offsetParent !== null; });
+                var firstFocusable = focusable.length ? focusable[0] : panelEl;
+                var lastFocusable = focusable.length ? focusable[focusable.length - 1] : panelEl;
+                try { firstFocusable.focus(); } catch(e) { /* ignore */ }
+
+                menuModalState.keyHandler = function(e){
+                    if (e.key === 'Escape') { e.preventDefault(); closeMenuModal(); return; }
+                    if (e.key === 'Tab') {
+                        // if no focusable items, do nothing
+                        if (focusable.length === 0) { e.preventDefault(); return; }
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstFocusable) { e.preventDefault(); lastFocusable.focus(); }
+                        } else {
+                            if (document.activeElement === lastFocusable) { e.preventDefault(); firstFocusable.focus(); }
+                        }
+                    }
+                };
                 document.addEventListener('keydown', menuModalState.keyHandler);
             }
 
@@ -130,17 +166,29 @@
                 var btn = card.querySelector('.expand-btn');
                 if (btn) { btn.setAttribute('aria-expanded', 'false'); var lab = btn.querySelector('.expand-label'); if (lab) lab.textContent = 'See all units'; }
 
-                // hide and cleanup backdrop
+                // hide and cleanup backdrop with exit animation
                 if (backdrop) {
+                    // add closing class to trigger CSS exit animation
                     backdrop.classList.remove('open');
+                    // mark as closing and hide from assistive tech
+                    backdrop.classList.add('closing');
+                    backdrop.setAttribute('aria-hidden', 'true');
                     backdrop.removeEventListener('click', backdropClickHandler);
-                    // optional: don't fully remove backdrop to keep future reuse
+                    // after animation, remove closing class
+                    setTimeout(function(){ backdrop.classList.remove('closing'); }, 260);
                 }
                 document.body.classList.remove('scroll-lock');
                 if (menuModalState.keyHandler) {
                     document.removeEventListener('keydown', menuModalState.keyHandler);
                     menuModalState.keyHandler = null;
                 }
+                // restore focus to the opener (if any) for accessibility
+                try {
+                    if (menuModalState.opener && typeof menuModalState.opener.focus === 'function') {
+                        menuModalState.opener.focus();
+                    }
+                } catch(e) { /* ignore focus failures */ }
+                menuModalState.opener = null;
                 menuModalState.openCard = null;
             }
 
