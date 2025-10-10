@@ -900,8 +900,8 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
     <div id="contact-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="contact-modal-title">
         <div class="modal-backdrop" id="contact-modal-backdrop"></div>
         <div class="modal-panel" role="document">
-            <?php $modal_close_label = 'Close contact'; include __DIR__ . '/includes/modal-close.php'; ?>
             <div class="modal-header">
+                <div class="modal-brand">
                 <?php $biz = $content['business_info'] ?? []; ?>
                 <?php if (!empty($biz['logo'])): ?>
                     <img src="<?php echo htmlspecialchars('/uploads/images/' . ltrim($biz['logo'], '/')); ?>" alt="<?php echo htmlspecialchars($biz['name'] ?? ''); ?>" class="modal-logo">
@@ -909,6 +909,8 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     <div class="modal-logo-text"><?php echo htmlspecialchars($biz['name'] ?? ''); ?></div>
                 <?php endif; ?>
                 <div class="modal-subtitle small muted">Send us a message &mdash; we typically reply within 1 business day.</div>
+                </div>
+                <?php $modal_close_label = 'Close contact'; include __DIR__ . '/includes/modal-close.php'; ?>
             </div>
             <h2 id="contact-modal-title">Contact Us</h2>
             <div class="card">
@@ -926,8 +928,10 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
     <div id="legal-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="legal-modal-title">
         <div class="modal-backdrop" id="legal-modal-backdrop"></div>
         <div class="modal-panel" role="document">
-            <?php $modal_close_label = 'Close legal'; include __DIR__ . '/includes/modal-close.php'; ?>
-
+            <div class="modal-header">
+                <h2 id="legal-modal-title"></h2>
+                <?php $modal_close_label = 'Close legal'; include __DIR__ . '/includes/modal-close.php'; ?>
+            </div>
             <!-- Template of close button for JS cloning so fetched content won't overwrite it -->
             <template id="tmpl-modal-close">
                 <?php $modal_close_label = 'Close'; include __DIR__ . '/includes/modal-close.php'; ?>
