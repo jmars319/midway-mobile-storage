@@ -121,8 +121,9 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     $bizPhone = $biz['phone'] ?? '';
 
                     // Site URL / canonical
-                    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                    $host = $_SERVER['HTTP_HOST'] ?? 'yourdomain.com';
+                $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                // Prefer the canonical .com domain for public-facing metadata
+                $host = 'midwaymobilestorage.com';
                     $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
                     // canonical: remove query string
                     $uriParts = explode('?', $requestUri, 2);

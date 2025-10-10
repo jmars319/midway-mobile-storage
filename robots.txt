@@ -3,5 +3,5 @@ Allow: /
 Disallow: /admin/
 Disallow: /data/
 Disallow: /uploads/
-# Replace example.com with your production host. This file is a template; update the host when deploying.
-Sitemap: https://example.com/sitemap.xml
+# Production sitemap for the .com domain
+Sitemap: https://midwaymobilestorage.com/sitemap.xml

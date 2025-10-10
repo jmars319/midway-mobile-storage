@@ -35,7 +35,7 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
   <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Order Online — Coming Soon | Midway Mobile Storage</title>
   <meta name="description" content="Online ordering coming soon for Midway Mobile Storage — flexible container rentals and mobile storage near Winston-Salem.">
-  <link rel="canonical" href="<?php $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http'; $host = $_SERVER['HTTP_HOST'] ?? 'example.com'; echo htmlspecialchars($proto . '://' . $host . '/order.php'); ?>">
+  <link rel="canonical" href="<?php $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http'; $host = 'midwaymobilestorage.com'; echo htmlspecialchars($proto . '://' . $host . '/order.php'); ?>">
   <link rel="stylesheet" href="<?php echo htmlspecialchars($cssPath . '?v=' . $cssVersion, ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body>
