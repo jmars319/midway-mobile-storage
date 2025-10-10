@@ -3,4 +3,5 @@ Allow: /
 Disallow: /admin/
 Disallow: /data/
 Disallow: /uploads/
-Sitemap: https://yourdomain.com/sitemap.xml
+# Replace example.com with your production host. This file is a template; update the host when deploying.
+Sitemap: https://example.com/sitemap.xml

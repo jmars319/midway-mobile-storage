@@ -113,6 +113,124 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             <ul class="nav-menu">
                 <li><a class="nav-link" href="#units">Units</a></li>
                 <li><a class="nav-link" href="#storage-quote">Get a Quote</a></li>
+                <?php
+                    // Prepare SEO meta values from content.json (safe defaults provided)
+                    $biz = $content['business_info'] ?? [];
+                    $bizName = $biz['name'] ?? 'Midway Mobile Storage';
+                    $bizAddress = $biz['address'] ?? '';
+                    $bizPhone = $biz['phone'] ?? '';
+
+                    // Site URL / canonical
+                    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'yourdomain.com';
+                    $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+                    // canonical: remove query string
+                    $uriParts = explode('?', $requestUri, 2);
+                    $canonical = rtrim($proto . '://' . $host . $uriParts[0], '/');
+
+                    // Meta description: prefer hero.subtitle or about.body or a composed fallback
+                    $metaDescRaw = '';
+                    if (!empty($content['hero']['subtitle'])) $metaDescRaw = $content['hero']['subtitle'];
+                    elseif (!empty($content['about']['body'])) $metaDescRaw = strip_tags($content['about']['body']);
+                    else $metaDescRaw = "$bizName offers mobile storage containers, trailers, and flexible unit rentals near Winston-Salem.";
+                    $metaDescription = mb_substr(trim(preg_replace('/\s+/', ' ', $metaDescRaw)), 0, 155);
+
+                    // Choose an image for social previews: hero, gallery, or logo
+                    $ogImage = '';
+                    if (!empty($content['hero']['image'])) $ogImage = preg_match('#^https?://#i', $content['hero']['image']) ? $content['hero']['image'] : ('/' . ltrim($content['hero']['image'], '/'));
+                    elseif (!empty($content['images']['gallery'])) $ogImage = '/' . ltrim($content['images']['gallery'], '/');
+                    elseif (!empty($content['images']['logo'])) $ogImage = '/' . ltrim($content['images']['logo'], '/');
+                    // ensure absolute URL for Open Graph
+                    if ($ogImage && !preg_match('#^https?://#i', $ogImage)) $ogImage = $proto . '://' . $host . $ogImage;
+
+                    // Build a small keywords list from business name, common terms, and city if available
+                    $keywords = [$bizName, 'mobile storage', 'storage containers', 'storage units', 'container rental', 'portable storage'];
+                    if ($bizAddress) {
+                        $parts = explode(',', $bizAddress);
+                        if (count($parts) >= 2) $keywords[] = trim($parts[1]);
+                    }
+                    $metaKeywords = htmlspecialchars(implode(', ', array_unique($keywords)));
+                ?>
+
+                <!-- SEO / Social meta -->
+                <title><?php echo htmlspecialchars($bizName); ?></title>
+                <meta name="description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+                <meta name="keywords" content="<?php echo $metaKeywords; ?>">
+                <link rel="canonical" href="<?php echo htmlspecialchars($canonical); ?>">
+                <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo $proto . '://' . $host; ?>/sitemap.xml">
+
+                <!-- Open Graph -->
+                <meta property="og:site_name" content="<?php echo htmlspecialchars($bizName); ?>">
+                <meta property="og:title" content="<?php echo htmlspecialchars($bizName); ?>">
+                <meta property="og:description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+                <meta property="og:url" content="<?php echo htmlspecialchars($canonical); ?>">
+                <meta property="og:type" content="website">
+                <?php if ($ogImage): ?><meta property="og:image" content="<?php echo htmlspecialchars($ogImage); ?>"><?php endif; ?>
+
+                <!-- Twitter card -->
+                <meta name="twitter:card" content="summary_large_image">
+                <meta name="twitter:title" content="<?php echo htmlspecialchars($bizName); ?>">
+                <meta name="twitter:description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+                <?php if ($ogImage): ?><meta name="twitter:image" content="<?php echo htmlspecialchars($ogImage); ?>"><?php endif; ?>
+
+                <!-- JSON-LD LocalBusiness / Organization -->
+                <?php
+                    // Simple address parsing (street, city/state, postal)
+                    $street = $city = $region = $postal = '';
+                    if ($bizAddress) {
+                        $parts = array_map('trim', explode(',', $bizAddress));
+                        $street = $parts[0] ?? '';
+                        if (isset($parts[1])) {
+                            // try to split city and state/zip
+                            $cityState = $parts[1];
+                            if (preg_match('/^([^\d]+?)\s+([A-Za-z]{2})\s*(\d{5})?$/', $cityState, $m)) {
+                                $city = trim($m[1]); $region = trim($m[2]); $postal = $m[3] ?? '';
+                            } else {
+                                // fallback: put whole part in city
+                                $city = $parts[1];
+                                if (isset($parts[2])) $postal = trim($parts[2]);
+                            }
+                        }
+                    }
+                    $ld = [
+                        "@context" => "https://schema.org",
+                        "@type" => "LocalBusiness",
+                        "name" => $bizName,
+                        "url" => $proto . '://' . $host . '/',
+                    ];
+                    if ($bizPhone) $ld['telephone'] = $bizPhone;
+                    if ($bizAddress) {
+                        $ld['address'] = [
+                            "@type" => "PostalAddress",
+                            "streetAddress" => $street,
+                            "addressLocality" => $city,
+                            "addressRegion" => $region,
+                            "postalCode" => $postal,
+                        ];
+                    }
+                    if ($ogImage) $ld['image'] = $ogImage;
+                    if (!empty($content['hours'])) {
+                        // Convert hours map to openingHoursSpecification where possible
+                        $oh = [];
+                        foreach ($content['hours'] as $k => $v) {
+                            $day = ucfirst(strtolower($k));
+                            if (stripos($v, 'closed') !== false) continue;
+                            // simple parse like '10:00 AM - 3:00 PM'
+                            if (preg_match('/(\d{1,2}:\d{2}\s*(AM|PM))\s*-\s*(\d{1,2}:\d{2}\s*(AM|PM))/i', $v, $m)) {
+                                $oh[] = [
+                                    '@type' => 'OpeningHoursSpecification',
+                                    'dayOfWeek' => ["https://schema.org/{$day}"],
+                                    'opens' => date('H:i', strtotime($m[1])),
+                                    'closes' => date('H:i', strtotime($m[3])),
+                                ];
+                            }
+                        }
+                        if ($oh) $ld['openingHoursSpecification'] = $oh;
+                    }
+                ?>
+                <script type="application/ld+json">
+                <?php echo json_encode($ld, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT); ?>
+                </script>
                 <li><a class="nav-link" href="#about">About</a></li>
                 <li><a class="nav-link" href="#job-application">Careers</a></li>
                 <li><a class="nav-link open-contact" href="#contact">Contact</a></li>
