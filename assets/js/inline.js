@@ -1,5 +1,14 @@
 // Consolidated inline scripts previously embedded in index.php
 (function(){
+    // small helper to escape HTML when inserting text into constructed HTML
+    function escapeHTML(str){
+        return String(str||'')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
     // Storage quote confirmation helper
     (function(){
         try {
@@ -25,6 +34,9 @@
                 });
             }
 
+            // Clear any saved in-progress storage quote values (localStorage)
+            try { localStorage.removeItem('midway.storage_quote.formvalues'); } catch(e){ /* ignore */ }
+
             try { history.replaceState(null, '', window.location.pathname + window.location.search + '#storage-quote'); } catch(e){ void 0; }
         } catch(e) { /* non-fatal */ }
     })();
@@ -39,8 +51,22 @@
 
             function openLegal(html) {
                 if (!legalModal || !legalContent) return;
-                // ensure the close button exists and is not overwritten by fetched html
-                legalContent.innerHTML = html;
+                // ensure the close button exists and sanitize fetched html before insertion
+                try {
+                    if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
+                        if (window.DOMPurify.isFallback) {
+                            legalContent.textContent = String(html).replace(/<[^>]+>/g, '');
+                        } else {
+                            legalContent.innerHTML = window.DOMPurify.sanitize(html);
+                        }
+                    } else {
+                        // best-effort removal of script tags and render as text
+                        legalContent.textContent = String(html).replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+                    }
+                } catch (e) {
+                    // fallback: insert as text to avoid executing markup
+                    legalContent.textContent = String(html);
+                }
                 // clone close template into the modal-panel if close button missing
                 var tmpl = document.getElementById('tmpl-modal-close');
                 var panel = legalModal.querySelector('.modal-panel');
@@ -74,7 +100,7 @@
                 legalModal.setAttribute('aria-hidden','true'); legalModal.classList.remove('open'); document.body.classList.remove('scroll-lock');
                 if (legalModal._legalKeyHandler) { document.removeEventListener('keydown', legalModal._legalKeyHandler); legalModal._legalKeyHandler = null; }
                 // clear content to reduce memory
-                if (legalContent) legalContent.innerHTML = '';
+                if (legalContent) legalContent.textContent = '';
             }
 
             // Handle clicks on links that should open legal pages in modal
@@ -88,7 +114,36 @@
                         try {
                             var doc = new DOMParser().parseFromString(text, 'text/html');
                             var main = doc.querySelector('main') || doc.querySelector('.container') || doc.body;
-                            var html = main ? main.innerHTML : text;
+                            var html = null;
+                            try {
+                                if (main) {
+                                    // Prefer to serialize only safe text and basic structure.
+                                    // Build a conservative HTML string by concatenating
+                                    // plain-text headings and paragraphs to avoid importing
+                                    // accidental script/style content from the fetched page.
+                                    var parts = [];
+                                    var headings = main.querySelectorAll('h1,h2,h3');
+                                    if (headings && headings.length) {
+                                        headings.forEach(function(h){ parts.push('<h2>'+escapeHTML(h.textContent||'')+'</h2>'); });
+                                    }
+                                    var paras = main.querySelectorAll('p');
+                                    if (paras && paras.length) {
+                                        paras.forEach(function(p){ parts.push('<p>'+escapeHTML(p.textContent||'')+'</p>'); });
+                                    }
+                                    // fallback: if no headings/paras, use trimmed textContent
+                                    if (!parts.length) parts.push('<div>'+escapeHTML((main.textContent||'').trim())+'</div>');
+                                    html = parts.join('\n');
+                                } else {
+                                    html = escapeHTML(text);
+                                }
+                                if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
+                                    if (window.DOMPurify.isFallback) html = String(html).replace(/<[^>]+>/g, '');
+                                    else html = window.DOMPurify.sanitize(html);
+                                } else {
+                                    // already escaped via escapeHTML above, keep as-is
+                                    html = String(html);
+                                }
+                            } catch(e) { html = escapeHTML(text); }
                             openLegal(html, a.textContent || 'Legal');
                         } catch (e) { openLegal(text, a.textContent || 'Legal'); }
                     }).catch(function(){ openLegal('<p>Unable to load content. Please visit the page directly.</p><p><a href="'+src+'">Open page</a></p>', a.textContent || 'Legal'); });
@@ -346,7 +401,18 @@
             function playThankYouAnimation(container) {
                 var wrap = document.createElement('div');
                 wrap.className = 'thankyou-wrap';
-                wrap.innerHTML = '<div class="checkmark">\n  <svg viewBox="0 0 52 52">\n    <path d="M14 27 L21 34 L38 17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>\n  </svg>\n</div>';
+                // create SVG markup via innerHTML on a small created element (static trusted snippet)
+                var svgWrap = document.createElement('div'); svgWrap.className = 'checkmark';
+                // build SVG checkmark with DOM API (trusted static snippet)
+                (function(){
+                    var svgNS = 'http://www.w3.org/2000/svg';
+                    var svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('viewBox','0 0 52 52');
+                    var path = document.createElementNS(svgNS, 'path');
+                    path.setAttribute('d','M14 27 L21 34 L38 17');
+                    path.setAttribute('fill','none'); path.setAttribute('stroke','#fff'); path.setAttribute('stroke-width','4'); path.setAttribute('stroke-linecap','round'); path.setAttribute('stroke-linejoin','round');
+                    svg.appendChild(path); svgWrap.appendChild(svg);
+                })();
+                wrap.appendChild(svgWrap);
                 container.appendChild(wrap);
                 // simple confetti — small colored spans
                 var colors = ['#ff5a5f','#7bd389','#ffd36e','#5cc1ff'];
@@ -545,34 +611,40 @@
 
         function buildModal() {
             try {
-                var html = ''+
-                '<div id="hours-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="hours-modal-title">'+
-                    '<div class="modal-backdrop" id="hours-modal-backdrop"></div>'+
-                    '<div class="modal-panel" role="document">'+
-                        '<div class="modal-header">'+
-                            '<h2 id="hours-modal-title">Hours</h2>'+
-                            // placeholder for close button; JS will clone the template into the header if available
-                            '<div class="modal-close-placeholder"></div>'+
-                        '</div>'+
-                        '<div class="card">'+
-                            '<div class="hours-list">';
+                // Build hours modal DOM below (avoid string concatenation of HTML)
+                // Build nodes safely instead of assigning large HTML blocks
+                var modalWrap = document.createElement('div');
+                modalWrap.id = 'hours-modal'; modalWrap.className = 'modal'; modalWrap.setAttribute('role','dialog'); modalWrap.setAttribute('aria-hidden','true'); modalWrap.setAttribute('aria-labelledby','hours-modal-title');
+                var backdropEl = document.createElement('div'); backdropEl.className = 'modal-backdrop'; backdropEl.id = 'hours-modal-backdrop';
+                var panel = document.createElement('div'); panel.className = 'modal-panel'; panel.setAttribute('role','document');
+                var header = document.createElement('div'); header.className = 'modal-header';
+                var h2 = document.createElement('h2'); h2.id = 'hours-modal-title'; h2.textContent = 'Hours';
+                var placeholder = document.createElement('div'); placeholder.className = 'modal-close-placeholder';
+                header.appendChild(h2); header.appendChild(placeholder);
+                var card = document.createElement('div'); card.className = 'card';
+                var hoursList = document.createElement('div'); hoursList.className = 'hours-list';
+                // populate hoursList
                 var daysMap = {0:'sunday',1:'monday',2:'tuesday',3:'wednesday',4:'thursday',5:'friday',6:'saturday'};
                 var todayKey = daysMap[new Date().getDay()];
                 for (var d in hoursData) {
                     if (!Object.prototype.hasOwnProperty.call(hoursData, d)) continue;
                     var isToday = (d.toLowerCase() === todayKey);
-                    var cls = isToday ? 'hours-today' : '';
-                    var badge = isToday ? ' <span class="today-badge">Today</span>' : '';
-                    html += '<div class="'+cls+' hours-row"><div class="text-capitalize">'+d.replace(/_/g,' ') + badge +'</div><div>'+hoursData[d]+'</div></div>';
+                    var row = document.createElement('div'); row.className = (isToday ? 'hours-today hours-row' : 'hours-row');
+                    var left = document.createElement('div'); left.className = 'text-capitalize';
+                    left.textContent = d.replace(/_/g,' ');
+                    if (isToday) {
+                        var badge = document.createElement('span'); badge.className = 'today-badge'; badge.textContent = 'Today';
+                        left.appendChild(document.createTextNode(' '));
+                        left.appendChild(badge);
+                    }
+                    var right = document.createElement('div'); right.textContent = hoursData[d];
+                    row.appendChild(left); row.appendChild(right); hoursList.appendChild(row);
                 }
-                html +=      '</div>'+
-                        '</div>'+
-                    '</div>'+
-                '</div>';
-                var wrap = document.createElement('div'); wrap.innerHTML = html;
-                document.body.appendChild(wrap.firstChild);
-                modal = document.getElementById('hours-modal');
-                backdrop = document.getElementById('hours-modal-backdrop');
+                card.appendChild(hoursList);
+                panel.appendChild(header); panel.appendChild(card);
+                modalWrap.appendChild(backdropEl); modalWrap.appendChild(panel);
+                document.body.appendChild(modalWrap);
+                modal = modalWrap; backdrop = backdropEl;
                 // clone the close template into header placeholder if available
                 try {
                     var tmpl = document.getElementById('tmpl-modal-close');
@@ -605,7 +677,7 @@
                     if (!Object.prototype.hasOwnProperty.call(hoursData, d)) continue;
                     var isToday = (d.toLowerCase() === todayKey);
                     var cls = isToday ? 'today' : '';
-                    doc.write('<div class="'+cls+'"><div class="text-capitalize">'+d.replace(/_/g,' ')+(isToday? ' <strong>Today</strong>':'')+'</div><div>'+hoursData[d]+'</div></div>');
+                    doc.write('<div class="'+cls+'"><div class="text-capitalize">'+escapeHTML(d.replace(/_/g,' '))+(isToday? ' <strong>Today</strong>':'')+'</div><div>'+escapeHTML(hoursData[d])+'</div></div>');
                 }
                 doc.write('</div>');
                 doc.write('</body></html>');
@@ -665,4 +737,209 @@
 
     // No guest advisory needed for the storage quote form
 
+})();
+
+// Enhance storage quote collapsible sections: persist state and move form into a modal on small screens
+(function(){
+    document.addEventListener('DOMContentLoaded', function(){
+        var sections = Array.from(document.querySelectorAll('.quote-section'));
+        var storageKey = 'midway.storage_quote.sections';
+        var quoteForm = document.getElementById('storage-quote-form');
+        if (!sections.length) return;
+
+        // load saved state
+        var saved = {};
+        try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch(e) { saved = {}; }
+
+        sections.forEach(function(sec, idx){
+            var summary = sec.querySelector('summary');
+            var content = sec.querySelector('.quote-section-content');
+            if (!summary || !content) return;
+
+            // ensure a stable id for storage
+            var sid = sec.getAttribute('data-qs-id');
+            if (!sid) {
+                var text = (summary.textContent || ('section-' + idx)).trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+                sid = 'qs-' + text || ('qs-' + idx);
+                sec.setAttribute('data-qs-id', sid);
+            }
+
+            // apply saved open/closed state if present
+            if (typeof saved[sid] !== 'undefined') {
+                if (saved[sid]) sec.setAttribute('open',''); else sec.removeAttribute('open');
+            }
+
+            // accessibility helpers
+            summary.setAttribute('role','button');
+            summary.setAttribute('tabindex','0');
+
+            // keyboard: Enter/Space
+            summary.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); summary.click(); } });
+
+            // when required field receives focus, open the section so the user sees the field
+            var fields = Array.from(sec.querySelectorAll('input[required], select[required], textarea[required]'));
+            fields.forEach(function(f){ f.addEventListener('focus', function(){ if (!sec.hasAttribute('open')) sec.setAttribute('open',''); }); });
+
+            // if browser validation fires (invalid event), open the section containing the invalid field
+            var form = sec.closest('form');
+            if (form) {
+                form.addEventListener('invalid', function(e){
+                    var invalid = e.target;
+                    var parentSec = invalid.closest('.quote-section');
+                    if (parentSec && !parentSec.hasAttribute('open')) parentSec.setAttribute('open','');
+                }, true);
+            }
+
+            // save state on details toggle
+            sec.addEventListener('toggle', function(){ saveState(); });
+        });
+
+        function saveState(){
+            var out = {};
+            sections.forEach(function(s){ var id = s.getAttribute('data-qs-id'); if (!id) return; out[id] = s.hasAttribute('open'); });
+            try { localStorage.setItem(storageKey, JSON.stringify(out)); } catch(e) { /* ignore */ }
+        }
+
+        // Quote modal on narrow screens: move the form into a modal panel and restore on close
+        var anchorLinks = Array.from(document.querySelectorAll('a[href="#storage-quote"]'));
+        var quoteModalState = { open:false, origParent:null, origNext:null, modalEl:null, keyHandler:null, trapRem: null, opener: null };
+        function mq() { return window.matchMedia('(max-width:820px)').matches; }
+
+    // Persist form values across DOM moves using localStorage (cleared on success)
+    var formStorageKey = 'midway.storage_quote.formvalues';
+    function saveFormValues(){
+            if (!quoteForm) return;
+            try {
+                var data = {};
+                Array.from(quoteForm.elements).forEach(function(el){
+                    if (!el.name) return;
+                    if (el.type === 'checkbox') { data[el.name] = el.checked; return; }
+                    if (el.type === 'radio') { if (el.checked) data[el.name] = el.value; return; }
+                    if (el.tagName.toLowerCase() === 'select') { data[el.name] = el.value; return; }
+                    if (el.tagName.toLowerCase() === 'textarea' || el.type === 'text' || el.type === 'email' || el.type === 'tel' || el.type === 'number' || el.type === 'date') { data[el.name] = el.value; }
+                });
+                localStorage.setItem(formStorageKey, JSON.stringify(data));
+            } catch(e){ /* ignore storage errors */ }
+        }
+        function restoreFormValues(){
+            if (!quoteForm) return;
+            try {
+                var raw = localStorage.getItem(formStorageKey); if (!raw) return;
+                var data = JSON.parse(raw || '{}');
+                Array.from(quoteForm.elements).forEach(function(el){ if (!el.name) return; if (typeof data[el.name] === 'undefined') return; if (el.type === 'checkbox') { el.checked = !!data[el.name]; } else if (el.type === 'radio') { if (el.value === data[el.name]) el.checked = true; } else { el.value = data[el.name]; } });
+            } catch(e){ /* ignore */ }
+        }
+    // (localStorage removal is done inline when needed)
+
+        // debounce helper
+        function debounce(fn, wait){ var t = null; return function(){ clearTimeout(t); t = setTimeout(fn, wait || 180); }; }
+
+        // attach persistence listeners if a form exists
+        if (quoteForm) {
+            // restore any saved values first
+            restoreFormValues();
+
+            var saveDeb = debounce(function(){ saveFormValues(); }, 180);
+            Array.from(quoteForm.elements).forEach(function(el){
+                // ignore file inputs
+                if (!el.name || el.type === 'file') return;
+                var ev = (el.tagName.toLowerCase() === 'select' || el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input';
+                el.addEventListener(ev, saveDeb);
+            });
+
+            // on submit, leave saved values until server responds; clear only on explicit success token
+            quoteForm.addEventListener('submit', function(){ try { /* save a final snapshot */ saveFormValues(); } catch(e){ /* ignore */ } });
+        }
+
+
+        function buildQuoteModal(){
+            var existing = document.getElementById('quote-modal'); if (existing) return existing;
+            var modal = document.createElement('div'); modal.id = 'quote-modal'; modal.className = 'modal'; modal.setAttribute('role','dialog'); modal.setAttribute('aria-hidden','true');
+            var backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; backdrop.id = 'quote-modal-backdrop';
+            var panel = document.createElement('div'); panel.className = 'modal-panel'; panel.setAttribute('role','document');
+            var header = document.createElement('div'); header.className = 'modal-header';
+            var title = document.createElement('h2'); title.id = 'quote-modal-title'; title.textContent = 'Get Custom Storage Quote';
+            var ph = document.createElement('div'); ph.className = 'modal-close-placeholder';
+            header.appendChild(title); header.appendChild(ph);
+            panel.appendChild(header);
+            modal.appendChild(backdrop); modal.appendChild(panel);
+            document.body.appendChild(modal);
+
+            // clone shared close template to prevent fetched content replacing it
+            try {
+                var tmpl = document.getElementById('tmpl-modal-close');
+                var placeholder = modal.querySelector('.modal-close-placeholder');
+                if (tmpl && placeholder) placeholder.parentNode.replaceChild(tmpl.content.cloneNode(true), placeholder);
+            } catch(e) { /* ignore */ }
+
+            // backdrop click closes
+            modal.querySelector('.modal-backdrop') && modal.querySelector('.modal-backdrop').addEventListener('click', closeQuoteModal);
+            // delegated click for close
+            modal.addEventListener('click', function(e){ var btn = e.target.closest && e.target.closest('.modal-close'); if (btn && modal.contains(btn)) { e.preventDefault(); e.stopPropagation(); closeQuoteModal(); } });
+            return modal;
+        }
+
+        function trapFocusLocal(modalEl, onEscape){
+            var focusableSelectors = 'a[href], area[href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+            var focusable = Array.from(modalEl.querySelectorAll(focusableSelectors)).filter(function(el){ return el.offsetParent !== null; });
+            if (!focusable.length) return function(){};
+            var first = focusable[0], last = focusable[focusable.length - 1];
+            var keyHandler = function(e){
+                if (e.key === 'Tab') {
+                    if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+                    else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+                }
+                if (e.key === 'Escape') { if (typeof onEscape === 'function') onEscape(); }
+            };
+            document.addEventListener('keydown', keyHandler);
+            return function remove(){ document.removeEventListener('keydown', keyHandler); };
+        }
+
+        function openQuoteModal(e){
+            if (!mq()) return false;
+            if (!quoteForm) return false;
+            var opener = e && e.currentTarget ? e.currentTarget : document.activeElement;
+            quoteModalState.opener = opener;
+            quoteModalState.origParent = quoteForm.parentNode;
+            quoteModalState.origNext = quoteForm.nextSibling;
+            var modal = buildQuoteModal();
+            var panel = modal.querySelector('.modal-panel');
+            panel.appendChild(quoteForm);
+            modal.setAttribute('aria-hidden','false'); modal.classList.add('open'); document.body.classList.add('scroll-lock');
+            quoteModalState.modalEl = modal; quoteModalState.open = true;
+            try { var first = quoteForm.querySelector('input, textarea, select'); if (first) first.focus(); } catch(e){ /* focus best-effort */ }
+            quoteModalState.trapRem = trapFocusLocal(modal, closeQuoteModal);
+            quoteModalState.keyHandler = function(ev){ if (ev.key === 'Escape') closeQuoteModal(); };
+            document.addEventListener('keydown', quoteModalState.keyHandler);
+            return true;
+        }
+
+        function closeQuoteModal(){
+            if (!quoteModalState.open) return;
+            var modal = quoteModalState.modalEl || document.getElementById('quote-modal');
+            if (!modal) return;
+            modal.setAttribute('aria-hidden','true'); modal.classList.remove('open'); document.body.classList.remove('scroll-lock');
+            if (quoteModalState.origParent) {
+                if (quoteModalState.origNext && quoteModalState.origNext.parentNode === quoteModalState.origParent) {
+                    quoteModalState.origParent.insertBefore(quoteForm, quoteModalState.origNext);
+                } else {
+                    quoteModalState.origParent.appendChild(quoteForm);
+                }
+            }
+            if (quoteModalState.keyHandler) { document.removeEventListener('keydown', quoteModalState.keyHandler); quoteModalState.keyHandler = null; }
+            if (typeof quoteModalState.trapRem === 'function') { quoteModalState.trapRem(); quoteModalState.trapRem = null; }
+            try { if (quoteModalState.opener && typeof quoteModalState.opener.focus === 'function') quoteModalState.opener.focus(); } catch(e){ /* restore focus best-effort */ }
+            quoteModalState.open = false;
+        }
+
+        // intercept anchor clicks for small screens
+        anchorLinks.forEach(function(a){ a.addEventListener('click', function(ev){ if (mq()) { ev.preventDefault(); openQuoteModal(ev); } }); });
+
+        // if user navigates directly to #storage-quote on small screen, open modal
+        if (window.location.hash === '#storage-quote' && mq()) { setTimeout(function(){ openQuoteModal(); }, 50); }
+
+        // if the viewport expands while modal open, restore form to page
+        window.addEventListener('resize', function(){ if (!mq() && quoteModalState.open) closeQuoteModal(); });
+
+    });
 })();

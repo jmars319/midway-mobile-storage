@@ -62,7 +62,8 @@
       const closeBtn = document.getElementById('modal-close');
       if (!backdrop || !body || !ok || !cancel) return resolve(false);
       // compose modal body
-      body.innerHTML = '';
+  // clear modal body safely
+  body.textContent = '';
       const p = document.createElement('div'); p.textContent = message; body.appendChild(p);
   // remember previous focus so we can restore it
   const previouslyFocused = document.activeElement;
@@ -114,7 +115,7 @@
   const sectionSelect = document.getElementById('section-select');
   const schemaFields = document.getElementById('schema-fields');
   const saveForm = document.getElementById('schema-form');
-  const uploadForm = document.getElementById('upload-form');
+  // const uploadForm = document.getElementById('upload-form');
 
   const siteContent = window.__siteContent || {};
   const schemaUrl = window.__schemaUrl || 'content-schemas.json';
@@ -184,8 +185,11 @@
     const backdrop = document.getElementById('modal-backdrop');
     const body = document.getElementById('modal-body');
     if (!backdrop || !body) return;
-    body.innerHTML = '<div class="picker-grid"></div>';
-    const grid = body.firstChild;
+  // create picker grid via DOM APIs (avoid string-based HTML)
+  body.textContent = '';
+  const grid = document.createElement('div');
+  grid.className = 'picker-grid';
+  body.appendChild(grid);
   backdrop.classList.add('open');
   // NOTE: list-images.php returns a JSON list of filenames in
   // uploads/images. This UI trusts that the admin session is
@@ -203,11 +207,11 @@
   const contextQuery = requestedContext ? ('?context=' + encodeURIComponent(requestedContext)) : (isHero ? '?context=hero' : '');
   const listUrl = 'list-images.php' + contextQuery;
   fetch(listUrl).then(r=>r.json()).then(j=>{
-      if (!j || !Array.isArray(j.files)) { grid.innerHTML = '<i>No images</i>'; return; }
+    if (!j || !Array.isArray(j.files)) { var ni = document.createElement('i'); ni.textContent = 'No images'; grid.appendChild(ni); return; }
     const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
     // Normalize entries and dedupe: server may return strings or objects { relative, url }
     const files = dedupeFiles(j.files || []);
-    if (!files.length) { grid.innerHTML = '<i>No images</i>'; return; }
+  if (!files.length) { var ni2 = document.createElement('i'); ni2.textContent = 'No images'; grid.appendChild(ni2); return; }
     files.forEach(entry => {
       const rel = (entry && entry.relative) ? entry.relative : '';
       const url = (entry && entry.url) ? entry.url : ((window.ADMIN_UPLOADS_BASE || '../uploads/images/') + rel);
@@ -225,11 +229,11 @@
       thumb.appendChild(img); thumb.appendChild(lab);
       thumb.addEventListener('click', ()=>{ targetInput.value = rel; targetInput.dispatchEvent(new Event('input', { bubbles: true })); backdrop.classList.remove('open');
         // if this input belongs to the menu admin, update any preview immediately
-        try { if (typeof renderPreview === 'function') window.setTimeout(renderPreview, 80); } catch(e){ /* ignore */ }
+  try { if (window && typeof window.renderPreview === 'function') window.setTimeout(window.renderPreview, 80); } catch(e){ console.debug && console.debug('renderPreview scheduling failed', e); }
       });
       grid.appendChild(thumb);
     });
-  }).catch(()=>{ grid.innerHTML = '<i>Failed to load</i>'; });
+  }).catch(()=>{ var nf = document.createElement('i'); nf.textContent = 'Failed to load'; grid.appendChild(nf); });
   const ok = document.getElementById('modal-ok'); const cancel = document.getElementById('modal-cancel'); const closeBtn = document.getElementById('modal-close');
   const cleanup = function(){ backdrop.classList.remove('open'); ok && ok.removeEventListener('click', onOk); cancel && cancel.removeEventListener('click', onCancel); if (closeBtn) closeBtn.removeEventListener('click', onClose); };
     const onOk = function(){ cleanup(); };
@@ -240,7 +244,7 @@
 
   function renderSection(sec){
     if (!schemaFields) return;
-    schemaFields.innerHTML = '';
+    schemaFields.textContent = '';
     const schema = schemas[sec];
     const data = siteContent[sec] || {};
     if (!schema) {
@@ -272,7 +276,20 @@
     } else {
       html = '<pre class="small">' + escapeHtml(JSON.stringify(values || siteContent[sec] || {}, null, 2)) + '</pre>';
     }
-    adminPreview.innerHTML = html;
+    try {
+      if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
+        // If the included DOMPurify is the conservative fallback, it returns
+        // escaped text; prefer a plain-text preview in that case.
+        if (window.DOMPurify.isFallback) {
+          adminPreview.textContent = html.replace(/<[^>]+>/g, '');
+        } else {
+          adminPreview.innerHTML = window.DOMPurify.sanitize(html);
+        }
+      } else {
+        // No sanitizer available: render a safe, escaped fallback
+        adminPreview.textContent = html.replace(/<[^>]+>/g, '');
+      }
+    } catch (e) { adminPreview.textContent = html.replace(/<[^>]+>/g, ''); }
     // update last-updated if available
     if (previewLastUpdated && window.__siteContent && window.__siteContent.last_updated) {
       previewLastUpdated.textContent = 'Last updated: ' + window.__siteContent.last_updated;
@@ -299,7 +316,7 @@
 
   function populateSections(){
     if (!sectionSelect) return;
-    sectionSelect.innerHTML = '';
+    sectionSelect.textContent = '';
   // Keep separate management areas out of the Site Content Editor dropdown.
   // Exclude keys that have dedicated admin sections such as 'images' and 'menu'.
   const allKeys = [...Object.keys(schemas), ...Object.keys(siteContent)];
@@ -373,7 +390,11 @@
           const token = (document.querySelector('input[name="csrf_token"]') || {}).value || window.__csrfToken || '';
           if (token) fd.append('csrf_token', token);
         }
-  const progressBar = document.createElement('div'); progressBar.className = 'image-upload-progress'; progressBar.innerHTML = '<div class="bar"><div class="fill"></div></div>';
+  const progressBar = document.createElement('div'); progressBar.className = 'image-upload-progress';
+  const _bar = document.createElement('div'); _bar.className = 'bar';
+  const _fill = document.createElement('div'); _fill.className = 'fill';
+  _bar.appendChild(_fill);
+  progressBar.appendChild(_bar);
         form.parentNode.insertBefore(progressBar, form.nextSibling);
 
         xhr.upload.addEventListener('progress', function(e){
@@ -446,7 +467,12 @@
     const list = document.getElementById('image-list');
     if (!list) return;
     // show a loading state so the user sees progress in the modal
-    list.innerHTML = '<div class="muted">Loading images&hellip;</div>';
+  // show a loading state using DOM APIs
+  list.textContent = '';
+  const loadingNode = document.createElement('div');
+  loadingNode.className = 'muted';
+  loadingNode.textContent = 'Loading images…';
+  list.appendChild(loadingNode);
     // Determine active tab or container to scope images. If an element with
     // id 'images-tab' (or data-active-tab) exists, use its data-type to filter.
     const activeTab = document.querySelector('[data-active-tab]');
@@ -468,8 +494,8 @@
       }
       return j;
     }).then(j=>{
-  if (!j || !Array.isArray(j.files)) { list.innerHTML = '<i>No images</i>'; return; }
-  list.innerHTML = '';
+  if (!j || !Array.isArray(j.files)) { var ni = document.createElement('i'); ni.textContent = 'No images'; list.appendChild(ni); return; }
+  list.textContent = '';
   const allowedExt = ['png','jpg','jpeg','gif','webp','svg','ico'];
   // normalize and dedupe entries to objects { relative, url }
   const files = dedupeFiles(j.files);
@@ -502,7 +528,7 @@
   row.appendChild(img); row.appendChild(name); row.appendChild(del);
         list.appendChild(row);
       });
-    }).catch(()=>{ list.innerHTML = '<i>Failed to list images</i>'; });
+  }).catch(()=>{ var nf = document.createElement('i'); nf.textContent = 'Failed to list images'; list.appendChild(nf); });
   }
 
   // Refresh per-section image containers (if present) to show images relevant to that section
@@ -510,19 +536,19 @@
     const containers = document.querySelectorAll('.section-image-list');
     if (!containers || !containers.length) return;
     fetch('list-images.php').then(r=>r.json()).then(j=>{
-      if (!j || !Array.isArray(j.files)) { containers.forEach(c=> c.innerHTML = '<i>No images</i>'); return; }
+  if (!j || !Array.isArray(j.files)) { containers.forEach(c=> { var ni = document.createElement('i'); ni.textContent = 'No images'; c.appendChild(ni); }); return; }
         // Normalize and dedupe file entries to objects { relative, url }
         const files = dedupeFiles(j.files);
         containers.forEach(c=>{
         const type = (c.getAttribute('data-type') || '').toLowerCase();
-        c.innerHTML = '';
+  c.textContent = '';
         // If the page contains a dedicated full-gallery container, prefer
         // rendering gallery images there instead of repeating them in the
         // compact per-section list. This avoids duplicate UI entries with
         // different styling (small vs full list) for the same files.
         if (type === 'gallery' && document.getElementById('gallery-full-list')) {
           // leave the per-section container empty (the full gallery is rendered separately)
-          c.innerHTML = '';
+          c.textContent = '';
           return;
         }
 
@@ -622,7 +648,7 @@
           });
         }
       });
-    }).catch(()=>{ containers.forEach(c=> c.innerHTML = '<i>Failed to load</i>'); });
+  }).catch(()=>{ containers.forEach(c=> { var nf = document.createElement('i'); nf.textContent = 'Failed to load'; c.appendChild(nf); }); });
   }
 
   // Load trashed images into a separate view
@@ -632,8 +658,8 @@
     try {
       const r = await fetch('list-trash.php');
       const j = await r.json();
-      if (!j || !Array.isArray(j.items)) { list.innerHTML = '<i>No trash</i>'; return; }
-      list.innerHTML = '';
+  if (!j || !Array.isArray(j.items)) { var nt = document.createElement('i'); nt.textContent = 'No trash'; list.appendChild(nt); return; }
+  list.textContent = '';
       j.items.forEach(it=>{
   const row = document.createElement('div'); row.className = 'flex-row';
   const img = document.createElement('img'); img.src = '../uploads/trash/'+it.trash_name; img.className = 'img-48';
@@ -649,7 +675,7 @@
         row.appendChild(img); row.appendChild(name); row.appendChild(restore);
         list.appendChild(row);
       });
-    } catch(e) { list.innerHTML = '<i>Failed to load trash</i>'; }
+  } catch(e) { var nft = document.createElement('i'); nft.textContent = 'Failed to load trash'; list.appendChild(nft); }
   }
 
   // add a simple toggle to switch between Images and Trash
@@ -686,13 +712,13 @@
   const showAllBtn = document.getElementById('show-all-images-btn');
   if (showAllBtn) {
     // helper to count total images (used to show a badge on the button)
-    async function refreshImageCount(){
+    const refreshImageCount = async () => {
       try {
         const r = await fetch('list-images.php'); const j = await r.json();
         const count = Array.isArray(j.files) ? j.files.length : 0;
         showAllBtn.textContent = showAllMode ? 'Hide all images ('+count+')' : 'Show all images ('+count+')';
-      } catch(e) { /* ignore */ }
-    }
+      } catch(e) { console.debug && console.debug('refreshImageCount failed', e); }
+    };
     // create images modal container if missing
     let modalBackdrop = document.getElementById('images-modal-backdrop');
     if (!modalBackdrop) {
@@ -701,7 +727,24 @@
   // rely on CSS for backdrop/modal layout; fallback classes are provided in CSS
 
   const modal = document.createElement('div'); modal.id = 'images-modal';
-  modal.innerHTML = '<div class="modal-header"><strong>All images</strong><button class="close-btn" aria-label="Close images modal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div id="images-modal-body"></div>';
+      // build modal header safely
+  const modalHeader = document.createElement('div'); modalHeader.className = 'modal-header';
+  const mhTitle = document.createElement('strong'); mhTitle.textContent = 'All images';
+  const closeBtnEl = document.createElement('button'); closeBtnEl.className = 'close-btn'; closeBtnEl.setAttribute('aria-label','Close images modal');
+  // create close icon via SVG DOM API
+  (function(){
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '16'); svg.setAttribute('height', '16'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', 'M6 6l12 12M18 6L6 18');
+    path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.8'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+    closeBtnEl.appendChild(svg);
+  })();
+  modalHeader.appendChild(mhTitle); modalHeader.appendChild(closeBtnEl);
+  const modalBody = document.createElement('div'); modalBody.id = 'images-modal-body';
+  modal.appendChild(modalHeader); modal.appendChild(modalBody);
   // Rely on CSS for modal layout (styles are defined in admin.modal.css)
   modal.classList.add('images-modal-content');
       // modal styles moved to CSS; append modal/backdrop to the document
@@ -710,7 +753,15 @@
       const closeBtn = modalBackdrop.querySelector('.close-btn');
       if (closeBtn) {
         closeBtn.setAttribute('aria-label', 'Close images modal');
-  closeBtn.addEventListener('click', ()=>{ modalBackdrop.classList.remove('images-modal-open'); modalBackdrop.style.display = 'none'; showAllMode = false; try { if (imageArea.parentNode) imageArea.parentNode.removeChild(imageArea); } catch(e){}; refreshImageCount(); });
+        closeBtn.addEventListener('click', ()=>{
+          modalBackdrop.classList.remove('images-modal-open');
+          modalBackdrop.style.display = 'none';
+          showAllMode = false;
+          try {
+            if (imageArea && imageArea.parentNode) imageArea.parentNode.removeChild(imageArea);
+          } catch(e){ console.debug && console.debug('remove imageArea failed', e); }
+          try { refreshImageCount(); } catch (err) { console.debug && console.debug('refreshImageCount failed', err); }
+        });
       }
       // bind Escape to close modal once
       if (!modalBackdrop.__keyBound) {
@@ -720,8 +771,10 @@
             modalBackdrop.classList.remove('images-modal-open');
             modalBackdrop.style.display = 'none';
             showAllMode = false;
-            try { if (imageArea.parentNode) imageArea.parentNode.removeChild(imageArea); } catch(e){}
-            try { refreshImageCount(); } catch (err) { void 0; }
+            try {
+              if (imageArea && imageArea.parentNode) imageArea.parentNode.removeChild(imageArea);
+            } catch(e){ console.debug && console.debug('remove imageArea failed', e); }
+            try { refreshImageCount(); } catch (err) { console.debug && console.debug('refreshImageCount failed', err); }
           }
         });
       }
@@ -737,12 +790,15 @@
         modalBackdrop.style.display = 'flex';
         modalBackdrop.style.alignItems = 'center';
         modalBackdrop.style.justifyContent = 'center';
-        // clear modal body then attach imageArea and make visible
-        body.innerHTML = '';
+  // clear modal body then attach imageArea and make visible
+  body.textContent = '';
         imageArea.style.display = 'block';
         body.appendChild(imageArea);
         // ensure modal itself centers
-        try { modal.style.margin = 'auto'; modal.style.display = 'block'; } catch(e) { /* ignore if modal not set */ }
+        try {
+          const modalEl = modalBackdrop.querySelector('.images-modal-content') || modalBackdrop.querySelector('#images-modal');
+          if (modalEl) { modalEl.style.margin = 'auto'; modalEl.style.display = 'block'; }
+        } catch(e) { console.debug && console.debug('set modal style failed', e); }
         imageArea.classList.add('show');
         await refreshImageList();
       } else {
@@ -804,17 +860,17 @@
 
   // Render a full gallery list (all files under gallery/) in the #gallery-full-list container
   async function refreshGalleryFullList(){
-    const wrap = document.getElementById('gallery-full-list');
-    if (!wrap) return;
-    wrap.innerHTML = '';
+  const wrap = document.getElementById('gallery-full-list');
+  if (!wrap) return;
+  wrap.textContent = '';
     try {
       const r = await fetch('list-images.php');
       const j = await r.json();
-      if (!j || !Array.isArray(j.files)) { wrap.innerHTML = '<i>No images</i>'; return; }
+  if (!j || !Array.isArray(j.files)) { var ni = document.createElement('i'); ni.textContent = 'No images'; wrap.appendChild(ni); return; }
   // Normalize and dedupe entries to objects
   const files = dedupeFiles(j.files);
       const galleryFiles = files.filter(f => f.relative && f.relative.split('/')[0] === 'gallery');
-      if (!galleryFiles.length) { wrap.innerHTML = '<i>No gallery images found</i>'; return; }
+  if (!galleryFiles.length) { var ng = document.createElement('i'); ng.textContent = 'No gallery images found'; wrap.appendChild(ng); return; }
       galleryFiles.forEach(f => {
   const row = document.createElement('div'); row.className = 'flex-row-sm';
   const img = document.createElement('img'); img.src = f.url; img.className = 'img-120x80'; img.onerror = function(){ this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" fill="%23949" font-size="10" text-anchor="middle" dy=".3em">No preview</text></svg>'; };
@@ -830,7 +886,7 @@
         row.appendChild(img); row.appendChild(meta); row.appendChild(del);
         wrap.appendChild(row);
       });
-    } catch (e) { wrap.innerHTML = '<i>Failed to load gallery list</i>'; }
+  } catch (e) { var nf = document.createElement('i'); nf.textContent = 'Failed to load gallery list'; wrap.appendChild(nf); }
   }
 
   // expose a couple helpers for debugging
@@ -884,7 +940,7 @@
 
     function render(){
       console.debug && console.debug('menu.render: about to render; menuData.length=', menuData.length);
-      listEl.innerHTML = '';
+  listEl.textContent = '';
       if (!menuData.length) {
         const hint = document.createElement('div'); hint.textContent = 'No sections yet. Click "Add Section" to create one.'; hint.className = 'muted'; listEl.appendChild(hint);
       }
@@ -914,7 +970,7 @@
   const detailsContainer = document.createElement('div'); detailsContainer.className = 'section-details-admin';
 
         function renderDetailsAdmin() {
-          detailsContainer.innerHTML = '';
+          detailsContainer.textContent = '';
       section.details.forEach((d, di) => {
         const row = document.createElement('div'); row.className = 'menu-item-row';
             const ta = document.createElement('textarea'); ta.className = 'field-textarea min-h-48'; ta.value = d || ''; ta.placeholder = 'Detail for section (shown in expanded view)';
@@ -942,8 +998,11 @@
   // collapsible preview wrapper for section-level image
   const secPreviewWrap = document.createElement('div'); secPreviewWrap.className = 'preview-collapsible-wrap';
   const secPreviewToggle = document.createElement('button'); secPreviewToggle.type='button'; secPreviewToggle.className='btn btn-ghost small preview-toggle'; secPreviewToggle.setAttribute('aria-pressed','false');
-  // caret SVG + label
-  secPreviewToggle.innerHTML = '<span class="preview-label">Preview</span> <svg class="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    // caret SVG + label (built with DOM APIs)
+  secPreviewToggle.textContent = '';
+  const previewLabel = document.createElement('span'); previewLabel.className = 'preview-label'; previewLabel.textContent = 'Preview';
+  secPreviewToggle.appendChild(previewLabel);
+  (function(){ const svgNS = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(svgNS,'svg'); svg.className = 'caret'; svg.setAttribute('width','12'); svg.setAttribute('height','12'); svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none'); svg.setAttribute('aria-hidden','true'); const path = document.createElementNS(svgNS,'path'); path.setAttribute('d','M6 9l6 6 6-6'); path.setAttribute('stroke','currentColor'); path.setAttribute('stroke-width','1.8'); path.setAttribute('stroke-linecap','round'); path.setAttribute('stroke-linejoin','round'); svg.appendChild(path); secPreviewToggle.appendChild(svg); })();
   const secPreviewBody = document.createElement('div'); secPreviewBody.className = 'preview-collapsible';
   secPreviewBody.appendChild(secPreview);
   secPreviewWrap.appendChild(secImgRow);
@@ -965,7 +1024,8 @@
   const toggleBtn = document.createElement('button'); toggleBtn.type='button'; toggleBtn.className='menu-toggle'; toggleBtn.title = 'Collapse / expand';
         toggleBtn.setAttribute('aria-expanded','false');
         // use a chevron SVG that rotates when expanded
-        toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="6 9 12 15 18 9" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>';
+  // chevron icon created via SVG DOM API
+  (function(){ const svgNS = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('aria-hidden','true'); svg.setAttribute('focusable','false'); const poly = document.createElementNS(svgNS,'polyline'); poly.setAttribute('points','6 9 12 15 18 9'); poly.setAttribute('stroke-linecap','round'); poly.setAttribute('stroke-linejoin','round'); svg.appendChild(poly); toggleBtn.appendChild(svg); })();
         toggleBtn.addEventListener('click', ()=>{
           try {
             if (expandedSections.has(sectionId)) {
@@ -1051,7 +1111,7 @@
 
             const priceContainer = document.createElement('div'); priceContainer.className = 'price-entries mt-03';
             const renderPriceEntries = function() {
-              priceContainer.innerHTML = '';
+              priceContainer.textContent = '';
               if (!it.prices.length) {
                 const hint = document.createElement('div'); hint.className='small'; hint.textContent = 'No prices — add one below.'; priceContainer.appendChild(hint);
               }
@@ -1120,7 +1180,7 @@
               }
 
               const renderQtyOptions = function() {
-                qtyContainer.innerHTML = '';
+                qtyContainer.textContent = '';
                 const opts = menuData[sidx].items[idx].quantities || [];
                 if (!opts.length) {
                   const hint = document.createElement('div'); hint.className='small'; hint.textContent = 'No quantity options — add one below.'; qtyContainer.appendChild(hint);
@@ -1153,7 +1213,10 @@
           // collapsible wrapper for per-item preview (keeps item row compact)
           const previewWrap = document.createElement('div'); previewWrap.className = 'preview-collapsible-wrap';
           const previewToggle = document.createElement('button'); previewToggle.type='button'; previewToggle.className='btn btn-ghost small preview-toggle'; previewToggle.setAttribute('aria-pressed','false');
-          previewToggle.innerHTML = '<span class="preview-label">Preview</span> <svg class="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          // preview toggle label + caret built via DOM APIs
+          previewToggle.textContent = '';
+          const pLabel = document.createElement('span'); pLabel.className = 'preview-label'; pLabel.textContent = 'Preview'; previewToggle.appendChild(pLabel);
+          (function(){ const svgNS = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(svgNS,'svg'); svg.className='caret'; svg.setAttribute('width','12'); svg.setAttribute('height','12'); svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none'); svg.setAttribute('aria-hidden','true'); const path = document.createElementNS(svgNS,'path'); path.setAttribute('d','M6 9l6 6 6-6'); path.setAttribute('stroke','currentColor'); path.setAttribute('stroke-width','1.8'); path.setAttribute('stroke-linecap','round'); path.setAttribute('stroke-linejoin','round'); svg.appendChild(path); previewToggle.appendChild(svg); })();
           const previewBody = document.createElement('div'); previewBody.className = 'preview-collapsible'; previewBody.appendChild(preview);
           previewToggle.addEventListener('click', function(){
             const isOpen = previewBody.classList.toggle('expanded');
@@ -1208,7 +1271,7 @@
     function renderPreview(){
       const area = document.getElementById('preview-area');
       if (!area) return;
-      area.innerHTML = '';
+  area.textContent = '';
       menuData.forEach((section)=>{
         const sec = document.createElement('div'); sec.className='preview-section';
         const title = document.createElement('div'); title.className='preview-title'; title.textContent = section.title || 'Section';
@@ -1269,7 +1332,31 @@
           } else {
             q.textContent = (it.quantity !== undefined && it.quantity !== '') ? ('Qty: ' + it.quantity) : '';
           }
-          const d = document.createElement('div'); d.className = 'mt-03'; d.innerHTML = it.description ? it.description.replace(/\n/g,'<br>') : '';
+          const d = document.createElement('div'); d.className = 'mt-03';
+          // Render description safely: prefer sanitizing HTML if DOMPurify is available.
+          if (it.description) {
+            const desc = String(it.description || '');
+            const withBreaks = desc.replace(/\n/g, '<br>');
+            if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
+              try {
+                if (window.DOMPurify.isFallback) {
+                  // conservative fallback: render plain text
+                  d.textContent = desc;
+                } else {
+                  d.innerHTML = window.DOMPurify.sanitize(withBreaks);
+                }
+              } catch (e) { d.textContent = desc; }
+            } else {
+              // No sanitizer available: render escaped text and insert <br>
+              // using DOM APIs so we never assign raw HTML.
+              d.textContent = '';
+              const lines = desc.split('\n');
+              for (let li = 0; li < lines.length; li++) {
+                d.appendChild(document.createTextNode(lines[li]));
+                if (li < lines.length - 1) d.appendChild(document.createElement('br'));
+              }
+            }
+          } else { d.textContent = ''; }
           meta.appendChild(t); if (s.textContent) meta.appendChild(s); if (p.textContent) meta.appendChild(p); if (q.textContent) meta.appendChild(q); meta.appendChild(d);
           pi.appendChild(meta); itemsWrap.appendChild(pi);
         });

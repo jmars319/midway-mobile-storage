@@ -507,6 +507,17 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 .form-input[type="checkbox"], .form-input[type="radio"] { margin-bottom: 0.5rem; }
 .card .form-input { margin-bottom: 0.9rem; }
 
+/* Quote form collapsible sections */
+.quote-section { border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 0.9rem; overflow: visible; }
+.quote-section summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; font-weight: 700; color: var(--primary-color); background: transparent; border-radius: 10px; }
+.quote-section summary::-webkit-details-marker { display: none; }
+.quote-section .chev { color: var(--text-secondary); margin-left: 0.6rem; transition: transform .22s ease; }
+.quote-section[open] .chev { transform: rotate(180deg); }
+.quote-section-content { padding: .75rem 1rem 1rem 1rem; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .38s cubic-bezier(.2,.9,.2,1), opacity .28s ease; }
+.quote-section[open] .quote-section-content { opacity: 1; max-height: 1200px; }
+.quote-section .form-input { margin-bottom: .8rem; }
+
+
 .form-note { color: var(--text-secondary); }
 .form-error { color: var(--error-color); display:block; }
 .modal.open { display: block; position: fixed; inset: 0; z-index: 20000; }
@@ -526,6 +537,11 @@ textarea.form-input { min-height: 70px; resize:vertical; }
 @media (max-width: 520px) {
     .modal-panel { margin: 2vh 1rem; padding: 0.75rem; }
 }
+
+/* Quote modal specific tweaks (used when the storage quote form is moved into a modal on small screens) */
+#quote-modal .modal-panel { max-width: 92vw; padding: 0.8rem 1rem; }
+#quote-modal .modal-header { margin-bottom: .75rem; }
+#quote-modal .modal-panel .card { margin-top: .4rem; }
 
 .header-scrolled {
     background: rgba(248, 250, 252, 0.95);

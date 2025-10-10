@@ -238,22 +238,33 @@ header('Content-Type: text/html; charset=utf-8');
                 renderTableRows(items);
                 const pages = Math.max(1, Math.ceil(total / perPage));
                 renderPagination(pages, page);
-            }catch(e){ document.getElementById('campaign-list').innerHTML='<p>Error loading campaigns</p>'; }
+            }catch(e){
+                const cl = document.getElementById('campaign-list'); if (cl) { cl.textContent = ''; const p = document.createElement('p'); p.textContent = 'Error loading campaigns'; cl.appendChild(p); }
+            }
         }
 
         function renderTableRows(items){
             const tbody=document.querySelector('#campaigns-table tbody');
-            if(!items || items.length===0){ tbody.innerHTML='<tr><td colspan="8">No campaigns</td></tr>'; return }
-            tbody.innerHTML = items.map(c=>{
+            if(!items || items.length===0){ tbody.textContent = ''; const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 8; td.textContent = 'No campaigns'; tr.appendChild(td); tbody.appendChild(tr); return }
+            tbody.textContent = '';
+            items.forEach(function(c){
                 const recipientsCount = (c.recipients||[]).length;
                 const days = (c.send_days||[]).join(', ');
-                return `<tr data-id="${c.id}"><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.subject)}</td><td>${recipientsCount}</td><td>${escapeHtml(c.send_time||'-')}</td><td>${escapeHtml(days)}</td><td>${escapeHtml(c.created_at||'-')}</td><td>${c.suppliers_count||0}</td><td>${c.active? 'Active':'Paused'}</td><td>
-                    <button class="btn btn-ghost" data-action="view-suppliers">View Suppliers</button>
-                    <button class="btn btn-ghost" data-action="edit">Edit</button>
-                    <button class="btn btn-ghost" data-action="send">Send</button>
-                    <button class="btn btn-danger-muted" data-action="delete">Delete</button>
-                </td></tr>`;
-            }).join('');
+                const tr = document.createElement('tr'); tr.dataset.id = c.id;
+                function td(txt, cls){ const t = document.createElement('td'); if (cls) t.className = cls; t.textContent = txt; return t; }
+                tr.appendChild(td(c.name || ''));
+                tr.appendChild(td(c.subject || ''));
+                tr.appendChild(td(String(recipientsCount)));
+                tr.appendChild(td(c.send_time || '-'));
+                tr.appendChild(td(days));
+                tr.appendChild(td(c.created_at || '-'));
+                tr.appendChild(td(String(c.suppliers_count || 0)));
+                tr.appendChild(td(c.active ? 'Active' : 'Paused'));
+                const actions = document.createElement('td');
+                ['view-suppliers','edit','send','delete'].forEach(function(a){ const btn = document.createElement('button'); btn.className = a==='delete' ? 'btn btn-danger-muted' : 'btn btn-ghost'; btn.dataset.action = a; btn.textContent = a==='view-suppliers' ? 'View Suppliers' : (a==='edit' ? 'Edit' : (a==='send' ? 'Send' : 'Delete')); actions.appendChild(btn); });
+                tr.appendChild(actions);
+                tbody.appendChild(tr);
+            });
             // rebind actions
             document.querySelectorAll('#campaigns-table [data-action]').forEach(b=>b.addEventListener('click', async (ev)=>{
                 const btn=ev.currentTarget; const row=btn.closest('tr'); const id=row.dataset.id; const action=btn.dataset.action;
@@ -271,10 +282,7 @@ header('Content-Type: text/html; charset=utf-8');
         }
 
         function renderPagination(pages, current){
-            const pc=document.getElementById('pagination-controls'); pc.innerHTML='';
-            for(let i=1;i<=pages;i++){
-                const btn=document.createElement('button'); btn.className='btn btn-ghost'; btn.textContent=i; if(i===current) btn.classList.add('current-page'); btn.addEventListener('click',()=>{ loadCampaigns(i); }); pc.appendChild(btn);
-            }
+            const pc=document.getElementById('pagination-controls'); if (pc) { pc.textContent = ''; for(let i=1;i<=pages;i++){ const btn=document.createElement('button'); btn.className='btn btn-ghost'; btn.textContent=i; if(i===current) btn.classList.add('current-page'); btn.addEventListener('click',()=>{ loadCampaigns(i); }); pc.appendChild(btn); } }
         }
 
         // wire filter controls once and load initial page
@@ -302,8 +310,14 @@ header('Content-Type: text/html; charset=utf-8');
             // populate suppliers
             const supList = document.getElementById('supplier-list');
             if(c.suppliers && c.suppliers.length>0){
-                supList.innerHTML = c.suppliers.map(s=>`<div data-sid="${s.id}" class="space-between-row"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-ghost\" data-sid=\"${s.id}\" data-action=\"edit-supplier\">Edit</button> <button class=\"btn btn-danger-muted\" data-sid=\"${s.id}\" data-action=\"del-supplier\">Delete</button></div></div>`).join('');
-            } else { supList.innerHTML = '<p class="muted">No suppliers</p>' }
+                supList.textContent = '';
+                c.suppliers.forEach(function(s){
+                    const row = document.createElement('div'); row.className = 'space-between-row'; row.dataset.sid = s.id;
+                    const left = document.createElement('div'); const strong = document.createElement('strong'); strong.textContent = s.name || ''; left.appendChild(strong); const urlDiv = document.createElement('div'); urlDiv.className = 'muted-text small'; urlDiv.textContent = s.url || ''; left.appendChild(urlDiv);
+                    const right = document.createElement('div'); const editBtn = document.createElement('button'); editBtn.className='btn btn-ghost'; editBtn.dataset.sid = s.id; editBtn.dataset.action = 'edit-supplier'; editBtn.textContent = 'Edit'; const delBtn = document.createElement('button'); delBtn.className='btn btn-danger-muted'; delBtn.dataset.sid = s.id; delBtn.dataset.action = 'del-supplier'; delBtn.textContent = 'Delete'; right.appendChild(editBtn); right.appendChild(document.createTextNode(' ')); right.appendChild(delBtn);
+                    row.appendChild(left); row.appendChild(right); supList.appendChild(row);
+                });
+            } else { supList.textContent = ''; const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No suppliers'; supList.appendChild(p); }
             document.getElementById('supplier-campaign-id').value = c.id;
             document.getElementById('supplier-editor').classList.add('show-block');
             switchTab('new-campaign');
@@ -392,9 +406,17 @@ header('Content-Type: text/html; charset=utf-8');
                         const data = await res.json(); if(!data.campaign) { showToast('Failed to load suppliers','error'); return }
                         const c = data.campaign;
                         const body = document.getElementById('modal-body');
-                        if(!c.suppliers || c.suppliers.length===0){ body.innerHTML = '<p class="muted">No suppliers for this campaign</p>'; }
+                        body.textContent = '';
+                        if(!c.suppliers || c.suppliers.length===0){ const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No suppliers for this campaign'; body.appendChild(p); }
                         else {
-                            body.innerHTML = '<div>' + c.suppliers.map(s=>`<div class="space-between-row"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class="btn btn-danger-muted" data-sid="${s.id}" data-action="del-supplier-modal">Delete</button></div></div>`).join('') + '</div>';
+                            const container = document.createElement('div');
+                            c.suppliers.forEach(function(s){
+                                const row = document.createElement('div'); row.className = 'space-between-row';
+                                const left = document.createElement('div'); const strong = document.createElement('strong'); strong.textContent = s.name || ''; left.appendChild(strong); const urlDiv = document.createElement('div'); urlDiv.className = 'muted-text small'; urlDiv.textContent = s.url || ''; left.appendChild(urlDiv);
+                                const right = document.createElement('div'); const delBtn = document.createElement('button'); delBtn.className = 'btn btn-danger-muted'; delBtn.dataset.sid = s.id; delBtn.dataset.action = 'del-supplier-modal'; delBtn.textContent = 'Delete'; right.appendChild(delBtn);
+                                row.appendChild(left); row.appendChild(right); container.appendChild(row);
+                            });
+                            body.appendChild(container);
                             // wire delete buttons
                             body.querySelectorAll('[data-action="del-supplier-modal"]').forEach(b=>b.addEventListener('click', async (ev)=>{
                                 const sid = ev.currentTarget.dataset.sid; if(!sid) return;
@@ -493,8 +515,9 @@ header('Content-Type: text/html; charset=utf-8');
         const TEMP_SUPPLIERS = [];
         function renderTempSuppliers(){
             const list = document.getElementById('supplier-list');
-            if(TEMP_SUPPLIERS.length===0) { list.innerHTML = '<p class="muted">No suppliers</p>'; return }
-            list.innerHTML = TEMP_SUPPLIERS.map((s,idx)=>`<div data-temp-idx="${idx}" class="space-between-row"><div><strong>${escapeHtml(s.name)}</strong><div class="muted-text small">${escapeHtml(s.url)}</div></div><div><button class=\"btn btn-danger-muted\" data-temp-action=\"del-temp\" data-idx=\"${idx}\">Delete</button></div></div>`).join('');
+            if(TEMP_SUPPLIERS.length===0) { list.textContent = ''; const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No suppliers'; list.appendChild(p); return }
+            list.textContent = '';
+            TEMP_SUPPLIERS.forEach(function(s, idx){ const row = document.createElement('div'); row.className = 'space-between-row'; row.dataset['tempIdx'] = idx; const left = document.createElement('div'); const strong = document.createElement('strong'); strong.textContent = s.name || ''; left.appendChild(strong); const urlDiv = document.createElement('div'); urlDiv.className = 'muted-text small'; urlDiv.textContent = s.url || ''; left.appendChild(urlDiv); const right = document.createElement('div'); const del = document.createElement('button'); del.className='btn btn-danger-muted'; del.dataset.tempAction='del-temp'; del.dataset.idx = idx; del.textContent='Delete'; right.appendChild(del); row.appendChild(left); row.appendChild(right); list.appendChild(row); });
             document.querySelectorAll('[data-temp-action="del-temp"]').forEach(b=>b.addEventListener('click', (ev)=>{
                 const i = parseInt(ev.currentTarget.dataset.idx,10); if(isNaN(i)) return; TEMP_SUPPLIERS.splice(i,1); renderTempSuppliers();
             }));
@@ -521,7 +544,10 @@ header('Content-Type: text/html; charset=utf-8');
         document.getElementById('add-selector-row').addEventListener('click', ()=>{
             const wrap = document.getElementById('selector-rows');
             const div = document.createElement('div'); div.className='selector-row flex-row-sm';
-            div.innerHTML = '<input class="selector-key" placeholder="key"><input class="selector-val" placeholder="CSS selector">';
+            div.textContent = '';
+            var k = document.createElement('input'); k.className = 'selector-key'; k.placeholder = 'key';
+            var v = document.createElement('input'); v.className = 'selector-val'; v.placeholder = 'CSS selector';
+            div.appendChild(k); div.appendChild(v);
             wrap.appendChild(div);
         });
 
@@ -543,15 +569,16 @@ header('Content-Type: text/html; charset=utf-8');
             try{
                 const r = await fetch(`${API_URL}?action=test-scrape`,{method:'POST',headers:{'X-CSRF-Token':CSRF_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({url:url,selectors:selectors,supplier_id:supplierId,force:force})});
                 const d = await r.json();
-                if(!d.success){ previewEl.innerHTML = '<div class="muted">Preview failed: '+(d.message||d.error||'Unknown')+'</div>'; return }
-                const cached = d.cached ? '<em>(cached)</em>' : '';
-                let html = `<div><strong>Preview results ${cached}</strong></div><div class="mt-04">`;
-                for(const k of Object.keys(d.data||{})){
-                    html += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(d.data[k]))}</div>`;
-                }
-                html += '</div>';
-                previewEl.innerHTML = html;
-            }catch(e){ previewEl.innerHTML = '<div class="muted">Preview failed</div>'; }
+                    if(!d.success){ previewEl.textContent = 'Preview failed: '+(d.message||d.error||'Unknown'); return }
+                    previewEl.textContent = '';
+                    const hdr = document.createElement('div'); hdr.appendChild(document.createElement('strong')).textContent = 'Preview results';
+                    previewEl.appendChild(hdr);
+                    const wrap = document.createElement('div'); wrap.className = 'mt-04';
+                    for(const k of Object.keys(d.data||{})){
+                        const row = document.createElement('div'); const strong = document.createElement('strong'); strong.textContent = k + ': '; row.appendChild(strong); row.appendChild(document.createTextNode(String(d.data[k]))); wrap.appendChild(row);
+                    }
+                    previewEl.appendChild(wrap);
+            }catch(e){ previewEl.textContent = 'Preview failed'; }
         });
 
         document.getElementById('config-form').addEventListener('submit', async (e)=>{
@@ -563,7 +590,7 @@ header('Content-Type: text/html; charset=utf-8');
         });
 
         async function loadLogs(){
-            try{const res=await fetch(`${API_URL}?action=logs`);const data=await res.json();const el=document.getElementById('logs-list');if(!data.logs||data.logs.length===0){el.innerHTML='<p>No logs</p>';return}el.innerHTML='<pre>'+JSON.stringify(data.logs, null, 2)+'</pre>'}catch(e){document.getElementById('logs-list').innerHTML='<p>Error loading logs</p>'}
+            try{const res=await fetch(`${API_URL}?action=logs`);const data=await res.json();const el=document.getElementById('logs-list');el.textContent='';if(!data.logs||data.logs.length===0){const p=document.createElement('p');p.textContent='No logs';el.appendChild(p);return}const pre=document.createElement('pre');pre.textContent=JSON.stringify(data.logs, null, 2);el.appendChild(pre);}catch(e){const el=document.getElementById('logs-list');el.textContent='';const p=document.createElement('p');p.textContent='Error loading logs';el.appendChild(p);}
         }
 
         // initialize the campaign list and wire controls

@@ -532,12 +532,17 @@ if (isset($_GET['download']) && $_GET['download'] === 'applications') {
 }
 
 header('Content-Type: text/html; charset=utf-8');
+// Admin pages should also report CSP violations while we fix issues.
+$admin_csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; report-uri /admin/csp-report.php";
+header('Content-Security-Policy-Report-Only: ' . $admin_csp);
 ?>
 <!doctype html>
 <html>
   <head>
   <title>Admin - Job Applications</title>
   <?php require_once __DIR__ . '/partials/head.php'; ?>
+  <script src="/assets/js/dompurify.min.js" defer></script>
+  <script src="/assets/js/dompurify-wrapper.js" defer></script>
   </head>
   <body class="admin">
   <!-- page-level helpers are now in /assets/css/admin.css -->
@@ -997,26 +1002,34 @@ header('Content-Type: text/html; charset=utf-8');
             var data = this.getAttribute('data-entry');
             try { var obj = JSON.parse(data); } catch(e){ obj = null; }
             if (!obj) return;
-            var html = '';
-            html += '<table class="small app-modal-table">';
-            function row(k,v){ return '<tr><th class="app-modal-table">'+k+'</th><td class="app-modal-table">'+(v||'')+'</td></tr>'; }
-            html += row('Name', (obj.first_name||'') + ' ' + (obj.last_name||''));
-            html += row('Email', obj.email||'');
-            html += row('Phone', obj.phone||'');
-            html += row('Position', obj.position_desired||'');
-            html += row('Employment type', obj.employment_type||'');
-            html += row('Age', obj.age||'');
-            html += row('Eligible to work', obj.eligible_to_work||'');
-            html += row('Availability', Array.isArray(obj.availability) ? obj.availability.join(', ') : (obj.availability||''));
-            html += row('Certifications', Array.isArray(obj.certifications) ? obj.certifications.join(', ') : (obj.certifications||''));
-            html += row('Experience', obj.restaurant_experience || obj.other_experience || obj.why_work_here || '');
-            html += row('References', obj.references || '');
+            // Build a safe DOM table rather than concatenating HTML strings
+            var tbl = document.createElement('table'); tbl.className = 'small app-modal-table';
+            function addRow(k, v){
+              var tr = document.createElement('tr');
+              var th = document.createElement('th'); th.className = 'app-modal-table'; th.textContent = k;
+              var td = document.createElement('td'); td.className = 'app-modal-table';
+              if (v instanceof Node) td.appendChild(v); else td.textContent = (v || '');
+              tr.appendChild(th); tr.appendChild(td); tbl.appendChild(tr);
+            }
+            addRow('Name', (obj.first_name||'') + ' ' + (obj.last_name||''));
+            addRow('Email', obj.email||'');
+            addRow('Phone', obj.phone||'');
+            addRow('Position', obj.position_desired||'');
+            addRow('Employment type', obj.employment_type||'');
+            addRow('Age', obj.age||'');
+            addRow('Eligible to work', obj.eligible_to_work||'');
+            addRow('Availability', Array.isArray(obj.availability) ? obj.availability.join(', ') : (obj.availability||''));
+            addRow('Certifications', Array.isArray(obj.certifications) ? obj.certifications.join(', ') : (obj.certifications||''));
+            addRow('Experience', obj.restaurant_experience || obj.other_experience || obj.why_work_here || '');
+            addRow('References', obj.references || '');
             if (obj.resume_file) {
               var fn = obj.resume_file.split('/').pop();
-              html += row('Resume', '<a href="download-resume.php?file='+encodeURIComponent(fn)+'" target="_blank">Download</a> ' + fn);
+              var a = document.createElement('a'); a.href = 'download-resume.php?file='+encodeURIComponent(fn); a.target = '_blank'; a.textContent = 'Download';
+              var span = document.createElement('span'); span.appendChild(a); span.appendChild(document.createTextNode(' ' + fn));
+              addRow('Resume', span);
             }
-            html += '</table>';
-            body.innerHTML = html;
+            body.textContent = '';
+            body.appendChild(tbl);
             modal.classList.add('open');
             modal.setAttribute('aria-hidden','false');
           });
@@ -1215,7 +1228,23 @@ header('Content-Type: text/html; charset=utf-8');
               });
             } catch(e) { /* ignore */ }
 
-            body.innerHTML = html;
+            // Build DOM for scan results instead of assigning HTML string
+            body.textContent = '';
+            if (!Array.isArray(data.files) || data.files.length === 0) {
+              var p = document.createElement('p'); p.className = 'small muted'; p.textContent = 'No resume files found.'; body.appendChild(p);
+            } else {
+              var tbl = document.createElement('table'); tbl.className = 'small app-modal-table';
+              var thead = document.createElement('thead'); var htr = document.createElement('tr'); ['File','Size','Flags'].forEach(function(h){ var th = document.createElement('th'); th.textContent = h; htr.appendChild(th); }); thead.appendChild(htr); tbl.appendChild(thead);
+              var tbody = document.createElement('tbody');
+              data.files.forEach(function(f){
+                var tr = document.createElement('tr');
+                var tdFile = document.createElement('td'); tdFile.textContent = f.name || '';
+                var tdSize = document.createElement('td'); tdSize.textContent = f.size || '';
+                var tdFlags = document.createElement('td'); tdFlags.textContent = (Array.isArray(f.flags) ? f.flags.join(', ') : ((f.suspicious ? 'suspicious' : '') + (f.missing ? ' missing' : '') + (f.invalid_signature ? ' invalid signature' : '') + (f.small ? ' too small' : ''))).trim() || '\u00A0';
+                tr.appendChild(tdFile); tr.appendChild(tdSize); tr.appendChild(tdFlags); tbody.appendChild(tr);
+              });
+              tbl.appendChild(tbody); body.appendChild(tbl);
+            }
             modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
             if (window.showAdminToast) window.showAdminToast('Scan complete — ' + newCount + ' files found', 'success');
             else if (typeof toast === 'function') toast('Scan complete — ' + newCount + ' files found');

@@ -150,7 +150,7 @@ const Navigation = {
     // desktop DOM light and avoid duplicate UI elements.
     const mobileMenuBtn = document.createElement('button');
         mobileMenuBtn.className = 'mobile-menu-btn';
-        mobileMenuBtn.innerHTML = '☰';
+        mobileMenuBtn.textContent = '☰';
         mobileMenuBtn.setAttribute('aria-label', 'Toggle mobile menu');
         
         const checkMobile = () => {
@@ -169,20 +169,20 @@ const Navigation = {
 
         mobileMenuBtn.addEventListener('click', () => {
             navMenu.classList.toggle('nav-menu-open');
-            mobileMenuBtn.innerHTML = navMenu.classList.contains('nav-menu-open') ? '✕' : '☰';
+            mobileMenuBtn.textContent = navMenu.classList.contains('nav-menu-open') ? '✕' : '☰';
         });
 
         document.addEventListener('click', (e) => {
             if (!navbar.contains(e.target)) {
                 navMenu.classList.remove('nav-menu-open');
-                mobileMenuBtn.innerHTML = '☰';
+                mobileMenuBtn.textContent = '☰';
             }
         });
 
         navMenu.addEventListener('click', (e) => {
             if (e.target.classList.contains('nav-link')) {
                 navMenu.classList.remove('nav-menu-open');
-                mobileMenuBtn.innerHTML = '☰';
+                mobileMenuBtn.textContent = '☰';
             }
         });
 

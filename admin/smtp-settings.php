@@ -96,9 +96,13 @@ if (file_exists(CONTENT_FILE)) {
           btn.textContent = 'Sending...'; btn.disabled = true;
           fetch('send-test-email.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).then(function(r){ return r.json(); }).then(function(j){
             var out = document.getElementById('smtp-result');
-            if (j && j.success) { out.innerHTML = '<div class="toast success">Test email sent successfully.</div>'; }
-            else { out.innerHTML = '<div class="toast error">Test failed: ' + (j && j.message ? j.message : 'unknown') + '</div>'; }
-          }).catch(function(err){ document.getElementById('smtp-result').innerHTML = '<div class="toast error">Error: ' + err.message + '</div>'; }).finally(function(){ btn.textContent = 'Send Test Email'; btn.disabled = false; setTimeout(function(){ var container = document.getElementById('smtp-result'); if (container) { var t = container.querySelector('.toast'); if (t) { t.classList.add('fade-out'); setTimeout(function(){ container.innerHTML = ''; }, 350); } else { container.innerHTML = ''; } } }, 5000); });
+            if (!out) return;
+            // clear previous
+            out.textContent = '';
+            var el = document.createElement('div'); el.className = 'toast ' + (j && j.success ? 'success' : 'error');
+            el.textContent = j && j.success ? 'Test email sent successfully.' : ('Test failed: ' + (j && j.message ? j.message : 'unknown'));
+            out.appendChild(el);
+          }).catch(function(err){ var out = document.getElementById('smtp-result'); if (out) { out.textContent = ''; var el = document.createElement('div'); el.className = 'toast error'; el.textContent = 'Error: ' + err.message; out.appendChild(el); } }).finally(function(){ btn.textContent = 'Send Test Email'; btn.disabled = false; setTimeout(function(){ var container = document.getElementById('smtp-result'); if (container) { var t = container.querySelector('.toast'); if (t) { t.classList.add('fade-out'); setTimeout(function(){ container.textContent = ''; }, 350); } else { container.textContent = ''; } } }, 5000); });
         });
       })();
     </script>

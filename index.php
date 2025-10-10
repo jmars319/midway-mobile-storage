@@ -49,6 +49,10 @@ function getContent($content, $key, $fallback = '') {
 // Start session before any output
 session_start();
 $form_flash = $_SESSION['form_flash'] ?? null;
+// Content Security Policy (report-only) to collect violations during hardening.
+// After fixing reported issues, change to "Content-Security-Policy" to enforce.
+$csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; report-uri /admin/csp-report.php";
+header('Content-Security-Policy-Report-Only: ' . $csp);
 // Emit document head (doctype, meta, CSS)
 ?>
 <!doctype html>
@@ -57,6 +61,8 @@ $form_flash = $_SESSION['form_flash'] ?? null;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="assets/js/dompurify.min.js" defer></script>
+    <script src="assets/js/dompurify-wrapper.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700&family=Roboto+Condensed:wght@400;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -409,225 +415,250 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
             <div class="container-narrow">
                 <form class="card" id="storage-quote-form" method="post" action="admin/reserve.php" data-no-ajax="1">
                     <!-- Customer Information -->
-                    <h3 class="accent-heading mb-1rem">Contact Information</h3>
-                    <div class="grid grid-2">
-                        <div>
-                            <label for="customer-name-storage" class="form-label">Full Name *</label>
-                            <input type="text" id="customer-name-storage" name="customer_name" required class="form-input">
+                    <details class="quote-section" open>
+                        <summary class="quote-section-summary"><span>Contact Information</span><span class="chev" aria-hidden="true">▾</span></summary>
+                        <div class="quote-section-content">
+                            <div class="grid grid-2">
+                                <div>
+                                    <label for="customer-name-storage" class="form-label">Full Name *</label>
+                                    <input type="text" id="customer-name-storage" name="customer_name" required class="form-input">
+                                </div>
+                                <div>
+                                    <label for="company-name" class="form-label">Company Name (if applicable)</label>
+                                    <input type="text" id="company-name" name="company_name" class="form-input">
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-2">
+                                <div>
+                                    <label for="customer-phone-storage" class="form-label">Phone Number *</label>
+                                    <input type="tel" id="customer-phone-storage" name="customer_phone" required class="form-input">
+                                </div>
+                                <div>
+                                    <label for="customer-email-storage" class="form-label">Email Address *</label>
+                                    <input type="email" id="customer-email-storage" name="customer_email" required class="form-input">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label for="company-name" class="form-label">Company Name (if applicable)</label>
-                            <input type="text" id="company-name" name="company_name" class="form-input">
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-2">
-                        <div>
-                            <label for="customer-phone-storage" class="form-label">Phone Number *</label>
-                            <input type="tel" id="customer-phone-storage" name="customer_phone" required class="form-input">
-                        </div>
-                        <div>
-                            <label for="customer-email-storage" class="form-label">Email Address *</label>
-                            <input type="email" id="customer-email-storage" name="customer_email" required class="form-input">
-                        </div>
-                    </div>
+                    </details>
                     
                     <!-- Storage Requirements -->
-                    <h3 class="accent-heading mt-2rem-mb-1rem">Storage Requirements</h3>
-                    <div class="grid grid-2">
-                        <div>
-                            <label for="container-size-storage" class="form-label">Container Size Needed *</label>
-                            <select id="container-size-storage" name="container_size" required class="form-input">
-                                <option value="">Select Size</option>
-                                <option value="10ft">10ft Container (560 cu ft)</option>
-                                <option value="20ft">20ft Container (1,120 cu ft)</option>
-                                <option value="40ft">40ft Container (2,240 cu ft)</option>
-                                <option value="multiple">Multiple Containers</option>
-                                <option value="not-sure">Not Sure - Need Recommendation</option>
-                            </select>
+                    <details class="quote-section" open>
+                        <summary class="quote-section-summary"><span>Storage Requirements</span><span class="chev" aria-hidden="true">▾</span></summary>
+                        <div class="quote-section-content">
+                            <div class="grid grid-2">
+                                <div>
+                                    <label for="container-size-storage" class="form-label">Container Size Needed *</label>
+                                    <select id="container-size-storage" name="container_size" required class="form-input">
+                                        <option value="">Select Size</option>
+                                        <option value="10ft">10ft Container (560 cu ft)</option>
+                                        <option value="20ft">20ft Container (1,120 cu ft)</option>
+                                        <option value="40ft">40ft Container (2,240 cu ft)</option>
+                                        <option value="multiple">Multiple Containers</option>
+                                        <option value="not-sure">Not Sure - Need Recommendation</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="quantity" class="form-label">Quantity Needed</label>
+                                    <input type="number" id="quantity" name="quantity" min="1" max="20" value="1" class="form-input">
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-2">
+                                <div>
+                                    <label for="rental-duration" class="form-label">Rental Duration *</label>
+                                    <select id="rental-duration" name="rental_duration" required class="form-input">
+                                        <option value="">Select Duration</option>
+                                        <option value="1-week">1 Week</option>
+                                        <option value="2-weeks">2 Weeks</option>
+                                        <option value="1-month">1 Month</option>
+                                        <option value="2-months">2 Months</option>
+                                        <option value="3-months">3 Months</option>
+                                        <option value="6-months">6 Months</option>
+                                        <option value="12-months">12+ Months</option>
+                                        <option value="ongoing">Ongoing/Month-to-Month</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="start-date-storage" class="form-label">Needed By Date</label>
+                                    <input type="date" id="start-date-storage" name="start_date" class="form-input">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label for="quantity" class="form-label">Quantity Needed</label>
-                            <input type="number" id="quantity" name="quantity" min="1" max="20" value="1" class="form-input">
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-2">
-                        <div>
-                            <label for="rental-duration" class="form-label">Rental Duration *</label>
-                            <select id="rental-duration" name="rental_duration" required class="form-input">
-                                <option value="">Select Duration</option>
-                                <option value="1-week">1 Week</option>
-                                <option value="2-weeks">2 Weeks</option>
-                                <option value="1-month">1 Month</option>
-                                <option value="2-months">2 Months</option>
-                                <option value="3-months">3 Months</option>
-                                <option value="6-months">6 Months</option>
-                                <option value="12-months">12+ Months</option>
-                                <option value="ongoing">Ongoing/Month-to-Month</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="start-date-storage" class="form-label">Needed By Date</label>
-                            <input type="date" id="start-date-storage" name="start_date" class="form-input">
-                        </div>
-                    </div>
+                    </details>
                     
                     <!-- Delivery Information -->
-                    <h3 class="accent-heading mt-2rem-mb-1rem">Delivery Information</h3>
-                    <div>
-                        <label for="delivery-address" class="form-label">Delivery Address *</label>
-                        <textarea id="delivery-address" name="delivery_address" rows="3" required placeholder="Full street address including city, state, and zip code" class="form-input"></textarea>
-                    </div>
-                    
-                    <div class="grid grid-2">
-                        <div>
-                            <label for="access-type" class="form-label">Property Type</label>
-                            <select id="access-type" name="access_type" class="form-input">
-                                <option value="">Select Type</option>
-                                <option value="residential">Residential Home</option>
-                                <option value="apartment">Apartment Complex</option>
-                                <option value="commercial">Commercial Property</option>
-                                <option value="construction">Construction Site</option>
-                                <option value="storage-facility">Storage Facility</option>
-                                <option value="other">Other</option>
-                            </select>
+                    <details class="quote-section">
+                        <summary class="quote-section-summary"><span>Delivery Information</span><span class="chev" aria-hidden="true">▾</span></summary>
+                        <div class="quote-section-content">
+                            <div>
+                                <label for="delivery-address" class="form-label">Delivery Address *</label>
+                                <textarea id="delivery-address" name="delivery_address" rows="3" required placeholder="Full street address including city, state, and zip code" class="form-input"></textarea>
+                            </div>
+                            
+                            <div class="grid grid-2">
+                                <div>
+                                    <label for="access-type" class="form-label">Property Type</label>
+                                    <select id="access-type" name="access_type" class="form-input">
+                                        <option value="">Select Type</option>
+                                        <option value="residential">Residential Home</option>
+                                        <option value="apartment">Apartment Complex</option>
+                                        <option value="commercial">Commercial Property</option>
+                                        <option value="construction">Construction Site</option>
+                                        <option value="storage-facility">Storage Facility</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="surface-type" class="form-label">Surface Type</label>
+                                    <select id="surface-type" name="surface_type" class="form-input">
+                                        <option value="">Select Surface</option>
+                                        <option value="concrete">Concrete/Asphalt</option>
+                                        <option value="gravel">Gravel</option>
+                                        <option value="dirt">Dirt/Grass</option>
+                                        <option value="paved">Paved Driveway</option>
+                                        <option value="unknown">Not Sure</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="access-restrictions" class="form-label">Access Restrictions</label>
+                                <textarea id="access-restrictions" name="access_restrictions" rows="3" placeholder="Gates, low overhangs, narrow driveways, stairs, or other delivery challenges?" class="form-input"></textarea>
+                            </div>
                         </div>
-                        <div>
-                            <label for="surface-type" class="form-label">Surface Type</label>
-                            <select id="surface-type" name="surface_type" class="form-input">
-                                <option value="">Select Surface</option>
-                                <option value="concrete">Concrete/Asphalt</option>
-                                <option value="gravel">Gravel</option>
-                                <option value="dirt">Dirt/Grass</option>
-                                <option value="paved">Paved Driveway</option>
-                                <option value="unknown">Not Sure</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label for="access-restrictions" class="form-label">Access Restrictions</label>
-                        <textarea id="access-restrictions" name="access_restrictions" rows="3" placeholder="Gates, low overhangs, narrow driveways, stairs, or other delivery challenges?" class="form-input"></textarea>
-                    </div>
+                    </details>
                     
                     <!-- Usage Information -->
-                    <h3 class="accent-heading mt-2rem-mb-1rem">Usage Information</h3>
-                    <div>
-                        <label for="storage-purpose" class="form-label">What will you be storing? *</label>
-                        <select id="storage-purpose" name="storage_purpose" required class="form-input">
-                            <option value="">Select Purpose</option>
-                            <option value="household-move">Household Moving/Storage</option>
-                            <option value="home-renovation">Home Renovation</option>
-                            <option value="business-storage">Business Storage</option>
-                            <option value="construction-tools">Construction Tools/Materials</option>
-                            <option value="seasonal-items">Seasonal Items</option>
-                            <option value="commercial-inventory">Commercial Inventory</option>
-                            <option value="vehicle-storage">Vehicle Storage</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label for="items-description" class="form-label">Description of Items</label>
-                        <textarea id="items-description" name="items_description" rows="3" placeholder="Briefly describe what you'll be storing (helps us recommend the right size)" class="form-input"></textarea>
-                    </div>
-                    
-                    <div class="grid grid-2">
-                        <div>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="climate_sensitive" value="yes">
-                                <span>Items are temperature/humidity sensitive</span>
-                            </label>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="valuable_items" value="yes">
-                                <span>High-value items needing extra security</span>
-                            </label>
+                    <details class="quote-section">
+                        <summary class="quote-section-summary"><span>Usage Information</span><span class="chev" aria-hidden="true">▾</span></summary>
+                        <div class="quote-section-content">
+                            <div>
+                                <label for="storage-purpose" class="form-label">What will you be storing? *</label>
+                                <select id="storage-purpose" name="storage_purpose" required class="form-input">
+                                    <option value="">Select Purpose</option>
+                                    <option value="household-move">Household Moving/Storage</option>
+                                    <option value="home-renovation">Home Renovation</option>
+                                    <option value="business-storage">Business Storage</option>
+                                    <option value="construction-tools">Construction Tools/Materials</option>
+                                    <option value="seasonal-items">Seasonal Items</option>
+                                    <option value="commercial-inventory">Commercial Inventory</option>
+                                    <option value="vehicle-storage">Vehicle Storage</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="items-description" class="form-label">Description of Items</label>
+                                <textarea id="items-description" name="items_description" rows="3" placeholder="Briefly describe what you'll be storing (helps us recommend the right size)" class="form-input"></textarea>
+                            </div>
+                            
+                            <div class="grid grid-2">
+                                <div>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="climate_sensitive" value="yes">
+                                        <span>Items are temperature/humidity sensitive</span>
+                                    </label>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="valuable_items" value="yes">
+                                        <span>High-value items needing extra security</span>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="frequent_access" value="yes">
+                                        <span>Need frequent access to stored items</span>
+                                    </label>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="loading_help" value="yes">
+                                        <span>Interested in loading/unloading assistance</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="frequent_access" value="yes">
-                                <span>Need frequent access to stored items</span>
-                            </label>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="loading_help" value="yes">
-                                <span>Interested in loading/unloading assistance</span>
-                            </label>
-                        </div>
-                    </div>
+                    </details>
                     
                     <!-- Additional Services -->
-                    <h3 class="accent-heading mt-2rem-mb-1rem">Additional Services</h3>
-                    <div class="grid grid-2">
-                        <div>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="services[]" value="locks-provided">
-                                <span>Provide high-security locks</span>
-                            </label>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="services[]" value="insurance">
-                                <span>Storage insurance options</span>
-                            </label>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="services[]" value="moving-supplies">
-                                <span>Moving supplies (boxes, padding)</span>
-                            </label>
+                    <details class="quote-section">
+                        <summary class="quote-section-summary"><span>Additional Services</span><span class="chev" aria-hidden="true">▾</span></summary>
+                        <div class="quote-section-content">
+                            <div class="grid grid-2">
+                                <div>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="services[]" value="locks-provided">
+                                        <span>Provide high-security locks</span>
+                                    </label>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="services[]" value="insurance">
+                                        <span>Storage insurance options</span>
+                                    </label>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="services[]" value="moving-supplies">
+                                        <span>Moving supplies (boxes, padding)</span>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="services[]" value="pickup-service">
+                                        <span>Pickup when rental ends</span>
+                                    </label>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="services[]" value="relocation">
+                                        <span>Relocation to different address</span>
+                                    </label>
+                                    <label class="form-checkbox">
+                                        <input type="checkbox" name="services[]" value="extended-hours">
+                                        <span>After-hours/weekend delivery</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="services[]" value="pickup-service">
-                                <span>Pickup when rental ends</span>
-                            </label>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="services[]" value="relocation">
-                                <span>Relocation to different address</span>
-                            </label>
-                            <label class="form-checkbox">
-                                <input type="checkbox" name="services[]" value="extended-hours">
-                                <span>After-hours/weekend delivery</span>
-                            </label>
-                        </div>
-                    </div>
+                    </details>
                     
                     <!-- Budget and Special Requests -->
-                    <div>
-                        <label for="budget-range" class="form-label">Budget Range (optional)</label>
-                        <select id="budget-range" name="budget_range" class="form-input">
-                            <option value="">Select Range</option>
-                            <option value="under-100">Under $100/month</option>
-                            <option value="100-200">$100 - $200/month</option>
-                            <option value="200-500">$200 - $500/month</option>
-                            <option value="500-1000">$500 - $1,000/month</option>
-                            <option value="over-1000">Over $1,000/month</option>
-                            <option value="flexible">Flexible</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label for="special-requests" class="form-label">Special Requests or Questions</label>
-                        <textarea id="special-requests" name="special_requests" rows="4" placeholder="Any specific requirements, questions about our service, or special circumstances we should know about?" class="form-input"></textarea>
-                    </div>
-                    
-                    <div>
-                        <label for="how-heard" class="form-label">How did you hear about us?</label>
-                        <select id="how-heard" name="how_heard" class="form-input">
-                            <option value="">Select Source</option>
-                            <option value="google">Google Search</option>
-                            <option value="referral">Referral from Friend/Family</option>
-                            <option value="social-media">Social Media</option>
-                            <option value="website">Our Website</option>
-                            <option value="advertisement">Advertisement</option>
-                            <option value="repeat-customer">Previous Customer</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="rush_quote" value="yes">
-                            <span>This is urgent - please contact me ASAP</span>
-                        </label>
-                    </div>
+                    <details class="quote-section">
+                        <summary class="quote-section-summary"><span>Budget &amp; Special Requests</span><span class="chev" aria-hidden="true">▾</span></summary>
+                        <div class="quote-section-content">
+                            <div>
+                                <label for="budget-range" class="form-label">Budget Range (optional)</label>
+                                <select id="budget-range" name="budget_range" class="form-input">
+                                    <option value="">Select Range</option>
+                                    <option value="under-100">Under $100/month</option>
+                                    <option value="100-200">$100 - $200/month</option>
+                                    <option value="200-500">$200 - $500/month</option>
+                                    <option value="500-1000">$500 - $1,000/month</option>
+                                    <option value="over-1000">Over $1,000/month</option>
+                                    <option value="flexible">Flexible</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="special-requests" class="form-label">Special Requests or Questions</label>
+                                <textarea id="special-requests" name="special_requests" rows="4" placeholder="Any specific requirements, questions about our service, or special circumstances we should know about?" class="form-input"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label for="how-heard" class="form-label">How did you hear about us?</label>
+                                <select id="how-heard" name="how_heard" class="form-input">
+                                    <option value="">Select Source</option>
+                                    <option value="google">Google Search</option>
+                                    <option value="referral">Referral from Friend/Family</option>
+                                    <option value="social-media">Social Media</option>
+                                    <option value="website">Our Website</option>
+                                    <option value="advertisement">Advertisement</option>
+                                    <option value="repeat-customer">Previous Customer</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="form-checkbox">
+                                    <input type="checkbox" name="rush_quote" value="yes">
+                                    <span>This is urgent - please contact me ASAP</span>
+                                </label>
+                            </div>
+                        </div>
+                    </details>
                     
                     <button type="submit" class="btn btn-primary form-submit-btn">Get My Custom Quote</button>
                 </form>
