@@ -880,6 +880,16 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                     </nav>
                 </div>
             </div>
+            <div class="footer-row footer-legal">
+                <div></div>
+                <div></div>
+                <div class="small footer-right right">
+                    <nav class="footer-legal-links" aria-label="Legal">
+                        <a href="/privacy-policy.html">Privacy Policy</a>
+                        <a href="/terms-of-service.html">Terms of Service</a>
+                    </nav>
+                </div>
+            </div>
         </div>
     </footer>
 
