@@ -256,6 +256,7 @@ h4, h5, h6 { font-weight: var(--font-weight-medium); }
     transform-origin: center top;
     animation: modal-in .22s cubic-bezier(.2,.9,.22,1);
 }
+.modal.open .modal-panel { padding-top: 2rem; }
 .modal .modal-close {
     position: absolute; right: 12px; top: 12px; background: transparent; border: none; font-size: 1.05rem; cursor: pointer;
     padding: .5rem; border-radius: 10px; color: var(--text-secondary);
