@@ -1646,8 +1646,17 @@ UTILITY CLASSES
 
 /* Center the legal links row visually while keeping main nav right-aligned */
 .footer .footer-legal { grid-template-columns: 1fr 1fr 1fr; }
-.footer .footer-legal > div:last-child { justify-self: center; text-align: center; }
-.footer .footer-legal .footer-legal-links { justify-content: center; }
+/* Target the right cell in the legal row specifically (it often has .footer-right and .small)
+   and force it to center; this avoids being overridden by the generic .small / .footer-right rules. */
+.footer .footer-legal > div.footer-right, .footer .footer-legal > div.small.footer-right {
+    justify-self: center;
+    text-align: center;
+}
+/* Ensure the links themselves are centered inside that cell. Use higher specificity to win. */
+.footer .footer-legal > div.footer-right .footer-legal-links,
+.footer .footer-legal > div.small.footer-right .footer-legal-links {
+    justify-content: center !important;
+}
 
 /* Today badge */
 .hours-list .today-badge { background: var(--accent-color); color: var(--text-primary); padding: 0 .4rem; border-radius: 999px; font-size: .75rem; margin-left:.5rem; font-weight:700 }
