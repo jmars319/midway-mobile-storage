@@ -1644,6 +1644,10 @@ UTILITY CLASSES
 /* Visual separator above the legal row */
 .footer .footer-legal { border-top: 1px solid var(--divider-color); padding-top: .6rem; margin-top: .6rem; }
 
+/* Center the legal links row visually while keeping main nav right-aligned */
+.footer .footer-legal .footer-right { justify-self: center; text-align: center; }
+.footer .footer-legal .footer-legal-links { justify-content: center; }
+
 /* Today badge */
 .hours-list .today-badge { background: var(--accent-color); color: var(--text-primary); padding: 0 .4rem; border-radius: 999px; font-size: .75rem; margin-left:.5rem; font-weight:700 }
 
