@@ -17,6 +17,11 @@
 .preview-item .preview-meta { flex:1 }
 .preview-price { font-weight:700; color:var(--admin-text); }
 
+/* Ensure JS-rendered preview images (.preview-img) inside the menu preview
+	match the intended small thumbnail size used for preview lists. This
+	scopes .preview-img so other contexts (picker/thumbs) are not affected. */
+.preview-item .preview-img { width:72px; height:56px; object-fit:cover; border-radius:6px; }
+
 /* polished submenu visuals */
 .pm-combo { position: relative }
 .pm-combo-toggle { display:inline-flex; align-items:center; gap:.4rem }
