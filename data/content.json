@@ -44,7 +44,7 @@
             "price": "110"
         }
     ],
-    "last_updated": "2025-10-09 20:52:16",
+    "last_updated": "2025-10-10 05:32:16",
     "hours": {
         "monday": "10:00 AM - 3:00 PM",
         "tuesday": "10:00 AM - 3:00 PM",
@@ -61,8 +61,8 @@
             "items": [
                 {
                     "title": "20ft Container",
-                    "short": "20L x 8W x 8.5H",
-                    "description": "",
+                    "short": "",
+                    "description": "EXTERIOR:\nLength: 20\u2019 Width: 8\u2019 Height: 8\u20196\u201d \n\nINTERIOR: Length: 19\u20193\u201d Width: 7\u20198\u201d Height: 7\u20199 7/8\u201d \n\nDOOR OPENING: Width: 7\u20198\u201d Height: 7\u20195\u201d",
                     "image": "",
                     "quantities": [],
                     "prices": []
@@ -70,7 +70,7 @@
                 {
                     "title": "40ft Container",
                     "short": "",
-                    "description": "",
+                    "description": "EXTERIOR: Length: 40\u2019 Width: 8\u2019 Height: 8\u20196\u201d \n\nINTERIOR: Length: 39\u20195\u201d Width: 7\u20198\u201d Height: 7\u20199 7/8\u201d \n\nDOOR OPENING: Width: 7\u20198\u201d Height: 7\u20195\u201d",
                     "image": "",
                     "price": "",
                     "quantities": [],
