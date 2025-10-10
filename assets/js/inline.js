@@ -31,68 +31,123 @@
 
     // Menu card expand/collapse
     (function(){
-        function toggleForButton(btn){
-            var card = btn.closest('.menu-card'); if (!card) return;
-            var expanded = card.classList.toggle('expanded');
-            btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-            var label = btn.querySelector('.expand-label'); if (label) label.textContent = expanded ? 'Show less' : 'See all units';
-            return expanded;
-        }
+        // menu-card toggle handled elsewhere; helper removed to avoid unused function warnings
 
-        document.addEventListener('click', function(e){
-            var btn = e.target.closest && e.target.closest('.expand-btn');
-            if (!btn) return;
-            toggleForButton(btn);
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // contact modal open/close
+            var openContact = document.querySelectorAll('.open-contact');
+            var contactModal = document.getElementById('contact-modal');
+            var contactBackdrop = document.getElementById('contact-modal-backdrop');
+            var closeButtons = contactModal ? contactModal.querySelectorAll('.close-modal') : [];
 
-        document.addEventListener('keydown', function(e){
-            if (!e.target) return;
-            if (!e.target.classList || !e.target.classList.contains('expand-btn')) return;
-            if (e.key === 'Enter') { e.preventDefault(); toggleForButton(e.target); }
-            if (e.key === ' ') { e.preventDefault(); toggleForButton(e.target); }
-        });
-    })();
+            function openModal() {
+                contactModal.classList.add('open');
+                contactBackdrop.classList.add('open');
+                var first = contactModal.querySelector('input, textarea, select');
+                if (first) first.focus();
+            }
 
-    // Convert inline <img class="menu-img"> into background layers with desaturation
-    (function(){
-        function applyMenuCardBg(card){
-            if (!card) return;
-            var img = card.querySelector('.menu-img');
-            if (!img || !img.src) return;
-            try {
-                card.classList.add('has-bg');
-                card.style.setProperty('--menu-bg-src', 'url("' + img.src + '")');
-                card.style.setProperty('--menu-bg-css', img.src);
-                // set background via CSS custom property applied to pseudo-element
-                card.style.backgroundImage = 'none';
-                // apply via inline style on pseudo by setting attribute for CSS to pick up
-                card.dataset.bg = img.src;
-                // hide the original <img> element to avoid double rendering
-                img.style.display = 'none';
-            } catch (e) { /* ignore */ }
-        }
-        function refreshAllMenuCardBgs(){
-            document.querySelectorAll('.menu-card').forEach(function(card){
-                var img = card.querySelector('.menu-img');
-                if (img && img.src) {
-                    card.classList.add('has-bg');
-                    card.style.setProperty('--menu-bg', 'url("' + img.src + '")');
-                    card.style.setProperty('--menu-bg-src', img.src);
-                    img.style.display = 'none';
-                    // set pseudo-element background by writing an inline style on the element
-                    card.style.setProperty('background-image', 'none');
-                    // also set the pseudo via a small style block attached to the element
-                } else {
-                    card.classList.remove('has-bg');
+            function closeModal() {
+                contactModal.classList.remove('open');
+                contactBackdrop.classList.remove('open');
+            }
+
+            openContact.forEach(function(el){ el.addEventListener('click', function(e){ e.preventDefault(); openModal(); }); });
+            contactBackdrop && contactBackdrop.addEventListener('click', closeModal);
+            closeButtons.forEach(function(btn){ btn.addEventListener('click', closeModal); });
+
+            // small DOM helpers
+            function showFieldError(field, message) {
+                var p = field.closest('.form-row') || field.parentNode;
+                var err = p.querySelector('.field-error');
+                if (!err) { err = document.createElement('div'); err.className = 'field-error'; p.appendChild(err); }
+                err.textContent = message;
+                field.classList.add('has-error');
+            }
+            function clearFieldError(field) {
+                var p = field.closest('.form-row') || field.parentNode;
+                var err = p.querySelector('.field-error');
+                if (err) err.textContent = '';
+                field.classList.remove('has-error');
+            }
+
+            function validateEmail(email) {
+                // simple RFC-like regex for common formats
+                var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@(([^<>()[\]\\.,;:\s@"]+\.)+[^<>()[\]\\.,;:\s@"]{2,})$/i;
+                // normalize: remove unnecessary escape before double-quote for compatibility
+                re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@(([^<>()[\]\\.,;:\s@"]+\.)+[^<>()[\]\\.,;:\s@"]{2,})$/i;
+                return re.test(String(email).toLowerCase());
+            }
+
+            // thank-you micro-interaction: display check and simple confetti burst
+            function playThankYouAnimation(container) {
+                var wrap = document.createElement('div');
+                wrap.className = 'thankyou-wrap';
+                wrap.innerHTML = '<div class="checkmark">\n  <svg viewBox="0 0 52 52">\n    <path d="M14 27 L21 34 L38 17" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>\n  </svg>\n</div>';
+                container.appendChild(wrap);
+                // simple confetti — small colored spans
+                var colors = ['#ff5a5f','#7bd389','#ffd36e','#5cc1ff'];
+                for (var i=0;i<12;i++){
+                    var c = document.createElement('span'); c.className='confetti'; c.style.backgroundColor = colors[i%colors.length];
+                    c.style.left = (20 + Math.random()*60) + '%';
+                    c.style.top = (30 + Math.random()*40) + '%';
+                    wrap.appendChild(c);
+                    // remove after animation
+                    (function(el){ setTimeout(function(){ el.remove(); }, 1400); })(c);
                 }
-            });
-        }
-        // On DOM ready and after images load, refresh menu card backgrounds
-        try { document.addEventListener('DOMContentLoaded', refreshAllMenuCardBgs); window.addEventListener('load', refreshAllMenuCardBgs); } catch(e){}
-    })();
+                setTimeout(function(){ wrap.classList.add('fade'); setTimeout(function(){ wrap.remove(); }, 500); }, 1000);
+            }
 
-    // Accessibility helpers + contact modal
-    (function(){
+            // AJAX contact form submit with client-side validation and optional reCAPTCHA v3
+            var contactForm = document.getElementById('footer-contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    var submitBtn = contactForm.querySelector('button[type=submit]');
+                    var msg = contactForm.querySelector('.form-message');
+                    // clear previous
+                    msg.textContent = ''; msg.className = 'form-message';
+                    var firstName = contactForm.querySelector('[name=first_name]');
+                    var email = contactForm.querySelector('[name=email]');
+                    var message = contactForm.querySelector('[name=message]');
+
+                    // basic validation
+                    var ok = true;
+                    [firstName, email, message].forEach(function(f){ if (!f) return; clearFieldError(f); });
+                    if (firstName && !firstName.value.trim()) { showFieldError(firstName, 'Please enter your name'); ok = false; }
+                    if (email && !email.value.trim()) { showFieldError(email, 'Please enter your email'); ok = false; }
+                    else if (email && !validateEmail(email.value.trim())) { showFieldError(email, 'Please enter a valid email'); ok = false; }
+                    if (message && !message.value.trim()) { showFieldError(message, 'Please enter a message'); ok = false; }
+                    if (!ok) return;
+
+                    // disable submit
+                    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('is-loading'); }
+
+                    function doSubmit() {
+                        var fd = new FormData(contactForm);
+                        fetch('/contact.php', { method: 'POST', body: fd }).then(function(res){ return res.json(); }).then(function(json){
+                            if (json.success) {
+                                msg.classList.add('success');
+                                msg.textContent = json.message || 'Thanks! We received your message.';
+                                contactForm.reset();
+                                // play tiny animation
+                                playThankYouAnimation(contactForm);
+                                setTimeout(function(){ closeModal(); }, 1200);
+                            } else {
+                                msg.classList.add('error');
+                                msg.textContent = json.message || 'There was a problem. Please try again.';
+                            }
+                        }).catch(function(){
+                            msg.classList.add('error');
+                            msg.textContent = 'Network error. Please try again.';
+                        }).finally(function(){ if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('is-loading'); } });
+                    }
+
+                    // No reCAPTCHA configured: submit directly
+                    doSubmit();
+                });
+            }
+        });
         try {
             var navLinks = document.querySelectorAll('.nav-link');
             var sections = Array.from(navLinks).map(function(a){
@@ -193,7 +248,7 @@
                             form.reset(); setTimeout(function(){ closeModal(); ok.classList.add('fade-out'); setTimeout(function(){ ok.remove(); }, 350); }, 1400);
                         } else {
                             var err = document.createElement('div'); err.className = 'form-message form-error'; err.textContent = (data && data.message) ? data.message : 'Submission failed. Please try again.'; container.insertBefore(err, form.nextSibling);
-                            setTimeout(function(){ try { err.classList.add('fade-out'); setTimeout(function(){ err.remove(); }, 350); } catch(e){} }, 5000);
+                            setTimeout(function(){ try { err.classList.add('fade-out'); setTimeout(function(){ err.remove(); }, 350); } catch(e){ console.error(e); } }, 5000);
                         }
                     }).catch(function(err){ var container = form.parentNode; var errEl = document.createElement('div'); errEl.className='form-message form-error'; errEl.textContent = 'Network error: ' + err.message; container.insertBefore(errEl, form.nextSibling); setTimeout(function(){ errEl.classList.add('fade-out'); setTimeout(function(){ errEl.remove(); }, 350); }, 5000); }).finally(function(){ if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalText; } });
                 });

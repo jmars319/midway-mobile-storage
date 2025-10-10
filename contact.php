@@ -75,6 +75,38 @@ $message = s($_POST['message'] ?? '');
 $submission_type = $position_desired ? 'application' : 'contact';
 $honeypot = trim($_POST['hp_field'] ?? '');
 
+// If a reCAPTCHA response token was submitted, verify it server-side.
+// Load secret from admin/config.php overrides (admin/auth.json) or environment.
+$recaptchaToken = trim($_POST['g-recaptcha-response'] ?? '');
+if ($recaptchaToken !== '') {
+    $recfg = __DIR__ . '/admin/config.php';
+    if (file_exists($recfg)) { @include_once $recfg; }
+    $recSecret = $GLOBALS['RECAPTCHA_SECRET_OVERRIDE'] ?? (defined('RECAPTCHA_SECRET') ? RECAPTCHA_SECRET : null);
+    if ($recSecret) {
+        $resp = null;
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['secret' => $recSecret, 'response' => $recaptchaToken, 'remoteip' => $clientIp]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            $raw = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+            if ($raw) $resp = json_decode($raw, true);
+            if (!$resp || empty($resp['success']) || ($resp['score'] !== null && isset($resp['score']) && $resp['score'] < 0.3)) {
+                if ($isAjax) { http_response_code(400); echo json_encode(['success' => false, 'errors' => ['reCAPTCHA verification failed']]); }
+                else { $_SESSION['form_flash'] = ['errors' => ['reCAPTCHA verification failed']]; header('Location: /index.php#contact'); }
+                exit;
+            }
+        } catch (Exception $e) {
+            // If reCAPTCHA verification endpoint fails, continue but log
+            error_log('contact.php: reCAPTCHA verify error: ' . $e->getMessage());
+        }
+    }
+}
+
 $dataDir = __DIR__ . '/data'; @mkdir($dataDir, 0755, true);
 $applicationsFile = $dataDir . '/applications.json';
 $rateFile = $dataDir . '/rate_limits.json';
