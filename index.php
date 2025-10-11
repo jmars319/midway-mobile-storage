@@ -906,7 +906,7 @@ function ferrs() { global $form_flash; if (!$form_flash || empty($form_flash['er
                 </div>
                 <div class="small footer-right right">
                     <nav class="footer-links" aria-label="Footer navigation">
-                        <a href="#menu">Menu</a>
+                        <a href="#units">Units</a>
                         <a href="#storage-quote">Quotes</a>
                         <a href="#about">About</a>
                         <a href="#job-application">Careers</a>

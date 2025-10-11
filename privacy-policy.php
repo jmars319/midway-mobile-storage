@@ -36,7 +36,7 @@ $cssVersion = file_exists($cssPath) ? filemtime($cssPath) : time();
         </div>
         <div class="small footer-right right">
           <nav class="footer-links" aria-label="Footer navigation">
-            <a href="#menu">Menu</a>
+            <a href="#units">Units</a>
             <a href="#storage-quote">Quotes</a>
             <a href="#about">About</a>
             <a href="#job-application">Careers</a>
